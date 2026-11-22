@@ -10,7 +10,7 @@ const shadow = fs.readFileSync(`${dir}/shadow.frag`, 'utf8');
 const spec = JSON.parse(fs.readFileSync(specPath, 'utf8'));
 const tilts = tiltsArg ? JSON.parse(tiltsArg) : [[-0.7, -0.4], [0, 0], [0.7, 0.45]];
 const images = spec.map(s => 'data:image/jpeg;base64,' + fs.readFileSync(s.image).toString('base64'));
-const VW = 300, VH = 420; // a phone-like viewport per tile
+const VW = parseInt(process.env.VW || '300'), VH = Math.round(VW * 1.4); // a phone-like viewport per tile
 (async () => {
   const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   const page = await browser.newPage();

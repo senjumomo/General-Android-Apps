@@ -120,7 +120,9 @@ float4 shade(float2 uv) {
     float4 nameRect = float4(0.068, 0.046, 0.835, 0.101);
     // Letters are thin strokes: pixels that contrast with their surroundings about one stroke away.
     // (Works for dark-on-light and light-on-dark names, and ignores the bar's bevel and gradient.)
-    float nameBar = boxMask(uv, float4(nameRect.x, nameRect.y + 0.006, nameRect.z, nameRect.w - 0.005), 0.002);
+    // Lettering spans y 0.057..0.099 on every frame; the bar's plain margins (0.045..0.055 and
+    // 0.099..0.105) separate it from the bar's edges, so the mask ends inside those margins.
+    float nameBar = boxMask(uv, float4(nameRect.x, 0.050, nameRect.z, 0.104), 0.0015);
     float letters = 0.0;
     if (nameBar > 0.0) {
         float2 r = float2(0.012, 0.008);
