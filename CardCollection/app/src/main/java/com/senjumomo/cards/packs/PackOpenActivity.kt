@@ -10,8 +10,12 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
+import android.view.MotionEvent
+import android.view.VelocityTracker
 import android.view.View
+import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
@@ -43,7 +47,9 @@ import com.senjumomo.cards.holo.TiltTracker
 import com.senjumomo.cards.net.Exchange
 import com.senjumomo.cards.ui.Money
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 import kotlin.math.roundToLong
+import kotlin.math.sign
 
 /**
  * Pack opening: a 3D foil pack you tear open, then the cards one at a time (the big pull last, with
@@ -71,6 +77,12 @@ class PackOpenActivity : AppCompatActivity() {
     private var revealed = false
     private var busy = false
     private var lastTick = 0
+    // Swipe gesture on the revealed card.
+    private var downX = 0f
+    private var downY = 0f
+    private var swiping = false
+    private var gestureIgnored = false
+    private var velocity: VelocityTracker? = null
     private var usdRate: Double? = null
     private var currency = "ZAR"
     private var collection: List<Card> = emptyList()
@@ -127,7 +139,11 @@ class PackOpenActivity : AppCompatActivity() {
         packView.onOpened = ::startReveal
         packView.onError = { msg -> showLoadingMessage("The pack couldn't be drawn on this phone.\n$msg") }
         findViewById<MaterialButton>(R.id.openButton).setOnClickListener { packView.rip() }
-        findViewById<View>(R.id.revealStage).setOnClickListener { advance() }
+        val stage = findViewById<View>(R.id.revealStage)
+        stage.setOnClickListener { onCardTap() }
+        stage.setOnTouchListener { v, e -> onSwipeTouch(v, e) }
+        // The holo view keeps its drag-to-tilt; the same gesture can also throw the card away.
+        holo.setOnTouchListener { _, e -> onSwipeTouch(stage, e, consume = false) }
         findViewById<MaterialButton>(R.id.openAnother).setOnClickListener { newPack() }
         findViewById<MaterialButton>(R.id.choosePack).setOnClickListener { finish() }
 
@@ -222,6 +238,7 @@ class PackOpenActivity : AppCompatActivity() {
         revealed = !startsFaceDown(c)
         current.rotationY = 0f
         current.translationX = 0f
+        current.translationY = 0f
         current.rotation = 0f
         current.alpha = 1f
         current.visibility = View.VISIBLE
@@ -230,8 +247,10 @@ class PackOpenActivity : AppCompatActivity() {
         nextBack.setImageBitmap(backImage())
         findViewById<TextView>(R.id.counter).text = "${i + 1} / ${pack.size}"
         updateLabels(if (revealed) c else null)
-        findViewById<TextView>(R.id.tapHint).text = if (revealed) "Tap for the next card" else "Tap to flip"
+        findViewById<TextView>(R.id.tapHint).text = if (revealed) nextHint() else "Tap to flip"
     }
+
+    private fun nextHint() = if (index + 1 >= pack.size) "Swipe to see your pulls" else "Swipe for the next card"
 
     private fun updateLabels(c: SetCard?) {
         val name = findViewById<TextView>(R.id.pullName)
@@ -247,22 +266,92 @@ class PackOpenActivity : AppCompatActivity() {
         rarity.setTextColor(tierColor(c.tier))
     }
 
-    private fun advance() {
+    /** Tap flips a face-down card; on a revealed card it nudges sideways to show it can be swiped. */
+    private fun onCardTap() {
         if (busy) return
-        val c = pack[index]
-        if (!revealed) { flip(c); return }
-        if (holo.visibility == View.VISIBLE) holo.visibility = View.GONE
-        if (index + 1 >= pack.size) { showSummary(); return }
-        // Slide the card away to reveal the next.
+        if (!revealed) { flip(pack[index]); return }
+        val v = swipeTarget()
+        val nudge = dp(28).toFloat()
+        ObjectAnimator.ofFloat(v, View.TRANSLATION_X, 0f, -nudge, nudge * 0.4f, 0f).setDuration(420).start()
+        ObjectAnimator.ofFloat(v, View.ROTATION, 0f, -4f, 1.5f, 0f).setDuration(420).start()
+    }
+
+    /** The view showing the current card: the shining 3D one for big pulls, else the image. */
+    private fun swipeTarget(): View = if (holo.visibility == View.VISIBLE) holo else current
+
+    /**
+     * The card follows your finger sideways (tilting a little) and is thrown off screen when dragged
+     * far enough or flicked; otherwise it springs back. Face-down cards only give a little, so they
+     * have to be flipped first. A touch that doesn't move is a tap.
+     * [consume] is false for the holo view, which also uses the drag to tilt the card.
+     */
+    @SuppressLint("ClickableViewAccessibility")
+    private fun onSwipeTouch(stage: View, e: MotionEvent, consume: Boolean = true): Boolean {
+        val target = swipeTarget()
+        val slop = ViewConfiguration.get(this).scaledTouchSlop
+        when (e.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                gestureIgnored = busy
+                swiping = false
+                downX = e.rawX; downY = e.rawY
+                velocity?.recycle()
+                velocity = VelocityTracker.obtain().also { it.addMovement(e) }
+            }
+            MotionEvent.ACTION_MOVE -> {
+                if (gestureIgnored) return consume
+                velocity?.addMovement(e)
+                val dx = e.rawX - downX
+                if (!swiping && abs(dx) > slop && abs(dx) > abs(e.rawY - downY)) swiping = true
+                if (swiping) {
+                    val x = if (revealed) dx else dx * 0.2f
+                    target.translationX = x
+                    target.rotation = x / stage.width * 18f
+                }
+            }
+            MotionEvent.ACTION_UP -> {
+                if (gestureIgnored) return consume
+                velocity?.addMovement(e)
+                velocity?.computeCurrentVelocity(1000)
+                val vx = velocity?.xVelocity ?: 0f
+                val dx = e.rawX - downX
+                val moved = abs(dx) > slop || abs(e.rawY - downY) > slop
+                val flick = abs(vx) > dp(900) && sign(vx) == sign(dx)
+                when {
+                    !swiping && !moved -> if (consume) stage.performClick() else onCardTap()
+                    swiping && revealed && (abs(dx) > stage.width * 0.28f || flick) -> throwCard(target, sign(dx), vx)
+                    swiping -> springBack(target)
+                }
+                swiping = false
+            }
+            MotionEvent.ACTION_CANCEL -> {
+                if (swiping) springBack(target)
+                swiping = false
+            }
+        }
+        return consume
+    }
+
+    private fun springBack(v: View) {
+        v.animate().translationX(0f).rotation(0f).setDuration(260).setInterpolator(DecelerateInterpolator(1.6f)).start()
+    }
+
+    /** Fling the card off screen in [dir] (−1 left, 1 right), then show the next one. */
+    private fun throwCard(v: View, dir: Float, vx: Float) {
         busy = true
-        current.visibility = View.VISIBLE
-        current.animate().translationX(-dp(420).toFloat()).rotation(-14f).alpha(0f).setDuration(240)
-            .setInterpolator(AccelerateInterpolator())
+        haptics.tick()
+        val end = dir * (findViewById<View>(R.id.root).width + v.width) * 0.75f
+        // Keep the flick's speed: faster throws leave quicker.
+        val speed = maxOf(abs(vx), dp(1800).toFloat())
+        val duration = (abs(end - v.translationX) / speed * 1000).toLong().coerceIn(120, 280)
+        v.animate().translationX(end).rotation(dir * 24f).alpha(0f).setDuration(duration)
+            .setInterpolator(AccelerateInterpolator(0.6f))
             .setListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
-                    current.animate().setListener(null)
+                    v.animate().setListener(null)
+                    holo.visibility = View.GONE
+                    holo.translationX = 0f; holo.rotation = 0f; holo.alpha = 1f
                     busy = false
-                    showCard(index + 1)
+                    if (index + 1 >= pack.size) showSummary() else showCard(index + 1)
                 }
             }).start()
     }
@@ -306,8 +395,7 @@ class PackOpenActivity : AppCompatActivity() {
         revealed = true
         busy = false
         updateLabels(c)
-        findViewById<TextView>(R.id.tapHint).text =
-            if (index + 1 >= pack.size) "Tap to see your pulls" else "Tap for the next card"
+        findViewById<TextView>(R.id.tapHint).text = nextHint()
         if (c.tier >= Tier.SUPER) haptics.bigReveal()
         glow.animate().alpha(if (c.tier >= Tier.ULTRA) 0.55f else 0f).setDuration(600).start()
         // Ultra Rares and better: show it shining in 3D.

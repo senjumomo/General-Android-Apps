@@ -151,7 +151,8 @@ Preview tools (see `CardCollection/tools/holo-preview/README.md`):
   1/6, Secret 1/12, QCSR/Prismatic/Platinum 1/24, Collector's 1/48, Starlight/Ghost 1/288); all-foil sets
   fill every slot from the foil distribution. Approximate community odds, covered by a 20k-pack test.
 - Reveal: Commons face up; Rare+ face down with a rarity-coloured glow and shake before the flip;
-  Ultra+ shown in `HoloGLView`. Faces use 813×1185 scans; back is the official Yugipedia image
+  Ultra+ shown in `HoloGLView`. Tap flips; revealed cards are swiped away either side (drag follows the
+  finger, flick or drag past 28% throws it; on the holo view the same drag also tilts). Faces use 813×1185 scans; back is the official Yugipedia image
   (`CardBack.get()` draws a stand-in only while loading or offline).
 - Simulator only: pulls are never added to the collection automatically (♡ adds to wishlist).
 
