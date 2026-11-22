@@ -22,6 +22,7 @@ class BillScreen(root: View, private val prefs: SharedPreferences?) {
     private val tokens: TextInputEditText = root.findViewById(R.id.tokens)
     private val waterRate: TextView = root.findViewById(R.id.waterRate)
     private val tokenRate: TextView = root.findViewById(R.id.tokenRate)
+    private val monthView: TextView = root.findViewById(R.id.month)
 
     private val waterUsed: TextView = root.findViewById(R.id.waterUsed)
     private val waterTotal: TextView = root.findViewById(R.id.waterTotal)
@@ -42,6 +43,14 @@ class BillScreen(root: View, private val prefs: SharedPreferences?) {
     private var pricePerKl: BigDecimal? = null
     private var pricePerToken: BigDecimal? = null
 
+    /** The month this calculation is for, as a "yyyy-MM" key. */
+    var month: String = prefs?.getString(KEY_MONTH, null)?.takeIf { it.isNotBlank() } ?: Months.current()
+        set(value) {
+            field = value
+            monthView.text = Months.label(value)
+            save()
+        }
+
     /** The finished bill, or null while the form is incomplete. */
     var bill: Bill? = null
         private set
@@ -49,6 +58,7 @@ class BillScreen(root: View, private val prefs: SharedPreferences?) {
     init {
         prefs?.let { p -> fields.forEach { (key, f) -> f.setText(p.getString(key, "")) } }
         fields.values.forEach { it.doAfterTextChanged { recalculate() } }
+        monthView.text = Months.label(month)
         recalculate()
     }
 
@@ -65,10 +75,11 @@ class BillScreen(root: View, private val prefs: SharedPreferences?) {
     fun save() {
         prefs?.edit()?.apply {
             fields.forEach { (key, f) -> putString(key, f.text.toString().trim()) }
+            putString(KEY_MONTH, month)
         }?.apply()
     }
 
-    /** Current reading becomes last month's; debt and tokens are cleared. */
+    /** Moves on a month: current reading becomes last month's; debt and tokens are cleared. */
     fun startNewMonth(): Boolean {
         val current = waterCurr.text?.toString()?.trim().orEmpty()
         if (current.isEmpty()) return false
@@ -76,7 +87,7 @@ class BillScreen(root: View, private val prefs: SharedPreferences?) {
         waterCurr.setText("")
         tokens.setText("")
         debt.setText("")
-        save()
+        month = Months.shift(month, 1)
         return true
     }
 
@@ -123,5 +134,9 @@ class BillScreen(root: View, private val prefs: SharedPreferences?) {
             }
             messageCard.visibility = View.GONE
         }
+    }
+
+    companion object {
+        const val KEY_MONTH = "month"
     }
 }

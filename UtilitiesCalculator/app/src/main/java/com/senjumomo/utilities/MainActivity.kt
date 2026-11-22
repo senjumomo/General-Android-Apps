@@ -61,7 +61,8 @@ class MainActivity : AppCompatActivity() {
         }
         findViewById<MaterialButton>(R.id.copy).setOnClickListener { copyMessage() }
         findViewById<MaterialButton>(R.id.share).setOnClickListener { screen.bill?.let { share(it) } }
-        findViewById<MaterialButton>(R.id.saveHistory).setOnClickListener { chooseMonthAndSave() }
+        findViewById<MaterialButton>(R.id.saveHistory).setOnClickListener { saveToHistory() }
+        findViewById<MaterialButton>(R.id.monthEdit).setOnClickListener { chooseMonth() }
         findViewById<MaterialButton>(R.id.waterRateEdit).setOnClickListener {
             openSettings(SettingsActivity.FOCUS_WATER)
         }
@@ -125,25 +126,38 @@ class MainActivity : AppCompatActivity() {
         startActivity(Intent.createChooser(send, "Send to landlord"))
     }
 
-    private fun chooseMonthAndSave() {
-        val bill = screen.bill ?: return
-        val months = Months.recent(6)
+    private fun chooseMonth() {
+        val months = Months.choices().toMutableList()
+        if (screen.month !in months) months.add(screen.month)
         val labels = months.map {
-            Months.label(it) + if (history.has(it)) "  (replaces saved)" else ""
+            Months.label(it) + if (history.has(it)) "  (saved)" else ""
         }.toTypedArray()
-        var chosen = 0
         MaterialAlertDialogBuilder(this)
-            .setTitle("Save which month?")
-            .setSingleChoiceItems(labels, chosen) { _, which -> chosen = which }
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Save") { _, _ ->
-                val month = months[chosen]
-                history.save(HistoryEntry(month, bill, System.currentTimeMillis()))
-                historyScreen.show(history.all())
-                snackbar("Saved ${Months.label(month)}")
-                    .setAction("Start new month") { startNewMonth() }
-                    .show()
+            .setTitle("Which month is this for?")
+            .setSingleChoiceItems(labels, months.indexOf(screen.month)) { dialog, which ->
+                screen.month = months[which]
+                dialog.dismiss()
             }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun saveToHistory() {
+        val bill = screen.bill ?: return
+        val month = screen.month
+        val save = {
+            history.save(HistoryEntry(month, bill, System.currentTimeMillis()))
+            historyScreen.show(history.all())
+            snackbar("Saved ${Months.label(month)}")
+                .setAction("Start new month") { startNewMonth() }
+                .show()
+        }
+        if (!history.has(month)) return save()
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Replace ${Months.label(month)}?")
+            .setMessage("You already saved this month. Saving again replaces it.")
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Replace") { _, _ -> save() }
             .show()
     }
 
@@ -182,7 +196,8 @@ class MainActivity : AppCompatActivity() {
             .setIcon(R.drawable.ic_new_month)
             .setTitle("Start a new month?")
             .setMessage(
-                "This month's water reading becomes last month's. Debt and tokens are cleared. " +
+                "Moves on to ${Months.label(Months.shift(screen.month, 1))}. This month's water " +
+                    "reading becomes last month's; debt and tokens are cleared. " +
                     "Save this month to History first if you want to keep it."
             )
             .setNegativeButton("Cancel", null)
@@ -193,7 +208,9 @@ class MainActivity : AppCompatActivity() {
     private fun startNewMonth() {
         val ok = screen.startNewMonth()
         bottomNav.selectedItemId = R.id.tab_calculate
-        snackbar(if (ok) "Ready for next month" else "Enter this month's water reading first").show()
+        snackbar(
+            if (ok) "Ready for ${Months.label(screen.month)}" else "Enter this month's water reading first"
+        ).show()
     }
 
     companion object {

@@ -14,12 +14,28 @@ object Months {
 
     fun current(): String = keyFormat.format(Calendar.getInstance().time)
 
-    /** This month first, then the [count] - 1 months before it. */
-    fun recent(count: Int): List<String> {
-        val cal = Calendar.getInstance()
-        return List(count) {
-            keyFormat.format(cal.time).also { cal.add(Calendar.MONTH, -1) }
-        }
+    /** [key] moved by [months] (negative = earlier). */
+    fun shift(key: String, months: Int): String = try {
+        val cal = Calendar.getInstance().apply { time = keyFormat.parse(key)!! }
+        cal.add(Calendar.MONTH, months)
+        keyFormat.format(cal.time)
+    } catch (e: Exception) {
+        current()
+    }
+
+    /** Choices for the month picker: next month, this month and 22 months back, newest first. */
+    fun choices(): List<String> = List(24) { shift(current(), 1 - it) }
+
+    /** "2026-11" -> "Nov" */
+    fun short(key: String): String = format(key, "MMM")
+
+    /** "2026-11" -> "Nov 2026" */
+    fun medium(key: String): String = format(key, "MMM yyyy")
+
+    private fun format(key: String, pattern: String): String = try {
+        SimpleDateFormat(pattern, Locale.getDefault()).format(keyFormat.parse(key)!!)
+    } catch (e: Exception) {
+        key
     }
 
     /** "2026-11" -> "November 2026" */

@@ -28,7 +28,8 @@ class ScreenshotTest {
 
     private fun calculate(values: Map<String, String>, priced: Boolean = true): View {
         val root = inflate(R.layout.activity_main)
-        BillScreen(root, null).apply {
+        BillScreen(root.findViewById(R.id.calculatePage), null).apply {
+            month = "2026-11"
             if (priced) setPrices("70".toBigDecimal(), "100".toBigDecimal())
             fill(values)
         }
@@ -58,7 +59,12 @@ class ScreenshotTest {
         entry("2026-11", "800", "810", "10", debt = "900"),
         entry("2026-10", "788", "800", "8"),
         entry("2026-09", "779", "788", "12", debt = "250"),
+        entry("2026-08", "765", "779", "14"),
+        entry("2026-07", "754", "765", "13"),
+        entry("2026-06", "746", "754", "9"),
     )
+
+    @Test fun historySingle() = paparazzi.snapshot(history(sampleHistory.take(1)))
 
     @Test fun empty() = paparazzi.snapshot(calculate(emptyMap()))
 
