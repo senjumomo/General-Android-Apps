@@ -58,6 +58,14 @@ float detail(float2 uv) {
     return clamp(abs(c - n * 0.25) * 6.0, 0.0, 1.0);
 }
 
+// Average brightness on a ring of 8 points at radius [r] around [uv].
+float ring(float2 uv, float2 r) {
+    return (luma(sampleCard(uv + float2(r.x, 0.0)).rgb) + luma(sampleCard(uv - float2(r.x, 0.0)).rgb)
+          + luma(sampleCard(uv + float2(0.0, r.y)).rgb) + luma(sampleCard(uv - float2(0.0, r.y)).rgb)
+          + luma(sampleCard(uv + r).rgb) + luma(sampleCard(uv - r).rgb)
+          + luma(sampleCard(uv + float2(r.x, -r.y)).rgb) + luma(sampleCard(uv + float2(-r.x, r.y)).rgb)) * 0.125;
+}
+
 // Surface normal from image brightness, for embossed (Ultimate Rare) relief.
 float3 embossNormal(float2 uv) {
     float2 o = texel * 2.0;
@@ -125,11 +133,10 @@ float4 shade(float2 uv) {
     float nameBar = boxMask(uv, float4(nameRect.x, 0.050, nameRect.z, 0.104), 0.0015);
     float letters = 0.0;
     if (nameBar > 0.0) {
-        float2 r = float2(0.012, 0.008);
-        float around = luma(sampleCard(uv + float2(r.x, 0.0)).rgb) + luma(sampleCard(uv - float2(r.x, 0.0)).rgb)
-                     + luma(sampleCard(uv + float2(0.0, r.y)).rgb) + luma(sampleCard(uv - float2(0.0, r.y)).rgb)
-                     + luma(sampleCard(uv + r).rgb) + luma(sampleCard(uv - r).rgb)
-                     + luma(sampleCard(uv + float2(r.x, -r.y)).rgb) + luma(sampleCard(uv + float2(-r.x, r.y)).rgb);
+        float around = ring(uv, float2(0.012, 0.008));
+        // A closer ring as well: in long, squeezed names the far ring lands on neighbouring letters
+        // (holes in H crossbars, N, U), but the close one still sees background between strokes.
+        float aroundNear = ring(uv, float2(0.0055, 0.0045));
         // Which way round is the text? Compare the lettering rows with the bar's plain margins just
         // above and below them: whichever way (darker or lighter) strays further from the margins is
         // the letters' side. (Sampling only the centre line was a coin flip: it hits letters about
@@ -137,6 +144,10 @@ float4 shade(float2 uv) {
         float bg = 0.0;
         float darkSide = 0.0;
         float lightSide = 0.0;
+        float darkSum = 0.0;
+        float darkN = 0.0;
+        float lightSum = 0.0;
+        float lightN = 0.0;
         for (int i = 0; i < 16; i++) {
             float x = 0.08 + float(i) * 0.049;     // stays left of the attribute icon
             bg += luma(sampleCard(float2(x, 0.052)).rgb) + luma(sampleCard(float2(x, 0.1015)).rgb);
@@ -148,13 +159,25 @@ float4 shade(float2 uv) {
                 float v = luma(sampleCard(float2(x, 0.068 + float(j) * 0.01)).rgb);
                 darkSide += max(bg - v - 0.08, 0.0);
                 lightSide += max(v - bg - 0.08, 0.0);
+                float isDark = step(0.08, bg - v);
+                float isLight = step(0.08, v - bg);
+                darkSum += (bg - v) * isDark; darkN += isDark;
+                lightSum += (v - bg) * isLight; lightN += isLight;
             }
         }
         float polarity = darkSide > lightSide ? 1.0 : -1.0;   // 1 = dark letters
         // A letter pixel is on the letters' side of its surroundings (so the background next to a
         // letter, which is on the other side, isn't picked up).
-        float diff = (around * 0.125 - luma(base)) * polarity;
-        letters = nameBar * smoothstep(0.05, 0.14, diff);
+        float diff = (around - luma(base)) * polarity;
+        float diffNear = (aroundNear - luma(base)) * polarity;
+        // How far the letters sit from the bar (typical letter contrast), and how letter-like this
+        // pixel's own brightness is: keeps the close ring from picking up the bar's cloudy texture.
+        float level = polarity > 0.0 ? darkSum / max(darkN, 1.0) : lightSum / max(lightN, 1.0);
+        level = max(level, 0.12);
+        float gate = smoothstep(0.3, 0.55, (bg - luma(base)) * polarity / level);
+        float far = smoothstep(0.05, 0.14, diff);
+        float near = smoothstep(0.05, 0.14, diffNear) * smoothstep(-0.03, 0.02, diff);
+        letters = nameBar * gate * max(far, near);
     }
     float inner = boxMask(uv, float4(0.045, 0.032, 0.955, 0.968), 0.004);
     float border = 1.0 - inner;

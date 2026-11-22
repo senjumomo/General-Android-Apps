@@ -130,7 +130,9 @@ not found), TCGplayer as fallback. **Never commit Konami card art or TCGplayer/Y
   0.067/0.178–0.933/0.629); name bar x 0.068–0.835, **lettering spans y 0.057–0.099**, plain margins
   0.045–0.055 and 0.099–0.105. Name foil detects letters as strokes on the text's side of their
   surroundings; text polarity (dark or light letters) = which way the lettering rows stray from the
-  plain margins above/below them (y 0.052, 0.1015). Sampling only the centre line was a coin flip. Don't sample a "background colour" (hits
+  plain margins above/below them (y 0.052, 0.1015). Sampling only the centre line was a coin flip.
+  Two contrast rings (far 0.012/0.008 for thick strokes, near 0.0055/0.0045 for squeezed long names,
+  whose letters sit closer than the far ring) gated by brightness relative to bar vs. letter level. Don't sample a "background colour" (hits
   the bevel → whole bar turns metallic) and don't trim the mask inside 0.099 (cuts letter bottoms).
 - GLSL ES pitfalls: `pow(x, y)` with negative `x` is undefined (square instead); identifiers ending `_`
   are fine but `half` is reserved; loops need constant bounds.
