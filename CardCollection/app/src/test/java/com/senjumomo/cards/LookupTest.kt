@@ -113,4 +113,26 @@ class LookupTest {
         assertEquals(2, linked.quantity)
         assertEquals(1000L, linked.paidPerUnitCents)
     }
+
+    @Test
+    fun prefersHighResMatchedImages() {
+        val c = Samples.cards[0].copy(tcgplayerId = "451061")
+        assertEquals("https://tcgplayer-cdn.tcgplayer.com/product/451061_200w.jpg", com.senjumomo.cards.data.CardImages.small(c))
+        val matched = c.copy(imageUrl = "https://images.ygoprodeck.com/images/cards_small/8949584.jpg")
+        assertEquals(matched.imageUrl, com.senjumomo.cards.data.CardImages.small(matched))
+        assertEquals("https://images.ygoprodeck.com/images/cards/8949584.jpg", com.senjumomo.cards.data.CardImages.large(matched))
+        // "" = looked, nothing found -> TCGplayer
+        assertEquals("https://tcgplayer-cdn.tcgplayer.com/product/451061_in_1000x1000.jpg",
+            com.senjumomo.cards.data.CardImages.large(c.copy(imageUrl = "")))
+    }
+
+    @Test
+    fun reimportKeepsMatchedImages() {
+        val existing = listOf(Samples.cards[0].copy(imageUrl = "x"))
+        val imported = listOf(Samples.cards[0].copy(quantity = 5), Samples.cards[1])
+        val merged = com.senjumomo.cards.data.CollectionJson.keepLocal(imported, existing)
+        assertEquals("x", merged[0].imageUrl)
+        assertEquals(5, merged[0].quantity)
+        assertNull(merged[1].imageUrl)
+    }
 }

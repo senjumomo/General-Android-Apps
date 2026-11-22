@@ -23,6 +23,10 @@ class LiveTest {
         println("Scan MAMA-EN081 -> $scan")
         assertTrue(scan.any { it.name == "A Hero Lives" && it.tcgplayerId == "451061" })
 
+        val alt = com.senjumomo.cards.net.Ygoprodeck.setPrinting("MACR-EN036")
+        println("MACR-EN036 artwork -> $alt")
+        assertTrue(alt?.artworkId == 14558128L) // Ash Blossom alternate artwork
+
         val found = CardLookup.search("ash blos")
         println("Search 'ash blos' -> ${found.size} printings, first: ${found.firstOrNull()}")
         assertTrue(found.isNotEmpty() && found.first().name.startsWith("Ash Blossom"))

@@ -52,6 +52,12 @@ object CollectionJson {
         return cards
     }
 
+    /** Keeps what the app worked out locally (matched image) when re-importing the same cards. */
+    fun keepLocal(imported: List<Card>, existing: List<Card>): List<Card> {
+        val byId = existing.associateBy { it.id }
+        return imported.map { c -> byId[c.id]?.let { c.copy(imageUrl = it.imageUrl ?: c.imageUrl) } ?: c }
+    }
+
     fun write(cards: List<Card>): String {
         val array = JSONArray()
         cards.sortedBy { it.dateAdded }.forEach { c ->

@@ -6,14 +6,17 @@ import com.senjumomo.cards.R
 import com.senjumomo.cards.net.Tcgplayer
 import com.senjumomo.cards.net.Ygoprodeck
 
-/** Picks the best image for a card: the exact TCGplayer printing first, then YGOPRODeck. */
+/**
+ * Picks the best image for a card: YGOPRODeck's high-res scan of that printing's artwork (matched by
+ * set code), falling back to TCGplayer's photo until it's been matched or if it can't be.
+ */
 object CardImages {
     fun small(card: Card): String? =
-        card.tcgplayerId?.let(Tcgplayer::smallImage) ?: card.imageUrl?.takeIf { it.isNotBlank() }
+        card.imageUrl?.takeIf { it.isNotBlank() } ?: card.tcgplayerId?.let(Tcgplayer::smallImage)
 
     fun large(card: Card): String? =
-        card.tcgplayerId?.let(Tcgplayer::largeImage)
-            ?: card.imageUrl?.takeIf { it.isNotBlank() }?.let(Ygoprodeck::largeImage)
+        card.imageUrl?.takeIf { it.isNotBlank() }?.let(Ygoprodeck::largeImage)
+            ?: card.tcgplayerId?.let(Tcgplayer::largeImage)
 
     fun load(view: ImageView, url: String?) {
         // Show the placeholder straight away (recycled rows would otherwise flash the old image).

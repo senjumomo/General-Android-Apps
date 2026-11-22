@@ -59,7 +59,8 @@ class MainActivity : AppCompatActivity() {
     private var loaded = false
     private var filter = Filter()
     private var tab = R.id.tab_collection
-    private var imagesResolved = false
+    private val imageResolver by lazy { com.senjumomo.cards.data.ImageResolver(dao) }
+    private var resolvingImages = false
 
     private val importLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let(::importFrom)
@@ -341,11 +342,13 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /** Look up images for hand-added cards once per launch. */
+    /** Match cards to high-res images in the background (new cards too, as they're added). */
     private fun resolveImagesOnce() {
-        if (imagesResolved) return
-        imagesResolved = true
-        lifecycleScope.launch { com.senjumomo.cards.data.ImageResolver(dao).resolveMissing(allCards) }
+        if (resolvingImages || imageResolver.pending(allCards).isEmpty()) return
+        resolvingImages = true
+        lifecycleScope.launch {
+            try { imageResolver.resolveMissing(allCards) } finally { resolvingImages = false }
+        }
     }
 
     private fun keyboardPadding(view: View) {
@@ -419,7 +422,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun runImport(imported: List<Card>, replace: Boolean) {
         lifecycleScope.launch {
-            if (replace) dao.replaceAll(imported) else dao.upsertAll(imported)
+            val withLocal = CollectionJson.keepLocal(imported, allCards)
+            if (replace) dao.replaceAll(withLocal) else dao.upsertAll(withLocal)
             val copies = imported.sumOf { it.quantity }
             snackbar("Imported ${imported.size} cards ($copies copies)").show()
         }

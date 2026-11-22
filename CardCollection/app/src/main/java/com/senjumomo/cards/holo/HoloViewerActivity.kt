@@ -73,18 +73,21 @@ class HoloViewerActivity : AppCompatActivity() {
     }
 
     /**
-     * Picks the sharpest image: the TCGplayer photo of the exact printing (its real foil texture
-     * shows), unless it's low-resolution, in which case YGOPRODeck's clean high-res scan.
+     * Uses YGOPRODeck's high-res scan (813 × 1185) of this printing's artwork, matched by set code.
+     * Falls back to TCGplayer's photo if there's no match.
      */
     private suspend fun load(card: Card) {
         val info = lifecycleScope.async { runCatching { Ygoprodeck.byName(card.name) }.getOrNull() }
         var bitmap: Bitmap? = null
-        var isPhoto = true
-        card.tcgplayerId?.let { bitmap = fetch(Tcgplayer.largeImage(it)) }
-        if (bitmap == null || bitmap!!.width < MIN_SHARP_WIDTH) {
-            val clean = info.await()?.let { fetch(Ygoprodeck.largeImage(it.imageSmall)) }
-                ?: card.imageUrl?.takeIf { it.isNotBlank() }?.let { fetch(Ygoprodeck.largeImage(it)) }
-            if (clean != null) { bitmap = clean; isPhoto = false }
+        var isPhoto = false
+        val small = card.imageUrl?.takeIf { it.isNotBlank() }
+            ?: card.code.takeIf { it.isNotBlank() }?.let { code ->
+                runCatching { Ygoprodeck.setPrinting(code) }.getOrNull()?.let { Ygoprodeck.smallImage(it.artworkId) }
+            }
+            ?: info.await()?.imageSmall
+        small?.let { bitmap = fetch(Ygoprodeck.largeImage(it)) }
+        if (bitmap == null) {
+            card.tcgplayerId?.let { bitmap = fetch(Tcgplayer.largeImage(it)); isPhoto = true }
         }
         val pendulum = info.await()?.type?.contains("Pendulum", ignoreCase = true) == true
 
@@ -126,7 +129,5 @@ class HoloViewerActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_ID = "id"
-        /** Photos narrower than this look soft full-screen; use the clean scan instead. */
-        private const val MIN_SHARP_WIDTH = 450
     }
 }

@@ -9,14 +9,13 @@ Download `apk/CardBinder.apk` to your phone and open it (allow "install unknown 
 - **Import** a collection export (JSON list with `product_name`, `set_name`, `discriminator`, `rarity`,
   `quantity`, `value_per_unit`, `paid_per_unit`, `tcgplayer_id`, ...). Choose **Merge** (adds new cards,
   updates matching ones by id) or **Replace**.
-- **Card images**: the exact printing from TCGplayer (by `tcgplayer_id`), falling back to YGOPRODeck by
-  name. Cached on the phone. Tap the image on a card to view it full screen.
+- **Card images**: YGOPRODeck's high-res scans (813 × 1185), matched by set code so alternate artworks
+  are right. Matched in the background once per card and cached; TCGplayer's photo is the fallback.
 - **Holo view**: tap a card's image for a full-screen 3D card that tilts with the phone (gyroscope) or
   your finger, with a foil effect per rarity: silver/gold foil names, holo and Secret Rare line patterns,
   prismatic glitter, Ultimate Rare emboss, Ghost, Starlight and Collector's whole-card foil, and more.
   Runs per pixel on the GPU with OpenGL ES 2.0, so it works on every Android phone
-  (shader: `res/raw/holo_core.agsl`). Uses the TCGplayer photo of the exact printing (whose real foil texture lights up) or
-  YGOPRODeck's clean high-res scan when the photo is low resolution. Preview tool: `tools/holo-preview`.
+  (shader: `res/raw/holo_core.agsl`). Uses the high-res YGOPRODeck scan of that printing's artwork. Preview tool: `tools/holo-preview`.
 - **List or grid view** (toggle in the toolbar).
 - **Price refresh** (menu): current TCGplayer market price × today's USD exchange rate (open.er-api.com).
 - **Wishlist** tab: cards you want, with the cost to complete it. Wishlist cards don't count towards the

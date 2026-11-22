@@ -73,15 +73,37 @@ class PriceRefresher(private val dao: CardDao) {
     }
 }
 
-/** Finds YGOPRODeck images for cards that have no TCGplayer id (e.g. added by hand). */
+/**
+ * Matches cards to YGOPRODeck's high-res images: by set code (gives the exact artwork of that
+ * printing), or by name when there's no code. Each card is looked up once and the result saved;
+ * "" means "looked, nothing found". Paced well under YGOPRODeck's 20 requests/second limit.
+ */
 class ImageResolver(private val dao: CardDao) {
+    private val tried = mutableSetOf<String>()
+    private val byCode = mutableMapOf<String, String>()
+
+    /** Cards this resolver would still look up. */
+    fun pending(cards: List<Card>) = cards.filter { it.imageUrl == null && it.id !in tried }
+
     suspend fun resolveMissing(cards: List<Card>) {
-        cards.filter { it.tcgplayerId == null && it.imageUrl == null && it.name.isNotBlank() }
-            .take(40)
-            .forEach { card ->
-                val info = runCatching { com.senjumomo.cards.net.Ygoprodeck.byName(card.name) }
-                // Network failure: try again next time. Not found: remember that ("").
-                if (info.isSuccess) dao.setImageUrl(card.id, info.getOrNull()?.imageSmall ?: "")
+        for (card in pending(cards)) {
+            tried += card.id
+            val code = card.code.trim().uppercase()
+            val url = runCatching {
+                when {
+                    code.isNotEmpty() -> byCode.getOrPut(code) {
+                        com.senjumomo.cards.net.Ygoprodeck.setPrinting(code)
+                            ?.let { com.senjumomo.cards.net.Ygoprodeck.smallImage(it.artworkId) }
+                            ?: com.senjumomo.cards.net.Ygoprodeck.byName(card.name)?.imageSmall
+                            ?: ""
+                    }
+                    card.name.isNotBlank() -> com.senjumomo.cards.net.Ygoprodeck.byName(card.name)?.imageSmall ?: ""
+                    else -> ""
+                }
             }
+            // On a network error leave it unmatched, so it's tried again next launch.
+            url.getOrNull()?.let { dao.setImageUrl(card.id, it) }
+            kotlinx.coroutines.delay(150)
+        }
     }
 }
