@@ -11,8 +11,22 @@ object Tcgplayer {
     fun largeImage(productId: String) = "https://tcgplayer-cdn.tcgplayer.com/product/${productId}_in_1000x1000.jpg"
     fun productPage(productId: String) = "https://www.tcgplayer.com/product/$productId"
 
-    /** Market price in USD, or null if TCGplayer has none. */
-    suspend fun marketPriceUsd(productId: String): Double? =
+    /**
+     * Market price in USD of a card's own edition (1st Edition / Unlimited / Limited, from its
+     * [rarity]) in Near Mint, or null if TCGplayer has none.
+     *
+     * The product-level price ([pricePoints]) blends editions: for older cards printed in both 1st
+     * Edition and Unlimited it's the Unlimited price (Archlord Kristya SOVR-EN096: $99.99 vs $370 for
+     * 1st Edition). TCGplayer's product page shows per-edition prices from its SKUs, so use those.
+     */
+    suspend fun marketPriceUsd(productId: String, rarity: String): Double? {
+        val sku = runCatching { pickSku(skus(productId), rarity) }.getOrNull()
+        val price = sku?.let { runCatching { skuMarketPrices(listOf(it.id))[it.id] }.getOrNull() }
+        return price ?: pricePoints(productId)
+    }
+
+    /** The product's blended market price (fallback when there's no SKU price). */
+    suspend fun pricePoints(productId: String): Double? =
         parsePricePoints(Http.get("https://mpapi.tcgplayer.com/v2/product/${Http.enc(productId)}/pricepoints"))
 
     /** Prefers the market price of the normal printing, then foil, then the listed median. */
@@ -24,6 +38,56 @@ object Tcgplayer {
         val ordered = list.sortedBy { if (it.optString("printingType") == "Normal") 0 else 1 }
         return ordered.firstNotNullOfOrNull { price(it, "marketPrice") }
             ?: ordered.firstNotNullOfOrNull { price(it, "listedMedianPrice") }
+    }
+
+    /** One sellable version of a product: edition ("variant") + condition + language. */
+    data class Sku(val id: Long, val variant: String, val condition: String, val language: String)
+
+    suspend fun skus(productId: String): List<Sku> =
+        parseSkus(Http.get("https://mp-search-api.tcgplayer.com/v2/product/${Http.enc(productId)}/details"))
+
+    fun parseSkus(json: String): List<Sku> {
+        val arr = org.json.JSONObject(json).optJSONArray("skus") ?: return emptyList()
+        return (0 until arr.length()).map { arr.getJSONObject(it) }.map {
+            Sku(it.getDouble("sku").toLong(), it.optString("variant"), it.optString("condition"), it.optString("language"))
+        }
+    }
+
+    /** Market prices (USD) for many SKUs at once; SKUs without a price are left out. */
+    suspend fun skuMarketPrices(ids: List<Long>): Map<Long, Double> {
+        val out = mutableMapOf<Long, Double>()
+        ids.distinct().chunked(100).forEach { chunk ->
+            val body = """{"skuIds":[${chunk.joinToString(",")}]}"""
+            out += parseSkuPrices(Http.post("https://mpgateway.tcgplayer.com/v1/pricepoints/marketprice/skus/search", body))
+        }
+        return out
+    }
+
+    fun parseSkuPrices(json: String): Map<Long, Double> {
+        val arr = JSONArray(json)
+        return (0 until arr.length()).map { arr.getJSONObject(it) }.mapNotNull { o ->
+            val p = if (o.isNull("marketPrice")) null else o.optDouble("marketPrice").takeIf { !it.isNaN() && it > 0 }
+            p?.let { o.getDouble("skuId").toLong() to it }
+        }.toMap()
+    }
+
+    /** Which edition a rarity label means, in TCGplayer's words. */
+    fun edition(rarity: String): String = when {
+        rarity.contains("1st Edition", true) -> "1st Edition"
+        rarity.contains("Limited", true) -> "Limited"
+        else -> "Unlimited"
+    }
+
+    /**
+     * The Near Mint English SKU of the card's edition. If the product only comes in one edition
+     * (most modern cards: 1st Edition only), that one, whatever the label says.
+     */
+    fun pickSku(skus: List<Sku>, rarity: String): Sku? {
+        val nm = skus.filter { it.condition.equals("Near Mint", true) && it.language.equals("English", true) }
+        val wanted = edition(rarity)
+        return nm.firstOrNull { it.variant.equals(wanted, true) }
+            ?: nm.firstOrNull { wanted == "Limited" && it.variant.contains("Limited", true) }
+            ?: nm.singleOrNull()
     }
 }
 

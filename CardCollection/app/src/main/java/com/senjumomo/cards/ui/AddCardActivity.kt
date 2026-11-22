@@ -143,7 +143,9 @@ class AddCardActivity : AppCompatActivity() {
             .setNegativeButton("Cancel", null)
             .setPositiveButton("Use it") { _, _ ->
                 lifecycleScope.launch {
-                    dao.upsert(CardLookup.link(card, p, usdRate))
+                    val linked = CardLookup.link(card, p, usdRate)
+                    dao.upsert(linked)
+                    com.senjumomo.cards.data.PriceRefresher.repriceSoon(dao, linked)
                     finish()
                 }
             }
@@ -204,6 +206,7 @@ class AddCardActivity : AppCompatActivity() {
                     quantity = qty, condition = condition.text.toString(), paidPerUnitCents = paidCents,
                 )
                 dao.upsert(card)
+                com.senjumomo.cards.data.PriceRefresher.repriceSoon(dao, card)
                 cards = dao.all()
                 adapter.owned = cards
                 sheet.dismiss()

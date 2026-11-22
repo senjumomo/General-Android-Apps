@@ -4,6 +4,7 @@ import com.senjumomo.cards.net.Exchange
 import com.senjumomo.cards.net.Tcgplayer
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlin.math.roundToLong
@@ -24,7 +25,7 @@ class PriceRefresher(private val dao: CardDao) {
     /** Refresh one card. Returns the updated card, or null if TCGplayer has no price for it. */
     suspend fun refreshOne(card: Card): Card? {
         val id = card.tcgplayerId ?: return null
-        val usd = Tcgplayer.marketPriceUsd(id) ?: return null
+        val usd = Tcgplayer.marketPriceUsd(id, card.rarity) ?: return null
         val updated = card.copy(
             valuePerUnitCents = (usd * Exchange.usdTo(card.currency) * 100).roundToLong(),
             priceUpdatedAt = Dates.now(),
@@ -33,18 +34,47 @@ class PriceRefresher(private val dao: CardDao) {
         return updated
     }
 
+    companion object {
+        private val background = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO + kotlinx.coroutines.SupervisorJob())
+
+        /**
+         * Re-price a just-saved card with its own edition's price. Search results only carry the
+         * blended product price, which is wrong for older cards printed in more than one edition.
+         * Keeps running if the screen closes.
+         */
+        fun repriceSoon(dao: CardDao, card: Card) {
+            if (card.tcgplayerId == null) return
+            background.launch { runCatching { PriceRefresher(dao).refreshOne(card) } }
+        }
+    }
+
     suspend fun refresh(cards: List<Card>, onProgress: (done: Int, total: Int) -> Unit): Result = coroutineScope {
         val priceable = cards.filter { it.tcgplayerId != null }
         val rates = cards.map { it.currency.uppercase() }.distinct().associateWith { Exchange.usdTo(it) }
         val gate = Semaphore(4) // be gentle with TCGplayer
         var done = 0
         val now = Dates.now()
-        val results = priceable.map { card ->
+        // 1. Which SKU (edition + Near Mint) each card is, one product lookup per distinct product.
+        val products = priceable.map { it.tcgplayerId!! }.distinct()
+        val skusByProduct = products.map { id ->
             async {
                 gate.withPermit {
-                    val usd = runCatching { Tcgplayer.marketPriceUsd(card.tcgplayerId!!) }
-                    synchronized(this@PriceRefresher) { onProgress(++done, priceable.size) }
-                    card to usd
+                    val skus = runCatching { Tcgplayer.skus(id) }.getOrNull()
+                    synchronized(this@PriceRefresher) { onProgress(++done, products.size + 1) }
+                    id to skus
+                }
+            }
+        }.map { it.await() }.toMap()
+        val skuOf = priceable.associate { it.id to skusByProduct[it.tcgplayerId]?.let { s -> Tcgplayer.pickSku(s, it.rarity) } }
+        // 2. All their market prices in a few batched requests.
+        val skuPrices = runCatching { Tcgplayer.skuMarketPrices(skuOf.values.mapNotNull { it?.id }) }.getOrDefault(emptyMap())
+        onProgress(products.size + 1, products.size + 1)
+        // 3. Cards without a SKU price fall back to the product's blended price.
+        val results = priceable.map { card ->
+            async {
+                val sku = skuOf[card.id]?.let { skuPrices[it.id] }
+                card to if (sku != null) kotlin.Result.success(sku) else gate.withPermit {
+                    runCatching { Tcgplayer.pricePoints(card.tcgplayerId!!) }
                 }
             }
         }.map { it.await() }

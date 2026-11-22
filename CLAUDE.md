@@ -100,6 +100,15 @@ dynamic colour, dark mode. Data in SharedPreferences (`utilities`), history stor
   site uses (unofficial; may break): market price `mpapi.tcgplayer.com/v2/product/{id}/pricepoints`,
   search (POST) `mp-search-api.tcgplayer.com/v1/search/request` (by name or set code), images
   `tcgplayer-cdn.tcgplayer.com/product/{id}_200w.jpg` / `_in_1000x1000.jpg`.
+  **Prices are per edition**: `pricepoints` blends editions (for old cards printed in 1st Edition and
+  Unlimited it's the Unlimited price: Archlord Kristya SOVR-EN096 $99.99 vs $370 1st Ed). The app uses
+  SKUs instead: `mp-search-api.tcgplayer.com/v2/product/{id}/details` lists skus (variant = edition,
+  condition, language), `mpgateway.tcgplayer.com/v1/pricepoints/marketprice/skus/search` (POST
+  `{"skuIds":[…]}`, batched) gives each SKU's market price. Edition from the rarity label, Near Mint,
+  English (`Tcgplayer.pickSku`); single-edition products use their only edition; no SKU price →
+  `pricepoints`. Matches Shiny and TCGplayer's "Near Mint Comparison Prices". Adds/scans re-price the
+  saved card right after (`PriceRefresher.repriceSoon`), since search results carry the blended price.
+  `infinite-api` (price history) and `latestsales` return 403 to the app: don't try to get around it.
   The user's export values = TCGplayer market price (USD) × USD→ZAR, verified to within a cent.
 - **open.er-api.com**: USD exchange rates (cached 1 h).
 - **Yugipedia**: official card back `img.yugipedia.com/e/e5/Back-EN.png` (927×1353), downloaded at

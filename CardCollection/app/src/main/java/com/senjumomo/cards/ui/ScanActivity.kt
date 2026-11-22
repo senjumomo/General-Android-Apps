@@ -225,6 +225,7 @@ class ScanActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val card = CardLookup.toCard(p, firstEdition.isChecked, wishlist, cards, usdRate, currency)
             dao.upsert(card)
+            com.senjumomo.cards.data.PriceRefresher.repriceSoon(dao, card)
             cards = dao.all()
             val where = if (wishlist) "wishlist" else "collection"
             val msg = if (card.quantity > 1) "${card.name}: now ×${card.quantity}" else "Added ${card.name} to your $where"

@@ -135,4 +135,30 @@ class LookupTest {
         assertEquals(5, merged[0].quantity)
         assertNull(merged[1].imageUrl)
     }
+
+    @Test
+    fun editionSkus() {
+        // Trimmed from TCGplayer's product details for Archlord Kristya (SOVR-EN096).
+        val skus = Tcgplayer.parseSkus("""{"productId":33733,"skus":[
+            {"sku":379273,"condition":"Near Mint","variant":"Unlimited","language":"English"},
+            {"sku":573519,"condition":"Lightly Played","variant":"Unlimited","language":"English"},
+            {"sku":379787,"condition":"Near Mint","variant":"1st Edition","language":"English"},
+            {"sku":540663,"condition":"Lightly Played","variant":"1st Edition","language":"English"}]}""")
+        assertEquals(4, skus.size)
+        assertEquals(379787L, Tcgplayer.pickSku(skus, "1st Edition Secret Rare")!!.id)
+        assertEquals(379273L, Tcgplayer.pickSku(skus, "Secret Rare")!!.id)
+        // Modern cards come in one edition only: use it even if the label doesn't say "1st Edition".
+        val modern = skus.filter { it.variant == "1st Edition" }
+        assertEquals(379787L, Tcgplayer.pickSku(modern, "Ultra Rare")!!.id)
+        assertNull(Tcgplayer.pickSku(emptyList(), "Ultra Rare"))
+
+        val prices = Tcgplayer.parseSkuPrices("""[
+            {"skuId":379273,"marketPrice":99.99,"lowestPrice":99.99},
+            {"skuId":379787,"marketPrice":370.00,"lowestPrice":350},
+            {"skuId":540663,"marketPrice":null}]""")
+        assertEquals(370.0, prices[379787L]!!, 1e-9)
+        assertEquals(99.99, prices[379273L]!!, 1e-9)
+        assertNull(prices[540663L])
+    }
 }
+

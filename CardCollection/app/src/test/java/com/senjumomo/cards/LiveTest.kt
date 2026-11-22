@@ -47,10 +47,16 @@ class LiveTest {
         println("Official card back: HTTP $backOk")
         assertTrue(backOk == 200)
 
+        // Editions are priced separately: Archlord Kristya SOVR-EN096 (1st Edition ≈ 3.7× Unlimited).
+        val first = Tcgplayer.marketPriceUsd("33733", "1st Edition Secret Rare")
+        val unlimited = Tcgplayer.marketPriceUsd("33733", "Secret Rare")
+        println("Archlord Kristya SOVR-EN096: 1st Edition $$first, Unlimited $$unlimited")
+        assertTrue(first != null && unlimited != null && first > unlimited * 1.5)
+
         val export = System.getenv("CARD_EXPORT") ?: return@runBlocking
         val cards = CollectionJson.parse(File(export).readText()).take(8)
         cards.forEach { c ->
-            val usd = Tcgplayer.marketPriceUsd(c.tcgplayerId!!)
+            val usd = Tcgplayer.marketPriceUsd(c.tcgplayerId!!, c.rarity)
             val zar = usd?.let { it * rate }
             println("%-40s export R%.2f  now R%s".format(c.name.take(40), c.valuePerUnitCents / 100.0, zar?.let { "%.2f".format(it) } ?: "—"))
         }
