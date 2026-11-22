@@ -45,65 +45,37 @@
             android:layout_marginEnd="-4dp"
             android:columnCount="2">
 
-                <LinearLayout
+                <include
                     android:id="@+id/statAverage"
+                    layout="@layout/view_stat_tile"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
-                    android:layout_margin="4dp"
-                    android:background="@drawable/message_bg"
-                    android:orientation="vertical"
-                    android:padding="12dp">
+                    android:layout_margin="4dp" />
 
-                    <TextView android:id="@+id/label" style="@style/StatLabel" />
-                    <TextView android:id="@+id/value" style="@style/StatValue" />
-                    <TextView android:id="@+id/caption" style="@style/StatCaption" />
-                </LinearLayout>
-
-                <LinearLayout
+                <include
                     android:id="@+id/statLatest"
+                    layout="@layout/view_stat_tile"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
-                    android:layout_margin="4dp"
-                    android:background="@drawable/message_bg"
-                    android:orientation="vertical"
-                    android:padding="12dp">
+                    android:layout_margin="4dp" />
 
-                    <TextView android:id="@+id/label" style="@style/StatLabel" />
-                    <TextView android:id="@+id/value" style="@style/StatValue" />
-                    <TextView android:id="@+id/caption" style="@style/StatCaption" />
-                </LinearLayout>
-
-                <LinearLayout
+                <include
                     android:id="@+id/statLowest"
+                    layout="@layout/view_stat_tile"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
-                    android:layout_margin="4dp"
-                    android:background="@drawable/message_bg"
-                    android:orientation="vertical"
-                    android:padding="12dp">
+                    android:layout_margin="4dp" />
 
-                    <TextView android:id="@+id/label" style="@style/StatLabel" />
-                    <TextView android:id="@+id/value" style="@style/StatValue" />
-                    <TextView android:id="@+id/caption" style="@style/StatCaption" />
-                </LinearLayout>
-
-                <LinearLayout
+                <include
                     android:id="@+id/statHighest"
+                    layout="@layout/view_stat_tile"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_columnWeight="1"
-                    android:layout_margin="4dp"
-                    android:background="@drawable/message_bg"
-                    android:orientation="vertical"
-                    android:padding="12dp">
-
-                    <TextView android:id="@+id/label" style="@style/StatLabel" />
-                    <TextView android:id="@+id/value" style="@style/StatValue" />
-                    <TextView android:id="@+id/caption" style="@style/StatCaption" />
-                </LinearLayout>
+                    android:layout_margin="4dp" />
 
         </GridLayout>
     </LinearLayout>
