@@ -41,13 +41,13 @@ object TcgSearch {
     private const val URL = "https://mp-search-api.tcgplayer.com/v1/search/request?isList=false&q="
 
     /** Yu-Gi-Oh! products matching [query] (a set code or a card name). Unofficial endpoint. */
-    suspend fun search(query: String, size: Int = 24): List<TcgProduct> {
+    suspend fun search(query: String, size: Int = 24, fuzzy: Boolean = false): List<TcgProduct> {
         val body = """
             {"algorithm":"sales_synonym_v2","from":0,"size":$size,
              "filters":{"term":{"productLineName":["yugioh"]},"range":{},"match":{}},
              "listingSearch":{"context":{"cart":{}},"filters":{"term":{},"range":{},"exclude":{"channelExclusion":0}}},
              "context":{"cart":{},"shippingCountry":"US","userProfile":{}},
-             "settings":{"useFuzzySearch":false,"didYouMean":{}},"sort":{}}
+             "settings":{"useFuzzySearch":$fuzzy,"didYouMean":{}},"sort":{}}
         """.trimIndent()
         return parseSearch(Http.post(URL + Http.enc(query), body))
     }
@@ -74,10 +74,16 @@ object TcgSearch {
 
 /** Exchange rates (open.er-api.com, free, updated daily). */
 object Exchange {
-    /** How many [currency] one US dollar buys. */
+    private var rates: org.json.JSONObject? = null
+    private var fetchedAt = 0L
+
+    /** How many [currency] one US dollar buys. Cached for an hour. */
     suspend fun usdTo(currency: String): Double {
         if (currency.equals("USD", true)) return 1.0
-        val json = org.json.JSONObject(Http.get("https://open.er-api.com/v6/latest/USD"))
-        return json.getJSONObject("rates").getDouble(currency.uppercase())
+        val now = System.currentTimeMillis()
+        val cached = rates?.takeIf { now - fetchedAt < 60 * 60 * 1000 }
+        val r = cached ?: org.json.JSONObject(Http.get("https://open.er-api.com/v6/latest/USD"))
+            .getJSONObject("rates").also { rates = it; fetchedAt = now }
+        return r.getDouble(currency.uppercase())
     }
 }

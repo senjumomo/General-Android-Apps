@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fitsSystemWindows="true"
+        app:liftOnScroll="true"
+        app:liftOnScrollTargetViewId="@id/scroll">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:menu="@menu/detail"
+            app:navigationContentDescription="Back"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            app:titleTextAppearance="?attr/textAppearanceHeadlineSmall" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="16dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="24dp">
+
+            <com.senjumomo.cards.ui.CardImageView
+                android:id="@+id/image"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:contentDescription="Card image. Tap to enlarge"
+                android:foreground="?attr/selectableItemBackground"
+                app:shapeAppearanceOverlay="@style/CardImageLarge" />
+
+            <TextView
+                android:id="@+id/name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center_horizontal"
+                android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                android:textColor="?attr/colorOnSurface" />
+
+            <TextView
+                android:id="@+id/meta"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center_horizontal"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:id="@+id/rarity"
+                    style="@style/Pill"
+                    android:backgroundTint="?attr/colorSecondaryContainer"
+                    android:textColor="?attr/colorOnSecondaryContainer" />
+
+                <TextView
+                    android:id="@+id/condition"
+                    style="@style/Pill"
+                    android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <TextView
+                    android:id="@+id/wishlistPill"
+                    style="@style/Pill"
+                    android:backgroundTint="?attr/colorTertiaryContainer"
+                    android:textColor="?attr/colorOnTertiaryContainer" />
+
+            </com.google.android.material.chip.ChipGroup>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/gotIt"
+                style="@style/Widget.Material3.Button.Icon"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginBottom="12dp"
+                android:text="Got it! Move to my collection"
+                app:icon="@drawable/ic_check" />
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/SectionCard">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        style="@style/IconBadge"
+                        android:backgroundTint="?attr/colorPrimaryContainer"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_price"
+                        app:tint="?attr/colorOnPrimaryContainer" />
+
+                    <TextView
+                        style="@style/SectionTitle"
+                        android:layout_marginStart="12dp"
+                        android:text="Value" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/valueTotal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                    android:textColor="?attr/colorOnSurface"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/valueEach"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <TextView
+                    android:id="@+id/valueSource"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/priceAction"
+                    style="@style/Widget.Material3.Button.TonalButton.Icon"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    app:icon="@drawable/ic_refresh" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/paidCard"
+            style="@style/SectionCard">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        style="@style/IconBadge"
+                        android:backgroundTint="?attr/colorSecondaryContainer"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_copies"
+                        app:tint="?attr/colorOnSecondaryContainer" />
+
+                    <TextView
+                        style="@style/SectionTitle"
+                        android:layout_marginStart="12dp"
+                        android:text="What you paid" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/DetailRow">
+                    <TextView style="@style/DetailLabel" android:text="Paid per card" />
+                    <TextView android:id="@+id/paidEach" style="@style/DetailValue" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/DetailRow">
+                    <TextView style="@style/DetailLabel" android:text="Paid in total" />
+                    <TextView android:id="@+id/paidTotal" style="@style/DetailValue" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/DetailRow">
+                    <TextView style="@style/DetailLabel" android:text="Gain" />
+                    <TextView android:id="@+id/gain" style="@style/DetailValue" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            style="@style/SectionCard">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        style="@style/IconBadge"
+                        android:backgroundTint="?attr/colorSurfaceContainerHighest"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_info"
+                        app:tint="?attr/colorOnSurfaceVariant" />
+
+                    <TextView
+                        style="@style/SectionTitle"
+                        android:layout_marginStart="12dp"
+                        android:text="Details" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/DetailRow">
+                    <TextView style="@style/DetailLabel" android:text="Quantity" />
+                    <TextView android:id="@+id/quantity" style="@style/DetailValue" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/DetailRow">
+                    <TextView style="@style/DetailLabel" android:text="Condition" />
+                    <TextView android:id="@+id/conditionValue" style="@style/DetailValue" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/DetailRow">
+                    <TextView style="@style/DetailLabel" android:text="Set" />
+                    <TextView android:id="@+id/setValue" style="@style/DetailValue" />
+                </LinearLayout>
+
+                <LinearLayout style="@style/DetailRow">
+                    <TextView style="@style/DetailLabel" android:text="Added" />
+                    <TextView android:id="@+id/added" style="@style/DetailValue" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/tcgplayer"
+                    style="@style/Widget.Material3.Button.OutlinedButton.Icon"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="View on TCGplayer"
+                    app:icon="@drawable/ic_open" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -19,8 +19,15 @@ Download `apk/CardBinder.apk` to your phone and open it (allow "install unknown 
 - **Scan** (camera icon): reads the set code printed on the card (e.g. `MAMA-EN081`) with on-device text
   recognition, looks up the printing on TCGplayer (YGOPRODeck as fallback), then add it to the collection or
   wishlist. Adding a printing you already own bumps its quantity. You can also type the code.
+- **Card screen** is read-only: image, value (with Refresh price), what you paid and gain, details.
+  Editing only happens after tapping Edit; delete (with undo) lives there too. Wishlist cards get
+  "Got it! Move to my collection".
+- **Add card**: search TCGplayer's catalogue as you type (name or set code), pick the exact printing,
+  then choose edition, quantity, condition and what you paid. Adding a printing you own bumps its quantity.
+  Entering a card by hand is still possible as a fallback.
+- **Value is never typed in**: it always comes from TCGplayer. Cards without a TCGplayer link get
+  "Find on TCGplayer" to link them to a printing.
 - **Search**, filter by set/rarity, sort by name/value/recent/set/quantity.
-- **Add / edit** cards by hand: quantity stepper, condition, value and paid price, TCGplayer link. Delete with undo.
 - **Export** back to the same JSON format as a backup.
 - Material 3, Material You colours, dark mode. Data stored on the phone (Room database).
 

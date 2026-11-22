@@ -72,7 +72,7 @@ class ScreenshotTest {
         paparazzi.unsafeUpdateConfig(device.copy(screenHeight = 3000))
         val root = inflate(R.layout.activity_edit)
         root.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar).apply {
-            title = "Edit card"; inflateMenu(R.menu.edit)
+            title = "Edit card"
         }
         CardForm(root).bind(Samples.cards[3], emptyList(), emptyList())
         paparazzi.snapshot(root)
@@ -92,6 +92,50 @@ class ScreenshotTest {
         root.findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav).selectedItemId = R.id.tab_stats
         com.senjumomo.cards.ui.StatsScreen(root, {}, {}, {}).show(Samples.cards)
         paparazzi.snapshot(root)
+    }
+
+    @Test fun detail() {
+        paparazzi.unsafeUpdateConfig(device.copy(screenHeight = 3400))
+        val root = inflate(R.layout.activity_detail)
+        root.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar).title = ""
+        com.senjumomo.cards.ui.CardDetailView(root).bind(Samples.cards[3].copy(priceUpdatedAt = "2026-11-22T10:00:00.000"))
+        paparazzi.snapshot(root)
+    }
+
+    @Test fun detailWishlistUnlinked() {
+        val root = inflate(R.layout.activity_detail)
+        com.senjumomo.cards.ui.CardDetailView(root).bind(Samples.cards[4].copy(wishlist = true, tcgplayerId = null))
+        paparazzi.snapshot(root)
+    }
+
+    @Test fun addSearch() {
+        val root = inflate(R.layout.activity_add)
+        root.findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.search).setText("ash blos")
+        root.findViewById<View>(R.id.message).visibility = View.GONE
+        root.findViewById<RecyclerView>(R.id.results).apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = com.senjumomo.cards.ui.PrintingAdapter {}.apply {
+                owned = Samples.cards
+                setPricing(17.53, "ZAR")
+                submit(listOf(
+                    com.senjumomo.cards.data.Printing("Ash Blossom & Joyous Spring", "Maze of Memories", "MAZE-EN058", "Secret Rare", 10.81, "1", null),
+                    com.senjumomo.cards.data.Printing("Ash Blossom & Joyous Spring", "Rarity Collection 5", "RA05-EN091", "Ultra Rare", 3.23, "2", null),
+                    com.senjumomo.cards.data.Printing("Ash Blossom & Joyous Spring", "Legendary Modern Decks 2026", "L26D-ENM02", "Common", 1.26, "3", null),
+                    com.senjumomo.cards.data.Printing("Ash Blossom & Joyous Spring", "Legendary Arc-V Decks", "LAVD-ENO08", "Common", 0.46, "4", null),
+                ))
+            }
+        }
+        paparazzi.snapshot(root)
+    }
+
+    @Test fun addSheet() {
+        val v = inflate(R.layout.sheet_add)
+        v.findViewById<android.widget.TextView>(R.id.name).text = "Ash Blossom & Joyous Spring"
+        v.findViewById<android.widget.TextView>(R.id.meta).text = "RA05-EN091 · Rarity Collection 5\nUltra Rare"
+        v.findViewById<android.widget.TextView>(R.id.price).text = "R56.62 each · TCGplayer"
+        v.findViewById<com.google.android.material.textfield.MaterialAutoCompleteTextView>(R.id.condition).setText("Near Mint", false)
+        v.findViewById<View>(R.id.owned).visibility = View.GONE
+        paparazzi.snapshot(v)
     }
 
     @Test fun collectionDark() {

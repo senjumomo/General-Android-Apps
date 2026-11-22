@@ -26,6 +26,15 @@
             android:parentActivityName=".ui.MainActivity"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".ui.CardDetailActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+        <activity
+            android:name=".ui.AddCardActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity"
+            android:windowSoftInputMode="adjustResize|stateVisible" />
+        <activity
             android:name=".ui.ScanActivity"
             android:exported="false"
             android:parentActivityName=".ui.MainActivity"

@@ -91,4 +91,26 @@ class LookupTest {
         assertEquals("Other (2)", rest!!.key)
         assertEquals(Samples.cards.sumOf { it.valueTotalCents }, two.sumOf { it.valueCents } + rest.valueCents)
     }
+
+    @Test
+    fun ranksNameMatchesFirst() {
+        fun p(name: String) = Printing(name, "S", "X-EN001", "Common", null, null, null)
+        val ranked = CardLookup.rank("dark magi", listOf(
+            p("L Magi Mergy"), p("Toon Dark Magician"), p("Dark Magician"), p("Dark Magical Curtain"),
+        ))
+        assertEquals(listOf("Dark Magician", "Dark Magical Curtain", "Toon Dark Magician", "L Magi Mergy"), ranked.map { it.name })
+        assertEquals("Ash Blossom & Joyous Spring", CardLookup.cleanName("Ash Blossom & Joyous Spring (LAVD-ENO08)", "LAVD-ENO08"))
+    }
+
+    @Test
+    fun linkingKeepsYourDetails() {
+        val handAdded = Samples.cards[4].copy(tcgplayerId = null, valuePerUnitCents = 0, paidPerUnitCents = 1000, quantity = 2)
+        val printing = Printing("Called by the Grave", "Magnificent Mavens", "MAMA-EN099", "Common", 0.5, "999", null)
+        val linked = CardLookup.link(handAdded, printing, 18.0)
+        assertEquals("999", linked.tcgplayerId)
+        assertEquals(900L, linked.valuePerUnitCents)
+        assertEquals("1st Edition Common", linked.rarity) // keeps the edition it had
+        assertEquals(2, linked.quantity)
+        assertEquals(1000L, linked.paidPerUnitCents)
+    }
 }

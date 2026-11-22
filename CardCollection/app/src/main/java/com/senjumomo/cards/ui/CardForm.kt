@@ -71,7 +71,13 @@ class CardForm(root: View) {
         code.setText(card?.code.orEmpty())
         rarity.setText(card?.rarity.orEmpty(), false)
         condition.setText(card?.condition ?: "Near Mint", false)
-        value.setText(card?.valuePerUnitCents?.let(CollectionJson::plain).orEmpty())
+        // Value always comes from TCGplayer; it can't be typed in.
+        value.setText(card?.valuePerUnitCents?.takeIf { card.tcgplayerId != null || it > 0 }?.let(CollectionJson::plain).orEmpty())
+        value.isEnabled = false
+        valueLayout.helperText = when {
+            card?.tcgplayerId != null -> "TCGplayer market price. Refresh it from the card screen."
+            else -> "Comes from TCGplayer. Use \"Find on TCGplayer\" on the card screen to link it."
+        }
         paid.setText(card?.paidPerUnitCents?.let(CollectionJson::plain).orEmpty())
         quantity = card?.quantity ?: 1
         wishlist.isChecked = card?.wishlist ?: newOnWishlist
@@ -102,13 +108,11 @@ class CardForm(root: View) {
     /** The edited card, or null (with errors shown) if the form is invalid. */
     fun read(): Card? {
         val n = name.text?.toString()?.trim().orEmpty()
-        val valueText = value.text?.toString()?.trim().orEmpty()
         val paidText = paid.text?.toString()?.trim().orEmpty()
-        val v = if (valueText.isEmpty()) 0L else CollectionJson.cents(valueText)
+        val v = original?.valuePerUnitCents ?: 0L
         val p = if (paidText.isEmpty()) null else CollectionJson.cents(paidText)
         var ok = true
         if (n.isEmpty()) { nameLayout.error = "Enter the card name"; ok = false }
-        if (v == null || v < 0) { valueLayout.error = "Not a valid amount"; ok = false }
         if (paidText.isNotEmpty() && (p == null || p < 0)) { paidLayout.error = "Not a valid amount"; ok = false }
         if (!ok) return null
 
@@ -124,7 +128,7 @@ class CardForm(root: View) {
             rarity = rarity.text?.toString()?.trim().orEmpty(),
             condition = condition.text?.toString()?.trim()?.ifEmpty { null } ?: "Near Mint",
             quantity = quantity,
-            valuePerUnitCents = v!!,
+            valuePerUnitCents = v,
             paidPerUnitCents = p,
             wishlist = wishlist.isChecked,
         )

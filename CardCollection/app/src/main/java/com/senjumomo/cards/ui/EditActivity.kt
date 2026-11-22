@@ -8,7 +8,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.senjumomo.cards.R
 import com.senjumomo.cards.data.Card
 import com.senjumomo.cards.data.CardDatabase
@@ -28,7 +27,7 @@ class EditActivity : AppCompatActivity() {
         val id = intent.getStringExtra(EXTRA_ID)
 
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
-        toolbar.title = if (id == null) "Add card" else "Edit card"
+        toolbar.title = if (id == null) "Add card by hand" else "Edit card"
         toolbar.setNavigationOnClickListener { finish() }
         findViewById<android.view.View>(R.id.content).padForSystemBars()
 
@@ -49,10 +48,6 @@ class EditActivity : AppCompatActivity() {
                 form.bind(card, all.map { it.setName }.filter { it.isNotBlank() }.distinct().sorted(),
                     all.map { it.rarity }.filter { it.isNotBlank() }.distinct().sorted(),
                     newOnWishlist = intent.getBooleanExtra(EXTRA_WISHLIST, false))
-            }
-            if (card != null) {
-                toolbar.inflateMenu(R.menu.edit)
-                toolbar.setOnMenuItemClickListener { confirmDelete(); true }
             }
         }
 
@@ -81,30 +76,9 @@ class EditActivity : AppCompatActivity() {
         outState.putInt(STATE_QUANTITY, form.quantity)
     }
 
-    private fun confirmDelete() {
-        val c = card ?: return
-        MaterialAlertDialogBuilder(this)
-            .setTitle("Delete ${c.name}?")
-            .setMessage("This removes all ${c.quantity} of this printing from your collection.")
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Delete") { _, _ ->
-                lifecycleScope.launch {
-                    CardDatabase.get(this@EditActivity).cards().delete(c.id)
-                    lastDeleted = c
-                    setResult(RESULT_OK)
-                    finish()
-                }
-            }
-            .show()
-    }
-
     companion object {
         const val EXTRA_ID = "id"
         const val EXTRA_WISHLIST = "wishlist"
         private const val STATE_QUANTITY = "quantity"
-
-        /** Handed back to the list so it can offer Undo. */
-        private var lastDeleted: Card? = null
-        fun takeDeleted(): Card? = lastDeleted.also { lastDeleted = null }
     }
 }

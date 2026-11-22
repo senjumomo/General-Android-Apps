@@ -261,7 +261,7 @@
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/valueLayout"
                     style="@style/Field"
-                    android:hint="Value per card"
+                    android:hint="Market value per card"
                     app:prefixText="R">
 
                     <com.google.android.material.textfield.TextInputEditText

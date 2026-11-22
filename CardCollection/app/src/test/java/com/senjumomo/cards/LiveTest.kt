@@ -23,6 +23,10 @@ class LiveTest {
         println("Scan MAMA-EN081 -> $scan")
         assertTrue(scan.any { it.name == "A Hero Lives" && it.tcgplayerId == "451061" })
 
+        val found = CardLookup.search("ash blos")
+        println("Search 'ash blos' -> ${found.size} printings, first: ${found.firstOrNull()}")
+        assertTrue(found.isNotEmpty() && found.first().name.startsWith("Ash Blossom"))
+
         val export = System.getenv("CARD_EXPORT") ?: return@runBlocking
         val cards = CollectionJson.parse(File(export).readText()).take(8)
         cards.forEach { c ->

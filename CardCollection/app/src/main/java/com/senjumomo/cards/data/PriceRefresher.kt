@@ -21,6 +21,18 @@ class PriceRefresher(private val dao: CardDao) {
         val afterCents: Long,
     )
 
+    /** Refresh one card. Returns the updated card, or null if TCGplayer has no price for it. */
+    suspend fun refreshOne(card: Card): Card? {
+        val id = card.tcgplayerId ?: return null
+        val usd = Tcgplayer.marketPriceUsd(id) ?: return null
+        val updated = card.copy(
+            valuePerUnitCents = (usd * Exchange.usdTo(card.currency) * 100).roundToLong(),
+            priceUpdatedAt = Dates.now(),
+        )
+        dao.upsert(updated)
+        return updated
+    }
+
     suspend fun refresh(cards: List<Card>, onProgress: (done: Int, total: Int) -> Unit): Result = coroutineScope {
         val priceable = cards.filter { it.tcgplayerId != null }
         val rates = cards.map { it.currency.uppercase() }.distinct().associateWith { Exchange.usdTo(it) }

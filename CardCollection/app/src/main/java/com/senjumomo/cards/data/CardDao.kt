@@ -17,6 +17,9 @@ interface CardDao {
     @Query("SELECT * FROM cards WHERE id = :id")
     suspend fun get(id: String): Card?
 
+    @Query("SELECT * FROM cards WHERE id = :id")
+    fun observe(id: String): Flow<Card?>
+
     @Upsert
     suspend fun upsert(card: Card)
 

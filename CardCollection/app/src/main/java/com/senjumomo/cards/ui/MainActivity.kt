@@ -69,7 +69,7 @@ class MainActivity : AppCompatActivity() {
             uri?.let(::exportTo)
         }
     private val editLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        EditActivity.takeDeleted()?.let { deleted ->
+        CardDetailActivity.takeDeleted()?.let { deleted ->
             snackbar("Deleted ${deleted.name}")
                 .setAction("Undo") { lifecycleScope.launch { dao.upsert(deleted) } }
                 .show()
@@ -268,11 +268,11 @@ class MainActivity : AppCompatActivity() {
         val wishlist = tab == R.id.tab_wishlist
         MaterialAlertDialogBuilder(this)
             .setTitle(if (wishlist) "Add to wishlist" else "Add a card")
-            .setItems(arrayOf("Scan with camera", "Enter details by hand")) { _, which ->
-                if (which == 0) startActivity(Intent(this, ScanActivity::class.java))
-                else editLauncher.launch(
-                    Intent(this, EditActivity::class.java).putExtra(EditActivity.EXTRA_WISHLIST, wishlist)
+            .setItems(arrayOf("Search by name", "Scan with camera")) { _, which ->
+                if (which == 0) startActivity(
+                    Intent(this, AddCardActivity::class.java).putExtra(AddCardActivity.EXTRA_WISHLIST, wishlist)
                 )
+                else startActivity(Intent(this, ScanActivity::class.java))
             }
             .show()
     }
@@ -358,7 +358,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openCard(card: Card) {
-        editLauncher.launch(Intent(this, EditActivity::class.java).putExtra(EditActivity.EXTRA_ID, card.id))
+        editLauncher.launch(Intent(this, CardDetailActivity::class.java).putExtra(CardDetailActivity.EXTRA_ID, card.id))
     }
 
     private fun choose(title: String, options: List<String>, selected: Int, onPick: (Int) -> Unit) {
