@@ -156,8 +156,10 @@ float4 shade(float2 uv) {
         if (m > 10.5) sparkle += glitter(uv, 90.0, 0.9, 0.3) * art * 0.5;  // 25th sheen
         darken = art * 0.18;
     } else if (m < 5.5) {                           // Prismatic Secret: speckled prism
-        float3 prism = glitter(uv, 230.0, 0.55, 1.0) + glitter(uv + 0.37, 140.0, 0.7, 1.0) * 0.8;
-        effect += prism * art * 0.8 + holo(uv, float2(0.5, 0.9), 2.0, grain, 0.9) * art * 0.3;
+        // Dense rainbow speckle: lots of tiny facets, each its own colour, flashing as it tilts.
+        float3 prism = glitter(uv, 200.0, 0.35, 1.0) + glitter(uv + 0.37, 120.0, 0.5, 1.0) * 0.9;
+        effect += prism * art * 1.1 + holo(uv, float2(0.5, 0.9), 2.0, grain, 0.95) * art * 0.4;
+        sparkle += glitter(uv + 0.71, 90.0, 0.88, 1.0) * art * 0.5;
         color = mix(color, metal(uv, float3(0.85, 0.85, 0.9), 0.85), letters * 0.9);
         darken = art * 0.2;
     } else if (m < 6.5) {                           // Ultimate: embossed relief, gold-ish name

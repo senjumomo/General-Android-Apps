@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 /** Full-screen card that reacts to tilting the phone, with a foil effect matching its rarity. */
 class HoloViewerActivity : AppCompatActivity() {
 
-    private lateinit var cardView: HoloCardView
+    private lateinit var cardView: HoloGLView
     private lateinit var tilt: TiltTracker
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,6 +48,7 @@ class HoloViewerActivity : AppCompatActivity() {
         cardView = findViewById(R.id.card)
         tilt = TiltTracker(this)
         if (tilt.available) cardView.externalTilt = { tilt.x to tilt.y }
+        cardView.onError = ::showError
 
         val id = intent.getStringExtra(EXTRA_ID) ?: return finish()
         lifecycleScope.launch {
@@ -62,13 +63,13 @@ class HoloViewerActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         tilt.start()
-        cardView.start()
+        cardView.onResume()
     }
 
     override fun onPause() {
         super.onPause()
         tilt.stop()
-        cardView.stop()
+        cardView.onPause()
     }
 
     /**
@@ -93,10 +94,26 @@ class HoloViewerActivity : AppCompatActivity() {
             findViewById<TextView>(R.id.hint).text = "Couldn't load the card image. Check your connection."
             return
         }
+        shown = bmp
+        if (failed) { showError(failedMessage); return }
         cardView.setCard(bmp, card.rarity, isPhoto, pendulum)
         cardView.visibility = View.VISIBLE
-        cardView.alpha = 0f
-        cardView.animate().alpha(1f).setDuration(250).start()
+    }
+
+    private var shown: Bitmap? = null
+    private var failed = false
+    private var failedMessage = ""
+
+    /** OpenGL failed: show the plain image and the reason, so it can be reported. */
+    private fun showError(message: String) {
+        failed = true
+        failedMessage = message
+        cardView.visibility = View.GONE
+        findViewById<android.widget.ImageView>(R.id.staticCard).apply {
+            visibility = View.VISIBLE
+            shown?.let(::setImageBitmap)
+        }
+        findViewById<TextView>(R.id.hint).text = "The foil effect couldn't start on this phone.\n$message"
     }
 
     private suspend fun fetch(url: String): Bitmap? {

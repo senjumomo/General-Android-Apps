@@ -22,12 +22,20 @@
             android:layout_height="0dp"
             android:layout_weight="1">
 
-            <com.senjumomo.cards.holo.HoloCardView
+            <com.senjumomo.cards.holo.HoloGLView
                 android:id="@+id/card"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_gravity="center"
                 android:visibility="invisible" />
+
+            <!-- Only used if OpenGL fails on this phone. -->
+            <com.senjumomo.cards.ui.CardImageView
+                android:id="@+id/staticCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                app:shapeAppearanceOverlay="@style/CardImageLarge" />
 
             <com.google.android.material.progressindicator.CircularProgressIndicator
                 android:id="@+id/loading"
