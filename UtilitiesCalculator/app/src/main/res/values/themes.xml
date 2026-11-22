@@ -1,0 +1,94 @@
+<resources>
+    <color name="launcher_bg">#00497A</color>
+
+    <style name="Theme.Utilities" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">#00639B</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#CEE5FF</item>
+        <item name="colorOnPrimaryContainer">#001D33</item>
+        <item name="colorSecondary">#51606F</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="colorSecondaryContainer">#D5E4F7</item>
+        <item name="colorOnSecondaryContainer">#0E1D2A</item>
+        <item name="colorTertiary">#7A5900</item>
+        <item name="colorOnTertiary">#FFFFFF</item>
+        <item name="colorTertiaryContainer">#FFDEA1</item>
+        <item name="colorOnTertiaryContainer">#261900</item>
+        <item name="colorError">#BA1A1A</item>
+        <item name="android:colorBackground">#F8F9FF</item>
+        <item name="colorSurface">#F8F9FF</item>
+        <item name="colorOnSurface">#191C20</item>
+        <item name="colorOnSurfaceVariant">#42474E</item>
+        <item name="colorSurfaceContainerLowest">#FFFFFF</item>
+        <item name="colorSurfaceContainerLow">#F2F3FA</item>
+        <item name="colorSurfaceContainer">#ECEEF4</item>
+        <item name="colorSurfaceContainerHigh">#E6E8EE</item>
+        <item name="colorSurfaceContainerHighest">#E1E2E8</item>
+        <item name="colorOutline">#72777F</item>
+        <item name="colorOutlineVariant">#C2C7CF</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="SectionCard" parent="Widget.Material3.CardView.Filled">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">12dp</item>
+        <item name="cardBackgroundColor">?attr/colorSurfaceContainerLow</item>
+        <item name="cardCornerRadius">20dp</item>
+        <item name="contentPadding">16dp</item>
+    </style>
+
+    <style name="IconBadge">
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:padding">9dp</item>
+        <item name="android:background">@drawable/icon_circle</item>
+    </style>
+
+    <style name="SectionTitle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="SectionSubtitle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="Field" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="boxCornerRadiusTopStart">12dp</item>
+        <item name="boxCornerRadiusTopEnd">12dp</item>
+        <item name="boxCornerRadiusBottomStart">12dp</item>
+        <item name="boxCornerRadiusBottomEnd">12dp</item>
+        <item name="boxBackgroundColor">?attr/colorSurfaceContainerLowest</item>
+    </style>
+
+    <style name="FieldInput">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:inputType">numberDecimal</item>
+        <item name="android:imeOptions">actionNext</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <style name="SubtotalLabel">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="SubtotalValue">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+</resources>
