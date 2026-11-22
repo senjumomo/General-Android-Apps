@@ -11,8 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fitsSystemWindows="true"
-        app:liftOnScroll="true"
-        app:liftOnScrollTargetViewId="@id/scroll">
+        app:liftOnScroll="true">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
@@ -23,349 +22,32 @@
             app:titleTextAppearance="?attr/textAppearanceHeadlineSmall" />
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/scroll"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipToPadding="false"
+        android:orientation="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-    <LinearLayout
-        android:id="@+id/content"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:paddingStart="16dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="24dp">
+        <FrameLayout
+            android:id="@+id/pages"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
 
-        <com.google.android.material.card.MaterialCardView style="@style/SectionCard">
+            <include
+                android:id="@+id/calculatePage"
+                layout="@layout/view_calculate" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+            <include
+                android:id="@+id/historyPage"
+                layout="@layout/view_history"
+                android:visibility="gone" />
+        </FrameLayout>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        style="@style/IconBadge"
-                        android:backgroundTint="?attr/colorSecondaryContainer"
-                        android:importantForAccessibility="no"
-                        android:src="@drawable/ic_history"
-                        app:tint="?attr/colorOnSecondaryContainer" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView style="@style/SectionTitle" android:text="Previous debt" />
-                        <TextView style="@style/SectionSubtitle" android:text="Anything still owed from last month" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/debtLayout"
-                        style="@style/Field"
-                        android:layout_width="match_parent"
-                        app:prefixText="R"
-                        android:hint="Amount (optional)">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/debt"
-                            style="@style/FieldInput" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView style="@style/SectionCard">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        style="@style/IconBadge"
-                        android:backgroundTint="?attr/colorPrimaryContainer"
-                        android:importantForAccessibility="no"
-                        android:src="@drawable/ic_water"
-                        app:tint="?attr/colorOnPrimaryContainer" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView style="@style/SectionTitle" android:text="Water" />
-                        <TextView style="@style/SectionSubtitle" android:text="Meter readings in kilolitres" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/waterPrevLayout"
-                        style="@style/Field"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="6dp"
-                        app:suffixText="kl"
-                        android:hint="Last month">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/waterPrev"
-                            style="@style/FieldInput" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/waterCurrLayout"
-                        style="@style/Field"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="6dp"
-                        app:suffixText="kl"
-                        android:hint="This month">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/waterCurr"
-                            style="@style/FieldInput" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                </LinearLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/waterPriceLayout"
-                        style="@style/Field"
-                        android:layout_width="match_parent"
-                        android:layout_marginTop="12dp"
-                        app:prefixText="R"
-                        android:hint="Price per kl">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/waterPrice"
-                            style="@style/FieldInput" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                <com.google.android.material.divider.MaterialDivider
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="12dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView android:id="@+id/waterUsed" style="@style/SubtotalLabel" />
-                    <TextView android:id="@+id/waterTotal" style="@style/SubtotalValue" />
-                </LinearLayout>
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView style="@style/SectionCard">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        style="@style/IconBadge"
-                        android:backgroundTint="?attr/colorTertiaryContainer"
-                        android:importantForAccessibility="no"
-                        android:src="@drawable/ic_bolt"
-                        app:tint="?attr/colorOnTertiaryContainer" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView style="@style/SectionTitle" android:text="Electricity" />
-                        <TextView style="@style/SectionSubtitle" android:text="Prepaid tokens bought" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tokensLayout"
-                        style="@style/Field"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="6dp"
-                        android:hint="Tokens">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/tokens"
-                            style="@style/FieldInput" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tokenPriceLayout"
-                        style="@style/Field"
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="6dp"
-                        app:prefixText="R"
-                        android:hint="Price each">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/tokenPrice"
-                            style="@style/FieldInput"
-                            android:imeOptions="actionDone" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                </LinearLayout>
-
-                <com.google.android.material.divider.MaterialDivider
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginBottom="12dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <TextView android:id="@+id/elecUsed" style="@style/SubtotalLabel" />
-                    <TextView android:id="@+id/elecTotal" style="@style/SubtotalValue" />
-                </LinearLayout>
-
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            style="@style/SectionCard"
-            app:cardBackgroundColor="?attr/colorPrimaryContainer">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingTop="4dp"
-                android:paddingBottom="4dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Total owing"
-                    android:textAppearance="?attr/textAppearanceLabelLarge"
-                    android:textColor="?attr/colorOnPrimaryContainer" />
-
-                <TextView
-                    android:id="@+id/total"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textAppearance="?attr/textAppearanceDisplaySmall"
-                    android:textColor="?attr/colorOnPrimaryContainer"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/totalHint"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="?attr/colorOnPrimaryContainer" />
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/messageCard"
-            style="@style/SectionCard"
-            android:visibility="gone">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <TextView
-                    style="@style/SectionTitle"
-                    android:layout_marginBottom="12dp"
-                    android:text="Message for landlord" />
-
-                <TextView
-                    android:id="@+id/message"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/message_bg"
-                    android:lineSpacingExtra="2dp"
-                    android:padding="16dp"
-                    android:textAppearance="?attr/textAppearanceBodyLarge"
-                    android:textColor="?attr/colorOnSurface"
-                    android:textIsSelectable="true" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:orientation="horizontal">
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/copy"
-                        style="@style/Widget.Material3.Button.TonalButton.Icon"
-                        android:layout_width="0dp"
-                        android:layout_height="56dp"
-                        android:layout_marginEnd="6dp"
-                        android:layout_weight="1"
-                        android:text="Copy"
-                        app:icon="@drawable/ic_copy" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/share"
-                        style="@style/Widget.Material3.Button.Icon"
-                        android:layout_width="0dp"
-                        android:layout_height="56dp"
-                        android:layout_marginStart="6dp"
-                        android:layout_weight="1"
-                        android:text="Share"
-                        app:icon="@drawable/ic_share" />
-                </LinearLayout>
-            </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+        <com.google.android.material.bottomnavigation.BottomNavigationView
+            android:id="@+id/bottomNav"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:menu="@menu/bottom_nav" />
     </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

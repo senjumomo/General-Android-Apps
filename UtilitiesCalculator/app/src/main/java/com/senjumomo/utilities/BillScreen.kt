@@ -9,8 +9,9 @@ import com.google.android.material.textfield.TextInputLayout
 import java.math.BigDecimal
 
 /**
- * Binds the form in activity_main.xml and recalculates live as the user types.
- * Kept separate from the Activity so it can be rendered in screenshot tests.
+ * Binds the Calculate page (view_calculate.xml) and recalculates live as the user types.
+ * Prices come from Settings via [setPrices]. Kept separate from the Activity so it can be
+ * rendered in screenshot tests.
  */
 class BillScreen(root: View, private val prefs: SharedPreferences?) {
 
@@ -18,9 +19,9 @@ class BillScreen(root: View, private val prefs: SharedPreferences?) {
     private val waterPrev: TextInputEditText = root.findViewById(R.id.waterPrev)
     private val waterCurr: TextInputEditText = root.findViewById(R.id.waterCurr)
     private val waterCurrLayout: TextInputLayout = root.findViewById(R.id.waterCurrLayout)
-    private val waterPrice: TextInputEditText = root.findViewById(R.id.waterPrice)
     private val tokens: TextInputEditText = root.findViewById(R.id.tokens)
-    private val tokenPrice: TextInputEditText = root.findViewById(R.id.tokenPrice)
+    private val waterRate: TextView = root.findViewById(R.id.waterRate)
+    private val tokenRate: TextView = root.findViewById(R.id.tokenRate)
 
     private val waterUsed: TextView = root.findViewById(R.id.waterUsed)
     private val waterTotal: TextView = root.findViewById(R.id.waterTotal)
@@ -35,18 +36,25 @@ class BillScreen(root: View, private val prefs: SharedPreferences?) {
         "debt" to debt,
         "waterPrev" to waterPrev,
         "waterCurr" to waterCurr,
-        "waterPrice" to waterPrice,
         "tokens" to tokens,
-        "tokenPrice" to tokenPrice,
     )
 
-    /** The finished message, or null while the form is incomplete. */
-    var message: String? = null
+    private var pricePerKl: BigDecimal? = null
+    private var pricePerToken: BigDecimal? = null
+
+    /** The finished bill, or null while the form is incomplete. */
+    var bill: Bill? = null
         private set
 
     init {
         prefs?.let { p -> fields.forEach { (key, f) -> f.setText(p.getString(key, "")) } }
         fields.values.forEach { it.doAfterTextChanged { recalculate() } }
+        recalculate()
+    }
+
+    fun setPrices(water: BigDecimal?, token: BigDecimal?) {
+        pricePerKl = water
+        pricePerToken = token
         recalculate()
     }
 
@@ -60,7 +68,7 @@ class BillScreen(root: View, private val prefs: SharedPreferences?) {
         }?.apply()
     }
 
-    /** Current reading becomes last month's; monthly amounts are cleared, prices kept. */
+    /** Current reading becomes last month's; debt and tokens are cleared. */
     fun startNewMonth(): Boolean {
         val current = waterCurr.text?.toString()?.trim().orEmpty()
         if (current.isEmpty()) return false
@@ -69,7 +77,6 @@ class BillScreen(root: View, private val prefs: SharedPreferences?) {
         tokens.setText("")
         debt.setText("")
         save()
-        waterCurr.requestFocus()
         return true
     }
 
@@ -77,37 +84,43 @@ class BillScreen(root: View, private val prefs: SharedPreferences?) {
         val debtValue = Bill.parse(debt.text) ?: BigDecimal.ZERO
         val prev = Bill.parse(waterPrev.text)
         val curr = Bill.parse(waterCurr.text)
-        val pricePerKl = Bill.parse(waterPrice.text)
         val tokenCount = Bill.parse(tokens.text)
-        val pricePerToken = Bill.parse(tokenPrice.text)
+        val klPrice = pricePerKl
+        val tokPrice = pricePerToken
+
+        waterRate.text = klPrice?.let { "${Bill.money(it)} per kl" } ?: "Not set yet"
+        tokenRate.text = tokPrice?.let { "${Bill.money(it)} per token" } ?: "Not set yet"
 
         // Water subtotal
-        val readingsOk = prev != null && curr != null && curr >= prev
-        waterCurrLayout.error =
-            if (prev != null && curr != null && curr < prev) "Lower than last month" else null
-        val used = if (readingsOk) curr!! - prev!! else null
-        val waterCost = if (used != null && pricePerKl != null) used * pricePerKl else null
+        val readingsBad = prev != null && curr != null && curr < prev
+        waterCurrLayout.error = if (readingsBad) "Lower than last month" else null
+        val used = if (prev != null && curr != null && !readingsBad) curr - prev else null
+        val waterCost = if (used != null && klPrice != null) used * klPrice else null
         waterUsed.text = used?.let { "${Bill.num(it)} kl used" } ?: "Usage"
         waterTotal.text = waterCost?.let(Bill::money) ?: "—"
 
         // Electricity subtotal
-        val elecCost =
-            if (tokenCount != null && pricePerToken != null) tokenCount * pricePerToken else null
+        val elecCost = if (tokenCount != null && tokPrice != null) tokenCount * tokPrice else null
         elecUsed.text = tokenCount?.let { "${Bill.num(it)} ${Bill.tokenWord(it)}" } ?: "Tokens"
         elecTotal.text = elecCost?.let(Bill::money) ?: "—"
 
         if (waterCost != null && elecCost != null) {
-            val bill = Bill(debtValue, prev!!, curr!!, pricePerKl!!, tokenCount!!, pricePerToken!!)
-            total.text = Bill.money(bill.owing)
+            val b = Bill(debtValue, prev!!, curr!!, klPrice!!, tokenCount!!, tokPrice!!)
+            bill = b
+            total.text = Bill.money(b.owing)
             totalHint.text = "Debt + water + electricity"
-            message = bill.message()
-            messageView.text = message
+            messageView.text = b.message()
             messageCard.visibility = View.VISIBLE
         } else {
-            total.text = Bill.money(debtValue + (waterCost ?: BigDecimal.ZERO) + (elecCost ?: BigDecimal.ZERO))
-            totalHint.text = if (waterCurrLayout.error != null) "Check this month's water reading"
-            else "Fill in water and electricity to finish"
-            message = null
+            bill = null
+            total.text = Bill.money(
+                debtValue + (waterCost ?: BigDecimal.ZERO) + (elecCost ?: BigDecimal.ZERO)
+            )
+            totalHint.text = when {
+                readingsBad -> "Check this month's water reading"
+                klPrice == null || tokPrice == null -> "Set your prices in Settings"
+                else -> "Fill in water and electricity to finish"
+            }
             messageCard.visibility = View.GONE
         }
     }

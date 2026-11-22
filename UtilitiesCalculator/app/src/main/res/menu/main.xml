@@ -6,4 +6,9 @@
         android:icon="@drawable/ic_new_month"
         android:title="Start new month"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_settings"
+        android:icon="@drawable/ic_settings"
+        android:title="Settings"
+        app:showAsAction="ifRoom" />
 </menu>
