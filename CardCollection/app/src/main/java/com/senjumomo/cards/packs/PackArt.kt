@@ -146,5 +146,4 @@ object PackArt {
     fun croppedArtUrl(artworkId: Long) = "https://images.ygoprodeck.com/images/cards_cropped/$artworkId.jpg"
     fun cardUrl(artworkId: Long) = "https://images.ygoprodeck.com/images/cards/$artworkId.jpg"
     fun cardSmallUrl(artworkId: Long) = "https://images.ygoprodeck.com/images/cards_small/$artworkId.jpg"
-    const val CARD_BACK = "https://images.ygoprodeck.com/images/assets/CardBack.jpg"
 }

@@ -118,11 +118,35 @@ float4 shade(float2 uv) {
     // --- Masks --------------------------------------------------------------------------------
     float art = boxMask(uv, artRect, 0.003);
     float4 nameRect = float4(0.068, 0.046, 0.835, 0.101);
-    float nameBar = boxMask(uv, nameRect, 0.002);
-    // Letters = pixels that differ from the name bar's background colour.
-    float3 bg = (sampleCard(float2(0.30, nameRect.y + 0.004)).rgb + sampleCard(float2(0.55, nameRect.y + 0.004)).rgb
-               + sampleCard(float2(0.78, nameRect.w - 0.004)).rgb + sampleCard(float2(0.12, nameRect.w - 0.004)).rgb) * 0.25;
-    float letters = nameBar * smoothstep(0.10, 0.26, length(base - bg));
+    // Letters are thin strokes: pixels that contrast with their surroundings about one stroke away.
+    // (Works for dark-on-light and light-on-dark names, and ignores the bar's bevel and gradient.)
+    float nameBar = boxMask(uv, float4(nameRect.x, nameRect.y + 0.006, nameRect.z, nameRect.w - 0.005), 0.002);
+    float letters = 0.0;
+    if (nameBar > 0.0) {
+        float2 r = float2(0.012, 0.008);
+        float around = luma(sampleCard(uv + float2(r.x, 0.0)).rgb) + luma(sampleCard(uv - float2(r.x, 0.0)).rgb)
+                     + luma(sampleCard(uv + float2(0.0, r.y)).rgb) + luma(sampleCard(uv - float2(0.0, r.y)).rgb)
+                     + luma(sampleCard(uv + r).rgb) + luma(sampleCard(uv - r).rgb)
+                     + luma(sampleCard(uv + float2(r.x, -r.y)).rgb) + luma(sampleCard(uv + float2(-r.x, r.y)).rgb);
+        // Which way round is the text? Along the bar's centre line the letters are the minority, so
+        // whichever extreme is further from the average is the letters' side (dark or light text).
+        float lo = 1.0;
+        float hi = 0.0;
+        float sum = 0.0;
+        float yc = (nameRect.y + nameRect.w) * 0.5;
+        for (int i = 0; i < 12; i++) {
+            float v = luma(sampleCard(float2(nameRect.x + 0.02 + float(i) * 0.058, yc)).rgb);
+            lo = min(lo, v);
+            hi = max(hi, v);
+            sum += v;
+        }
+        float mean = sum / 12.0;
+        float polarity = (mean - lo) > (hi - mean) ? 1.0 : -1.0;   // 1 = dark letters
+        // A letter pixel is on the letters' side of its surroundings (so the background next to a
+        // letter, which is on the other side, isn't picked up).
+        float diff = (around * 0.125 - luma(base)) * polarity;
+        letters = nameBar * smoothstep(0.05, 0.14, diff);
+    }
     float inner = boxMask(uv, float4(0.045, 0.032, 0.955, 0.968), 0.004);
     float border = 1.0 - inner;
 

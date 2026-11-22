@@ -160,6 +160,7 @@ class PackOpenActivity : AppCompatActivity() {
             collection = dao.all()
             currency = collection.firstOrNull()?.currency ?: "ZAR"
             usdRate = runCatching { Exchange.usdTo(currency) }.getOrNull()
+            launch(kotlinx.coroutines.Dispatchers.Default) { CardBack.get() }
             val art = PackArt.featured(setCards)?.let { fetch(PackArt.croppedArtUrl(it.artworkId)) }
             packBitmap = PackArt.draw(set, art)
             newPack()
@@ -187,9 +188,9 @@ class PackOpenActivity : AppCompatActivity() {
     /** Download the pack's images now so reveals are instant. */
     private fun prefetch() {
         val loader = imageLoader
-        loader.enqueue(ImageRequest.Builder(this).data(PackArt.CARD_BACK).build())
         pack.forEach { c ->
-            loader.enqueue(ImageRequest.Builder(this).data(PackArt.cardSmallUrl(c.artworkId)).build())
+            // Full-resolution scans (813 × 1185) so cards are sharp at full screen width.
+            loader.enqueue(ImageRequest.Builder(this).data(PackArt.cardUrl(c.artworkId)).build())
             if (c.tier >= Tier.ULTRA) lifecycleScope.launch {
                 fetch(PackArt.cardUrl(c.artworkId))?.let { bigImages[c.artworkId] = it }
             }
@@ -221,9 +222,9 @@ class PackOpenActivity : AppCompatActivity() {
         current.rotation = 0f
         current.alpha = 1f
         current.visibility = View.VISIBLE
-        if (revealed) current.load(PackArt.cardSmallUrl(c.artworkId)) else current.load(PackArt.CARD_BACK)
+        if (revealed) loadFace(c) else current.setImageBitmap(CardBack.get())
         nextBack.visibility = if (i + 1 < pack.size) View.VISIBLE else View.INVISIBLE
-        nextBack.load(PackArt.CARD_BACK)
+        nextBack.setImageBitmap(CardBack.get())
         findViewById<TextView>(R.id.counter).text = "${i + 1} / ${pack.size}"
         updateLabels(if (revealed) c else null)
         findViewById<TextView>(R.id.tapHint).text = if (revealed) "Tap for the next card" else "Tap to flip"
@@ -289,7 +290,7 @@ class PackOpenActivity : AppCompatActivity() {
             .setListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
                     current.animate().setListener(null)
-                    current.load(PackArt.cardSmallUrl(c.artworkId))
+                    loadFace(c)
                     current.rotationY = -90f
                     current.animate().rotationY(0f).setDuration(half).setInterpolator(DecelerateInterpolator())
                         .withEndAction { afterFlip(c) }.start()
@@ -329,6 +330,14 @@ class PackOpenActivity : AppCompatActivity() {
         val list = findViewById<RecyclerView>(R.id.pulls)
         list.layoutManager = GridLayoutManager(this, 3)
         list.adapter = PullAdapter(pack.reversed())  // best first
+    }
+
+    /** Full-res face; the small image (likely cached) shows first if the big one isn't ready. */
+    private fun loadFace(c: SetCard) {
+        current.load(PackArt.cardUrl(c.artworkId)) {
+            placeholderMemoryCacheKey(PackArt.cardSmallUrl(c.artworkId))
+            crossfade(false)
+        }
     }
 
     private fun valueCents(c: SetCard): Long? {

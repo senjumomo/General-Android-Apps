@@ -77,4 +77,14 @@ class HoloTest {
         val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = android.graphics.Color.rgb(255, 240, 200) }
         for (i in 0 until 9) c.drawCircle(120f + i * 48f, 250f + (i % 3) * 60f, 26f, p)
     }
+
+    @Test
+    fun cardBack() {
+        val view = android.widget.ImageView(paparazzi.context).apply {
+            setImageBitmap(com.senjumomo.cards.packs.CardBack.get())
+            setBackgroundColor(android.graphics.Color.rgb(20, 20, 26))
+            scaleType = android.widget.ImageView.ScaleType.FIT_CENTER; setPadding(60, 60, 60, 60)
+        }
+        paparazzi.snapshot(view)
+    }
 }
