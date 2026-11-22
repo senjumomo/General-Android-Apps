@@ -31,6 +31,17 @@ class LiveTest {
         println("Search 'ash blos' -> ${found.size} printings, first: ${found.firstOrNull()}")
         assertTrue(found.isNotEmpty() && found.first().name.startsWith("Ash Blossom"))
 
+        val sets = com.senjumomo.cards.packs.PackParsing.parseSets(
+            com.senjumomo.cards.net.Http.get("https://db.ygoprodeck.com/api/v7/cardsets.php"))
+        val rota = sets.first { it.code == "ROTA" }
+        val rotaCards = com.senjumomo.cards.packs.PackParsing.parseSetCards(
+            com.senjumomo.cards.net.Http.get("https://db.ygoprodeck.com/api/v7/cardinfo.php?cardset=" +
+                com.senjumomo.cards.net.Http.enc(rota.name)), rota.name)
+        val pack = com.senjumomo.cards.packs.PackGenerator.open(rotaCards)
+        println("${sets.size} booster sets. ${rota.name}: ${rotaCards.size} printings. Pack: " +
+            pack.joinToString { "${it.name} (${it.rarity})" })
+        assertTrue(pack.size == 9)
+
         val export = System.getenv("CARD_EXPORT") ?: return@runBlocking
         val cards = CollectionJson.parse(File(export).readText()).take(8)
         cards.forEach { c ->

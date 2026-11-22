@@ -45,4 +45,36 @@ class HoloTest {
         java.io.File(dir, "card.frag").writeText(HoloShaders.fragment(HoloShaders.core(paparazzi.context)))
         java.io.File(dir, "shadow.frag").writeText(HoloShaders.SHADOW)
     }
+
+    /** Renders the generated pack wrapper (also saved for the GL tear preview). */
+    @Test
+    fun packArt() {
+        // Uses real artwork if one was downloaded to build/holo/art.jpg, otherwise a stand-in.
+        val real = java.io.File("build/holo/art.jpg").takeIf { it.exists() }
+            ?.let { android.graphics.BitmapFactory.decodeFile(it.path) }
+        val art = real?.copy(android.graphics.Bitmap.Config.ARGB_8888, true)
+            ?: android.graphics.Bitmap.createBitmap(624, 624, android.graphics.Bitmap.Config.ARGB_8888)
+        if (real == null) drawStandIn(art)
+        val bmp = com.senjumomo.cards.packs.PackArt.draw(
+            com.senjumomo.cards.packs.CardSet("ROTA", "Rage of the Abyss", 101, "2024-10-10", null), art)
+        java.io.File("build/holo").mkdirs()
+        java.io.FileOutputStream("build/holo/pack.png").use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+        val view = android.widget.ImageView(paparazzi.context).apply {
+            setImageBitmap(bmp); setBackgroundColor(android.graphics.Color.rgb(20, 20, 26))
+            scaleType = android.widget.ImageView.ScaleType.FIT_CENTER; setPadding(80, 80, 80, 80)
+        }
+        // Only the stand-in is a committed snapshot; real artwork is just written out for gl-pack.js.
+        if (real == null) paparazzi.snapshot(view)
+    }
+
+    private fun drawStandIn(art: android.graphics.Bitmap) {
+        val c = android.graphics.Canvas(art)
+        c.drawPaint(android.graphics.Paint().apply {
+            shader = android.graphics.RadialGradient(312f, 280f, 420f,
+                intArrayOf(android.graphics.Color.rgb(250, 210, 255), android.graphics.Color.rgb(140, 60, 200), android.graphics.Color.rgb(30, 20, 70)),
+                null, android.graphics.Shader.TileMode.CLAMP)
+        })
+        val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply { color = android.graphics.Color.rgb(255, 240, 200) }
+        for (i in 0 until 9) c.drawCircle(120f + i * 48f, 250f + (i % 3) * 60f, 26f, p)
+    }
 }

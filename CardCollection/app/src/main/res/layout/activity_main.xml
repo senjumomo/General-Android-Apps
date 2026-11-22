@@ -58,6 +58,7 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <HorizontalScrollView
+            android:id="@+id/chipsRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:clipToPadding="false"
@@ -170,6 +171,11 @@
                     android:text="Add card"
                     app:icon="@drawable/ic_add" />
             </FrameLayout>
+
+            <include
+                android:id="@+id/packsPage"
+                layout="@layout/view_packs"
+                android:visibility="gone" />
 
             <include
                 android:id="@+id/statsPage"

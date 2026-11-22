@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/holo_bg">
+
+    <!-- Loading -->
+    <LinearLayout
+        android:id="@+id/loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:indeterminate="true"
+            app:indicatorColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/loadingText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:text="Getting the pack ready…"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="#D0D0DC" />
+    </LinearLayout>
+
+    <!-- Stage 1: the pack -->
+    <FrameLayout
+        android:id="@+id/packStage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone">
+
+        <com.senjumomo.cards.packs.PackGLView
+            android:id="@+id/pack"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="72dp"
+            android:layout_marginBottom="140dp"
+            android:contentDescription="Booster pack. Swipe across the top to open it." />
+
+        <LinearLayout
+            android:id="@+id/packControls"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingBottom="28dp">
+
+            <TextView
+                android:id="@+id/setName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textAppearance="?attr/textAppearanceTitleLarge"
+                android:textColor="#FFFFFF" />
+
+            <TextView
+                android:id="@+id/tearHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/scrim_pill"
+                android:paddingStart="16dp"
+                android:paddingTop="8dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="8dp"
+                android:text="Swipe across the top to tear it open  ⟶"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:textColor="#F0F0F8" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/openButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Or tap to open"
+                android:textColor="#B8B8C8" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Stage 2: revealing the cards one by one -->
+    <FrameLayout
+        android:id="@+id/revealStage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/counter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center_horizontal"
+            android:layout_marginTop="80dp"
+            android:textAppearance="?attr/textAppearanceLabelLarge"
+            android:textColor="#B8B8C8" />
+
+        <View
+            android:id="@+id/glow"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="-60dp"
+            android:alpha="0"
+            android:background="@drawable/glow" />
+
+        <FrameLayout
+            android:id="@+id/cardArea"
+            android:layout_width="260dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
+
+            <!-- The next face-down card in the pile -->
+            <com.senjumomo.cards.ui.CardImageView
+                android:id="@+id/nextBack"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:importantForAccessibility="no"
+                app:shapeAppearanceOverlay="@style/CardImage" />
+
+            <com.senjumomo.cards.ui.CardImageView
+                android:id="@+id/current"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:shapeAppearanceOverlay="@style/CardImage" />
+        </FrameLayout>
+
+        <!-- Big pulls are shown shining -->
+        <com.senjumomo.cards.holo.HoloGLView
+            android:id="@+id/holo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="110dp"
+            android:layout_marginBottom="170dp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingBottom="32dp">
+
+            <TextView
+                android:id="@+id/pullName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:textAppearance="?attr/textAppearanceTitleLarge"
+                android:textColor="#FFFFFF" />
+
+            <TextView
+                android:id="@+id/pullRarity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="#FFD970" />
+
+            <TextView
+                android:id="@+id/tapHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="Tap to reveal the next card"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:textColor="#9A9AAE" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Stage 3: what you pulled -->
+    <LinearLayout
+        android:id="@+id/summaryStage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingTop="64dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/summaryTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/summaryValue"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textColor="#FFD970" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/pulls"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:padding="12dp" />
+
+        <LinearLayout
+            android:id="@+id/summaryButtons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="16dp"
+            android:paddingBottom="24dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/choosePack"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="6dp"
+                android:layout_weight="1"
+                android:text="Other packs"
+                android:textColor="#FFFFFF" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/openAnother"
+                style="@style/Widget.Material3.Button.Icon"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="6dp"
+                android:layout_weight="1"
+                android:text="Open another"
+                app:icon="@drawable/ic_pack" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/close"
+        style="@style/Widget.Material3.Button.IconButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|start"
+        android:layout_margin="12dp"
+        android:contentDescription="Close"
+        app:icon="@drawable/ic_close"
+        app:iconTint="#FFFFFF" />
+</FrameLayout>

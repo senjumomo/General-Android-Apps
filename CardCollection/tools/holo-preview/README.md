@@ -27,3 +27,13 @@ phone drivers) and renders them through the same pipeline: shadow, perspective t
 ./gradlew testDebugUnitTest --tests '*HoloTest*'
 node gl-check.js ../../app/build/holo out.png spec.json
 ```
+
+## Pack opening preview
+
+`HoloTest.packArt` writes the generated pack wrapper to `app/build/holo/pack.png` (put a real
+`cards_cropped` artwork at `app/build/holo/art.jpg` first to use it). `gl-pack.js` renders it through the
+app's shaders like `PackGLView`: sealed, tearing, and the rip.
+
+```
+node gl-pack.js ../../app/build/holo out.png
+```

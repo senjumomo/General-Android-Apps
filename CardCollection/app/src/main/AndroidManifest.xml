@@ -3,6 +3,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <uses-feature android:name="android.hardware.camera.any" android:required="false" />
 
     <application
@@ -38,6 +39,12 @@
             android:name=".holo.HoloViewerActivity"
             android:exported="false"
             android:parentActivityName=".ui.CardDetailActivity"
+            android:theme="@style/Theme.Cards.Holo" />
+        <activity
+            android:name=".packs.PackOpenActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.Cards.Holo" />
         <activity
             android:name=".ui.ScanActivity"

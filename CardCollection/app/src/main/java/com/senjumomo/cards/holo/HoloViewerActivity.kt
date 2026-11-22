@@ -50,9 +50,19 @@ class HoloViewerActivity : AppCompatActivity() {
         if (tilt.available) cardView.externalTilt = { tilt.x to tilt.y }
         cardView.onError = ::showError
 
-        val id = intent.getStringExtra(EXTRA_ID) ?: return finish()
+        val id = intent.getStringExtra(EXTRA_ID)
         lifecycleScope.launch {
-            val card = CardDatabase.get(this@HoloViewerActivity).cards().get(id) ?: return@launch finish()
+            // A card from the collection, or one passed in directly (e.g. a pack pull).
+            val card = id?.let { CardDatabase.get(this@HoloViewerActivity).cards().get(it) }
+                ?: intent.getStringExtra(EXTRA_NAME)?.let { name ->
+                    Card(
+                        id = "preview", name = name, setName = "", code = "",
+                        rarity = intent.getStringExtra(EXTRA_RARITY).orEmpty(), quantity = 1,
+                        valuePerUnitCents = 0, paidPerUnitCents = null, dateAdded = "",
+                        imageUrl = intent.getStringExtra(EXTRA_IMAGE),
+                    )
+                }
+                ?: return@launch finish()
             findViewById<TextView>(R.id.name).text = card.name
             findViewById<TextView>(R.id.style).text =
                 "${card.rarity.ifBlank { "Common" }} · ${HoloStyle.label(HoloStyle.mode(card.rarity))}"
@@ -129,5 +139,9 @@ class HoloViewerActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_ID = "id"
+        const val EXTRA_NAME = "name"
+        const val EXTRA_RARITY = "rarity"
+        /** Small YGOPRODeck image URL (the large one is derived from it). */
+        const val EXTRA_IMAGE = "image"
     }
 }

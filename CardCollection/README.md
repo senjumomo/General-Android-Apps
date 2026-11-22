@@ -16,6 +16,13 @@ Download `apk/CardBinder.apk` to your phone and open it (allow "install unknown 
   prismatic glitter, Ultimate Rare emboss, Ghost, Starlight and Collector's whole-card foil, and more.
   Runs per pixel on the GPU with OpenGL ES 2.0, so it works on every Android phone
   (shader: `res/raw/holo_core.agsl`). Uses the high-res YGOPRODeck scan of that printing's artwork. Preview tool: `tools/holo-preview`.
+- **Open packs** (Packs tab): every booster set (the ones you own cards from first). Opening one shows a
+  3D foil pack (the app's own wrapper design with the set's top card art) that you tear open with a swipe,
+  then the cards one by one: Commons face up, the rest face down with a glow that hints at the rarity
+  before the flip, and Ultra Rares or better shown shining in 3D. The summary lists every pull with its
+  value, New/Owned tags and a wishlist button. Pull rates are approximate (Konami doesn't publish odds):
+  7 Commons + 1 Rare/Super + 1 foil slot where Ultra ≈ 1 in 6, Secret ≈ 1 in 12, Quarter Century ≈ 1 in 24,
+  Starlight ≈ 1 in 288. It's a simulator: nothing is added to your collection unless you choose to.
 - **List or grid view** (toggle in the toolbar).
 - **Price refresh** (menu): current TCGplayer market price × today's USD exchange rate (open.er-api.com).
 - **Wishlist** tab: cards you want, with the cost to complete it. Wishlist cards don't count towards the

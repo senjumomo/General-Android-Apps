@@ -50,6 +50,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var toolbar: MaterialToolbar
     private lateinit var bottomNav: com.google.android.material.bottomnavigation.BottomNavigationView
     private lateinit var stats: StatsScreen
+    private lateinit var packs: com.senjumomo.cards.packs.PacksScreen
     private lateinit var prefs: android.content.SharedPreferences
 
     /** Everything in the database (collection + wishlist). */
@@ -111,6 +112,11 @@ class MainActivity : AppCompatActivity() {
             onRarity = { showFiltered(rarity = it) },
             onCard = ::openCard,
         )
+        packs = com.senjumomo.cards.packs.PacksScreen(
+            findViewById(R.id.packsPage),
+            onOpen = { startActivity(com.senjumomo.cards.packs.PackOpenActivity.intent(this, it)) },
+            onRetry = ::loadPacks,
+        )
         bottomNav.setOnItemSelectedListener { showTab(it.itemId); true }
         list.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(rv: RecyclerView, dx: Int, dy: Int) {
@@ -129,7 +135,10 @@ class MainActivity : AppCompatActivity() {
             true
         }
         fab.setOnClickListener { chooseHowToAdd() }
-        search.doAfterTextChanged { filter = filter.copy(query = it?.toString().orEmpty()); render() }
+        search.doAfterTextChanged {
+            if (tab == R.id.tab_packs) packs.filter(it?.toString().orEmpty())
+            else { filter = filter.copy(query = it?.toString().orEmpty()); render() }
+        }
 
         listOf(chipSort, chipSet, chipRarity).forEach { chip ->
             chip.setOnCloseIconClickListener { chip.performClick() }
@@ -165,6 +174,7 @@ class MainActivity : AppCompatActivity() {
         val wishlist = tab == R.id.tab_wishlist
         cards = allCards.filter { it.wishlist == wishlist }
         stats.show(allCards.filter { !it.wishlist })
+        packs.setCollection(allCards)
         // Drop filters that no longer match anything (e.g. after deleting the last card of a set).
         if (filter.set != null && cards.none { it.setName == filter.set }) filter = filter.copy(set = null)
         if (filter.rarity != null && cards.none { it.rarity == filter.rarity }) filter = filter.copy(rarity = null)
@@ -183,7 +193,7 @@ class MainActivity : AppCompatActivity() {
                 Row.Header(Summary.of(shown), filter.isActive, wishlist, cards.mapNotNull { it.priceUpdatedAt }.maxOrNull())
             ) + shown.map { Row.Item(it) }
         )
-        showEmpty(loaded && shown.isEmpty() && tab != R.id.tab_stats)
+        showEmpty(loaded && shown.isEmpty() && tab != R.id.tab_stats && tab != R.id.tab_packs)
     }
 
     private fun showEmpty(show: Boolean) {
@@ -221,21 +231,41 @@ class MainActivity : AppCompatActivity() {
     private fun showTab(id: Int) {
         tab = id
         val isStats = id == R.id.tab_stats
-        findViewById<View>(R.id.listPage).visibility = if (isStats) View.GONE else View.VISIBLE
+        val isPacks = id == R.id.tab_packs
+        val isList = !isStats && !isPacks
+        findViewById<View>(R.id.listPage).visibility = if (isList) View.VISIBLE else View.GONE
         findViewById<View>(R.id.statsPage).visibility = if (isStats) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.packsPage).visibility = if (isPacks) View.VISIBLE else View.GONE
         findViewById<View>(R.id.filterBar).visibility = if (isStats) View.GONE else View.VISIBLE
+        findViewById<View>(R.id.chipsRow).visibility = if (isList) View.VISIBLE else View.GONE
+        search.hint = if (isPacks) "Search sets" else "Search name, set, code or rarity"
         toolbar.title = when (id) {
             R.id.tab_wishlist -> "Wishlist"
             R.id.tab_stats -> "Stats"
+            R.id.tab_packs -> "Open packs"
             else -> "My cards"
         }
-        toolbar.menu.findItem(R.id.action_view).isVisible = !isStats
-        appBar.liftOnScrollTargetViewId = if (isStats) R.id.statsScroll else R.id.list
+        toolbar.menu.findItem(R.id.action_view).isVisible = isList
+        appBar.liftOnScrollTargetViewId = when {
+            isStats -> R.id.statsScroll
+            isPacks -> R.id.packList
+            else -> R.id.list
+        }
+        if (isPacks && !packs.loaded) loadPacks()
         fab.text = if (id == R.id.tab_wishlist) "Add to wishlist" else "Add card"
         filter = filter.copy(query = "", set = null, rarity = null)
         search.setText("")
         render()
         list.scrollToPosition(0)
+    }
+
+    private fun loadPacks() {
+        packs.showLoading()
+        lifecycleScope.launch {
+            runCatching { com.senjumomo.cards.packs.PackRepository(this@MainActivity).sets() }
+                .onSuccess { packs.setSets(it) }
+                .onFailure { packs.showError() }
+        }
     }
 
     /** From Stats: jump to the collection filtered to one set or rarity. */
