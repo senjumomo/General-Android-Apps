@@ -1,16 +1,16 @@
 // Renders the generated pack (app/build/holo/pack.png, written by HoloTest.packArt) through the app's
 // exact OpenGL shaders, mirroring PackGLView: sealed, tearing, and the rip animation.
-// usage: node gl-pack.js <app/build/holo> <out.png>
+// usage: node gl-pack.js <app/build/holo> <out.png> [frames.json: [[label, tiltX, tiltY, tearProgress, ripT], ...]]
 const { chromium } = require('playwright');
 const fs = require('fs');
-const [,, dir, outPath] = process.argv;
+const [,, dir, outPath, framesArg] = process.argv;
 const vert = fs.readFileSync(`${dir}/card.vert`, 'utf8');
 const frag = fs.readFileSync(`${dir}/card.frag`, 'utf8');
 const shadow = fs.readFileSync(`${dir}/shadow.frag`, 'utf8');
 const img = 'data:image/png;base64,' + fs.readFileSync(`${dir}/pack.png`).toString('base64');
 const VW = 300, VH = 480, PW = 640, PH = 1110, TEAR_Y = 0.115;
 // [label, tiltX, tiltY, tearProgress, ripT]
-const frames = [['Sealed', -0.5, -0.2, 0, 0], ['Sealed (tilted)', 0.6, 0.35, 0, 0], ['Tearing 60%', 0.1, 0, 0.6, 0],
+const frames = framesArg ? JSON.parse(require('fs').readFileSync(framesArg, 'utf8')) : [['Sealed', -0.5, -0.2, 0, 0], ['Sealed (tilted)', 0.6, 0.35, 0, 0], ['Tearing 60%', 0.1, 0, 0.6, 0],
                 ['Rip 20%', 0.1, 0, 1, 0.2], ['Rip 45%', 0.1, 0, 1, 0.45], ['Rip 70%', 0.1, 0, 1, 0.7]];
 (async () => {
   const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
