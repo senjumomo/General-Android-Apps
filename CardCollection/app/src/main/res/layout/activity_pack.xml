@@ -6,6 +6,13 @@
     android:layout_height="match_parent"
     android:background="@drawable/holo_bg">
 
+    <!-- Light effects behind everything: dimming, the burst from the opening, the big-pull background -->
+    <com.senjumomo.cards.packs.PackFx
+        android:id="@+id/fxBack"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no" />
+
     <!-- Loading -->
     <LinearLayout
         android:id="@+id/loading"
@@ -135,6 +142,13 @@
                 app:shapeAppearanceOverlay="@style/CardImage" />
         </FrameLayout>
 
+        <!-- Sparkles and flares in front of the card -->
+        <com.senjumomo.cards.packs.PackFx
+            android:id="@+id/fxFront"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no" />
+
         <!-- Big pulls are shown shining -->
         <com.senjumomo.cards.holo.HoloGLView
             android:id="@+id/holo"
@@ -177,8 +191,23 @@
                 android:layout_marginTop="16dp"
                 android:text="Tap to flip"
                 android:textAppearance="?attr/textAppearanceLabelLarge"
-                android:textColor="#9A9AAE" />
+                android:textColor="#C4C4D4" />
         </LinearLayout>
+
+        <!-- Hold to race through the cards (stops before the big pull) -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/skip"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="12dp"
+            android:contentDescription="Hold to skip through the cards"
+            android:text="Hold"
+            android:textColor="#C4C4D4"
+            app:icon="@drawable/ic_fast_forward"
+            app:iconGravity="textTop"
+            app:iconTint="#E8E8F2" />
     </FrameLayout>
 
     <!-- Stage 3: what you pulled -->

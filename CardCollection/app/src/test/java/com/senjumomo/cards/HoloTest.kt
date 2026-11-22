@@ -87,4 +87,59 @@ class HoloTest {
         }
         paparazzi.snapshot(view)
     }
+
+    /**
+     * Pack opening light effects, frozen at moments: the room dimming as you cut, the burst of light
+     * from the opening, a big pull landing (flare + sparkles), and the colour-flooded background.
+     */
+    @Test
+    fun packEffects() {
+        val ctx = paparazzi.context
+        val back = com.senjumomo.cards.packs.CardBack.get()
+        val pw = 412
+        val ph = 860
+        val pink = android.graphics.Color.rgb(255, 120, 220)
+
+        fun panel(at: Long, setup: (com.senjumomo.cards.packs.PackFx, android.graphics.RectF) -> Unit): android.graphics.Bitmap {
+            val frame = android.widget.FrameLayout(ctx)
+            frame.setBackgroundResource(R.drawable.holo_bg)
+            val fx = com.senjumomo.cards.packs.PackFx(ctx)
+            var clock = 10_000L
+            fx.now = { clock }
+            val iv = android.widget.ImageView(ctx).apply { setImageBitmap(back); scaleType = android.widget.ImageView.ScaleType.FIT_XY }
+            val cw = (pw * 0.68f).toInt()
+            val ch = cw * back.height / back.width
+            val top = (ph * 0.22f).toInt()
+            frame.addView(fx, android.widget.FrameLayout.LayoutParams(-1, -1))
+            frame.addView(iv, android.widget.FrameLayout.LayoutParams(cw, ch).apply {
+                gravity = android.view.Gravity.CENTER_HORIZONTAL; topMargin = top })
+            val left = (pw - cw) / 2f
+            setup(fx, android.graphics.RectF(left, top.toFloat(), left + cw, top + ch.toFloat()))
+            clock = at
+            frame.measure(android.view.View.MeasureSpec.makeMeasureSpec(pw, android.view.View.MeasureSpec.EXACTLY),
+                android.view.View.MeasureSpec.makeMeasureSpec(ph, android.view.View.MeasureSpec.EXACTLY))
+            frame.layout(0, 0, pw, ph)
+            val bmp = android.graphics.Bitmap.createBitmap(pw, ph, android.graphics.Bitmap.Config.ARGB_8888)
+            frame.draw(android.graphics.Canvas(bmp))
+            return bmp
+        }
+
+        val frames = listOf(
+            panel(10_000) { fx, _ -> fx.dim(0.6f) },                                           // cutting
+            panel(10_380) { fx, r -> fx.burst(r.centerX(), r.top + 40f, r.width()) },           // the rip
+            panel(10_220) { fx, r ->                                                            // big pull lands
+                fx.rainbow(true)
+                fx.flare(r.right - r.width() * 0.12f, r.top + r.height() * 0.08f, pink)
+                fx.twinkle(r, 7, pink)
+            },
+            panel(12_000) { fx, _ -> fx.rainbow(true) },                                        // shining
+        )
+        val all = android.graphics.Bitmap.createBitmap(pw * frames.size, ph, android.graphics.Bitmap.Config.ARGB_8888)
+        val c = android.graphics.Canvas(all)
+        frames.forEachIndexed { i, b -> c.drawBitmap(b, (i * pw).toFloat(), 0f, null) }
+        java.io.File("build/holo").mkdirs()
+        java.io.FileOutputStream("build/holo/pack-fx.png").use { all.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+        val view = android.widget.ImageView(ctx).apply { setImageBitmap(all); adjustViewBounds = true }
+        paparazzi.snapshot(view)
+    }
 }

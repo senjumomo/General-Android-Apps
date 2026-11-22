@@ -3,11 +3,13 @@ package com.senjumomo.cards.packs
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.RectF
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.annotation.SuppressLint
@@ -19,6 +21,7 @@ import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
 import android.view.animation.DecelerateInterpolator
+import android.view.animation.OvershootInterpolator
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
@@ -47,9 +50,11 @@ import com.senjumomo.cards.holo.TiltTracker
 import com.senjumomo.cards.net.Exchange
 import com.senjumomo.cards.ui.Money
 import kotlinx.coroutines.launch
+import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.roundToLong
 import kotlin.math.sign
+import kotlin.math.sin
 
 /**
  * Pack opening: a 3D foil pack you tear open, then the cards one at a time (the big pull last, with
@@ -69,6 +74,11 @@ class PackOpenActivity : AppCompatActivity() {
     private lateinit var current: ImageView
     private lateinit var nextBack: ImageView
     private lateinit var glow: View
+    private lateinit var fxBack: PackFx
+    private lateinit var fxFront: PackFx
+    private lateinit var cardArea: View
+    /** Holding the fast-forward button. */
+    private var skipping = false
 
     private var setCards: List<SetCard> = emptyList()
     private var packBitmap: Bitmap? = null
@@ -110,6 +120,10 @@ class PackOpenActivity : AppCompatActivity() {
         current = findViewById(R.id.current)
         nextBack = findViewById(R.id.nextBack)
         glow = findViewById(R.id.glow)
+        fxBack = findViewById(R.id.fxBack)
+        fxFront = findViewById(R.id.fxFront)
+        cardArea = findViewById(R.id.cardArea)
+        current.cameraDistance = 9000 * resources.displayMetrics.density
         if (tilt.available) {
             packView.externalTilt = { tilt.x to tilt.y }
             holo.externalTilt = { tilt.x to tilt.y }
@@ -122,6 +136,7 @@ class PackOpenActivity : AppCompatActivity() {
             findViewById<View>(R.id.packControls).updatePadding(bottom = bars.bottom + dp(28))
             findViewById<View>(R.id.summaryButtons).updatePadding(bottom = bars.bottom + dp(16))
             findViewById<View>(R.id.summaryStage).updatePadding(top = bars.top + dp(56))
+            findViewById<View>(R.id.skip).translationY = -bars.bottom.toFloat()
             insets
         }
         close.setOnClickListener { finish() }
@@ -130,9 +145,14 @@ class PackOpenActivity : AppCompatActivity() {
             val step = (p * 10).toInt()
             if (step > lastTick) { lastTick = step; haptics.tick() }
             if (p == 0f) lastTick = 0
+            // The room goes dark as you cut, so the light from inside stands out.
+            fxBack.dim(p * 0.6f, if (p == 0f) 250 else 60)
         }
         packView.onRip = {
             haptics.rip()
+            val (x, y, w) = packView.tearLine().let { Triple(it[0], it[1], it[2]) }
+            fxBack.dim(0f, 700)
+            fxBack.burst(packView.left + x, packView.top + y, w)
             findViewById<View>(R.id.tearHint).animate().alpha(0f).setDuration(150).start()
             findViewById<View>(R.id.openButton).visibility = View.INVISIBLE
         }
@@ -145,6 +165,16 @@ class PackOpenActivity : AppCompatActivity() {
         // The holo view keeps its drag-to-tilt; the same gesture can also throw the card away.
         holo.setOnTouchListener { _, e -> onSwipeTouch(stage, e, consume = false) }
         findViewById<MaterialButton>(R.id.openAnother).setOnClickListener { newPack() }
+        findViewById<MaterialButton>(R.id.skip).apply {
+            setOnClickListener { skipStep() }
+            setOnTouchListener { v, e ->
+                when (e.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> { v.isPressed = true; skipping = true; skipTick.run() }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> { v.isPressed = false; skipping = false }
+                }
+                true
+            }
+        }
         findViewById<MaterialButton>(R.id.choosePack).setOnClickListener { finish() }
 
         findViewById<TextView>(R.id.setName).text = set.name
@@ -160,6 +190,7 @@ class PackOpenActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        skipping = false
         tilt.stop()
         packView.onPause()
         holo.onPause()
@@ -193,6 +224,9 @@ class PackOpenActivity : AppCompatActivity() {
         index = 0
         lastTick = 0
         bigImages.clear()
+        fxBack.clear()
+        fxFront.clear()
+        skipping = false
         prefetch()
         findViewById<View>(R.id.loading).visibility = View.GONE
         findViewById<View>(R.id.summaryStage).visibility = View.GONE
@@ -240,19 +274,29 @@ class PackOpenActivity : AppCompatActivity() {
         current.translationX = 0f
         current.translationY = 0f
         current.rotation = 0f
+        current.scaleX = 1f; current.scaleY = 1f
         current.alpha = 1f
+        fxBack.rainbow(false)
         current.visibility = View.VISIBLE
         if (revealed) loadFace(c) else current.setImageBitmap(backImage())
         nextBack.visibility = if (i + 1 < pack.size) View.VISIBLE else View.INVISIBLE
         nextBack.setImageBitmap(backImage())
         findViewById<TextView>(R.id.counter).text = "${i + 1} / ${pack.size}"
-        updateLabels(if (revealed) c else null)
+        updateLabels(if (revealed) c else null, pop = revealed)
         findViewById<TextView>(R.id.tapHint).text = if (revealed) nextHint() else "Tap to flip"
+        // Each card lands with a little twinkle.
+        if (revealed) cardArea.post { if (index == i) fxFront.twinkle(cardRect(), count = 2) }
     }
 
     private fun nextHint() = if (index + 1 >= pack.size) "Swipe to see your pulls" else "Swipe for the next card"
 
-    private fun updateLabels(c: SetCard?) {
+    /** The card's bounds on screen (in the reveal stage's coordinates). */
+    private fun cardRect() = RectF(
+        cardArea.left.toFloat(), cardArea.top + current.top.toFloat(),
+        cardArea.right.toFloat(), cardArea.top + current.bottom.toFloat(),
+    )
+
+    private fun updateLabels(c: SetCard?, pop: Boolean = false) {
         val name = findViewById<TextView>(R.id.pullName)
         val rarity = findViewById<TextView>(R.id.pullRarity)
         if (c == null) {
@@ -264,6 +308,12 @@ class PackOpenActivity : AppCompatActivity() {
         val value = valueCents(c)?.let { " · " + Money.format(it, currency) } ?: ""
         rarity.text = c.rarity + value
         rarity.setTextColor(tierColor(c.tier))
+        if (pop) {
+            // The rarity pops in.
+            rarity.alpha = 0f; rarity.scaleX = 0.4f; rarity.scaleY = 0.4f
+            rarity.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(380)
+                .setInterpolator(OvershootInterpolator(if (c.tier >= Tier.SUPER) 3.5f else 2f)).start()
+        }
     }
 
     /** Tap flips a face-down card; on a revealed card it nudges sideways to show it can be swiped. */
@@ -356,9 +406,34 @@ class PackOpenActivity : AppCompatActivity() {
             }).start()
     }
 
+    /** One step of fast-forward: flip the face-down card, or throw away the revealed one. */
+    private fun skipStep(): Boolean {
+        if (busy || findViewById<View>(R.id.revealStage).visibility != View.VISIBLE) return true
+        val c = pack[index]
+        if (!revealed) {
+            // Never skip past a big pull: stop and let it be revealed properly.
+            if (c.tier >= Tier.ULTRA) { onCardTap(); return false }
+            busy = true
+            doFlip(c, slow = false)
+        } else {
+            throwCard(swipeTarget(), -1f, dp(3200).toFloat())
+        }
+        return true
+    }
+
+    private val skipTick = object : Runnable {
+        override fun run() {
+            if (!skipping) return
+            if (!skipStep()) { skipping = false; return }
+            current.postDelayed(this, 110)
+        }
+    }
+
     private fun flip(c: SetCard) {
         busy = true
         val big = c.tier >= Tier.SUPER
+        // Ultra Rares and better: the background floods with colour while it builds up.
+        if (c.tier >= Tier.ULTRA) fxBack.rainbow(true)
         if (big) {
             // Glow in the rarity's colour, building up before the flip.
             glow.backgroundTintList = ColorStateList.valueOf(tierColor(c.tier))
@@ -370,7 +445,7 @@ class PackOpenActivity : AppCompatActivity() {
             val shake = ObjectAnimator.ofFloat(current, View.ROTATION, 0f, -2f, 2f, -2f, 2f, 0f)
             shake.duration = if (c.tier >= Tier.SECRET) 1100 else 650
             shake.start()
-            current.postDelayed({ doFlip(c, slow = true) }, shake.duration)
+            current.postDelayed({ if (c.tier >= Tier.ULTRA) spin(c) else doFlip(c, slow = true) }, shake.duration)
         } else {
             doFlip(c, slow = false)
         }
@@ -391,12 +466,56 @@ class PackOpenActivity : AppCompatActivity() {
         haptics.flip()
     }
 
+    /** Big pulls spin round one and a half times, back to face, landing with a flare. */
+    private fun spin(c: SetCard) {
+        val face = bigImages[c.artworkId]
+        var showingFace = false
+        haptics.flip()
+        ValueAnimator.ofFloat(0f, 540f).apply {
+            duration = 1150
+            interpolator = DecelerateInterpolator(1.5f)
+            addUpdateListener {
+                val angle = it.animatedValue as Float
+                val m = angle % 360f
+                val faceSide = m > 90f && m < 270f
+                if (faceSide != showingFace) {
+                    showingFace = faceSide
+                    when {
+                        faceSide && face != null -> current.setImageBitmap(face)
+                        faceSide -> loadFace(c)          // big image not ready: stay on the face from here
+                        face != null -> current.setImageBitmap(backImage())
+                    }
+                }
+                // Keep the visible side within ±90° so it's never drawn mirrored.
+                current.rotationY = (angle + 90f) % 180f - 90f
+                val lift = 1f + 0.14f * sin(angle / 540f * PI.toFloat())
+                current.scaleX = lift; current.scaleY = lift
+            }
+            addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    current.rotationY = 0f
+                    current.scaleX = 1f; current.scaleY = 1f
+                    if (!showingFace) loadFace(c)
+                    afterFlip(c)
+                }
+            })
+            start()
+        }
+    }
+
     private fun afterFlip(c: SetCard) {
         revealed = true
         busy = false
-        updateLabels(c)
+        updateLabels(c, pop = true)
         findViewById<TextView>(R.id.tapHint).text = nextHint()
-        if (c.tier >= Tier.SUPER) haptics.bigReveal()
+        val r = cardRect()
+        if (c.tier >= Tier.SUPER) {
+            haptics.bigReveal()
+            fxFront.flare(r.right - r.width() * 0.12f, r.top + r.height() * 0.08f, tierColor(c.tier))
+            fxFront.twinkle(r, count = if (c.tier >= Tier.ULTRA) 7 else 5, color = tierColor(c.tier))
+        } else {
+            fxFront.twinkle(r, count = 3)
+        }
         glow.animate().alpha(if (c.tier >= Tier.ULTRA) 0.55f else 0f).setDuration(600).start()
         // Ultra Rares and better: show it shining in 3D.
         val bmp = bigImages[c.artworkId]
@@ -411,6 +530,8 @@ class PackOpenActivity : AppCompatActivity() {
 
     private fun showSummary() {
         glow.alpha = 0f
+        skipping = false
+        fxBack.rainbow(false)
         holo.visibility = View.GONE
         findViewById<View>(R.id.revealStage).visibility = View.GONE
         findViewById<View>(R.id.summaryStage).visibility = View.VISIBLE

@@ -70,6 +70,12 @@ class PackGLView @JvmOverloads constructor(
 
     val isOpened get() = ripStart != 0L
 
+    /** The tear line: centre x, y and the pack's width, in view pixels (approximate, untilted). */
+    fun tearLine(): FloatArray {
+        val r = packRect()
+        return floatArrayOf(r[0] + r[2] / 2, r[1] + r[3] * PackArt.TEAR_Y, r[2])
+    }
+
     /** Where the pack is, in view pixels, for touch handling (approximate, untilted). */
     private fun packRect(): FloatArray {
         val aspect = width.toFloat() / height

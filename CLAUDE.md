@@ -156,7 +156,13 @@ Preview tools (see `CardCollection/tools/holo-preview/README.md`):
   finger, flick or drag past 28% throws it; on the holo view the same drag also tilts). Faces use 813×1185 scans; back is the official Yugipedia image
   (`CardBack.get()` draws a stand-in only while loading or offline).
 - Simulator only: pulls are never added to the collection automatically (♡ adds to wishlist).
+- Light effects (`PackFx`, plain Canvas, clock-driven so `HoloTest.packEffects` can freeze frames):
+  `fxBack` behind everything (dim while cutting, rainbow rays + sparks from the tear line on rip,
+  colour-flooded background for Ultra+), `fxFront` above the card (twinkles on landing, flare on
+  Super+). Ultra+ spin 540° back→face (`spin`), rarity label pops in. "Hold" button fast-forwards
+  (flips/throws every 110 ms) and stops at an Ultra+ so the big pull is never skipped.
+  Inspired by the user's Pokémon TCG Pocket video: same kind of effects, none of its assets.
 
 ### Ideas not built yet (pack opening round 2)
 
-Light rays/particles on big pulls, sound effects, open a whole box, pack history and best pulls.
+Sound effects, open a whole box, pack history and best pulls.
