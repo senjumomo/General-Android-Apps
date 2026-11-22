@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView style="@style/Header" android:text="Previous month" />
+
+        <TextView style="@style/Label" android:text="Previous month's debt (R)" />
+        <EditText
+            android:id="@+id/debt"
+            style="@style/Input"
+            android:hint="e.g. 900" />
+
+        <TextView style="@style/Header" android:text="Water" />
+
+        <TextView style="@style/Label" android:text="Previous month's reading (KL)" />
+        <EditText
+            android:id="@+id/waterPrev"
+            style="@style/Input"
+            android:hint="e.g. 800" />
+
+        <TextView style="@style/Label" android:text="Current month's reading (KL)" />
+        <EditText
+            android:id="@+id/waterCurr"
+            style="@style/Input"
+            android:hint="e.g. 810" />
+
+        <TextView style="@style/Label" android:text="Price per KL (R)" />
+        <EditText
+            android:id="@+id/waterPrice"
+            style="@style/Input"
+            android:hint="e.g. 70" />
+
+        <TextView style="@style/Header" android:text="Electricity" />
+
+        <TextView style="@style/Label" android:text="Number of tokens" />
+        <EditText
+            android:id="@+id/tokens"
+            style="@style/Input"
+            android:hint="e.g. 10" />
+
+        <TextView style="@style/Label" android:text="Price per token (R)" />
+        <EditText
+            android:id="@+id/tokenPrice"
+            style="@style/Input"
+            android:hint="e.g. 100" />
+
+        <Button
+            android:id="@+id/calculate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Calculate" />
+
+        <TextView
+            android:id="@+id/output"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/output_bg"
+            android:padding="14dp"
+            android:textColor="#111111"
+            android:textIsSelectable="true"
+            android:textSize="16sp"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/actions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <Button
+                android:id="@+id/copy"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Copy" />
+
+            <Button
+                android:id="@+id/share"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Share" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/newMonth"
+            style="@android:style/Widget.Material.Button.Borderless.Colored"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Start new month (current reading becomes previous)" />
+    </LinearLayout>
+</ScrollView>
