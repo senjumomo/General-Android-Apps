@@ -79,6 +79,8 @@ class PackOpenActivity : AppCompatActivity() {
     private lateinit var cardArea: View
     /** Holding the fast-forward button. */
     private var skipping = false
+    /** Bumped for every card shown, so a pending automatic flip only applies to its own card. */
+    private var cardToken = 0
 
     private var setCards: List<SetCard> = emptyList()
     private var packBitmap: Bitmap? = null
@@ -224,6 +226,7 @@ class PackOpenActivity : AppCompatActivity() {
         index = 0
         lastTick = 0
         bigImages.clear()
+        cardToken++
         fxBack.clear()
         fxFront.clear()
         skipping = false
@@ -283,9 +286,19 @@ class PackOpenActivity : AppCompatActivity() {
         nextBack.setImageBitmap(backImage())
         findViewById<TextView>(R.id.counter).text = "${i + 1} / ${pack.size}"
         updateLabels(if (revealed) c else null, pop = revealed)
-        findViewById<TextView>(R.id.tapHint).text = if (revealed) nextHint() else "Tap to flip"
+        findViewById<TextView>(R.id.tapHint).text = if (revealed) nextHint() else ""
         // Each card lands with a little twinkle.
         if (revealed) cardArea.post { if (index == i) fxFront.twinkle(cardRect(), count = 2) }
+        // Face-down cards turn over by themselves once they've landed (big pulls build up first).
+        val token = ++cardToken
+        if (!revealed) current.postDelayed(object : Runnable {
+            override fun run() {
+                if (token != cardToken || revealed || busy) return
+                if (swiping) { current.postDelayed(this, 150); return }   // wait for the finger to let go
+                current.translationX = 0f; current.rotation = 0f
+                flip(c)
+            }
+        }, if (i == 0) AUTO_FLIP_MS + 300 else AUTO_FLIP_MS)
     }
 
     private fun nextHint() = if (index + 1 >= pack.size) "Swipe to see your pulls" else "Swipe for the next card"
@@ -316,7 +329,7 @@ class PackOpenActivity : AppCompatActivity() {
         }
     }
 
-    /** Tap flips a face-down card; on a revealed card it nudges sideways to show it can be swiped. */
+    /** Tap flips a face-down card early; on a revealed card it nudges sideways to show it can be swiped. */
     private fun onCardTap() {
         if (busy) return
         if (!revealed) { flip(pack[index]); return }
@@ -411,8 +424,8 @@ class PackOpenActivity : AppCompatActivity() {
         if (busy || findViewById<View>(R.id.revealStage).visibility != View.VISIBLE) return true
         val c = pack[index]
         if (!revealed) {
-            // Never skip past a big pull: stop and let it be revealed properly.
-            if (c.tier >= Tier.ULTRA) { onCardTap(); return false }
+            // Never skip past a big pull: stop and let it reveal itself properly.
+            if (c.tier >= Tier.ULTRA) return false
             busy = true
             doFlip(c, slow = false)
         } else {
@@ -638,6 +651,9 @@ class PackOpenActivity : AppCompatActivity() {
         const val EXTRA_NAME = "name"
         const val EXTRA_COUNT = "count"
         const val EXTRA_DATE = "date"
+
+        /** Pause before a face-down card flips by itself. */
+        const val AUTO_FLIP_MS = 450L
 
         fun intent(context: Context, set: CardSet) = Intent(context, PackOpenActivity::class.java)
             .putExtra(EXTRA_CODE, set.code).putExtra(EXTRA_NAME, set.name)

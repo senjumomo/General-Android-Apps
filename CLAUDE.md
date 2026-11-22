@@ -151,8 +151,9 @@ Preview tools (see `CardCollection/tools/holo-preview/README.md`):
 - `PackGenerator`: 9 cards = 7 Commons + 1 Rare (or a Super in sets with no Rares) + 1 foil slot (Ultra
   1/6, Secret 1/12, QCSR/Prismatic/Platinum 1/24, Collector's 1/48, Starlight/Ghost 1/288); all-foil sets
   fill every slot from the foil distribution. Approximate community odds, covered by a 20k-pack test.
-- Reveal: Commons face up; Rare+ face down with a rarity-coloured glow and shake before the flip;
-  Ultra+ shown in `HoloGLView`. Tap flips; revealed cards are swiped away either side (drag follows the
+- Reveal: Commons face up; Rare+ land face down and flip by themselves after `AUTO_FLIP_MS` (user
+  found tapping to reveal annoying; a tap still flips early), with a rarity-coloured glow and shake first;
+  Ultra+ shown in `HoloGLView`. Revealed cards are swiped away either side (drag follows the
   finger, flick or drag past 28% throws it; on the holo view the same drag also tilts). Faces use 813×1185 scans; back is the official Yugipedia image
   (`CardBack.get()` draws a stand-in only while loading or offline).
 - Simulator only: pulls are never added to the collection automatically (♡ adds to wishlist).
