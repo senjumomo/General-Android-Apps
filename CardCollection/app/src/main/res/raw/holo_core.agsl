@@ -130,20 +130,27 @@ float4 shade(float2 uv) {
                      + luma(sampleCard(uv + float2(0.0, r.y)).rgb) + luma(sampleCard(uv - float2(0.0, r.y)).rgb)
                      + luma(sampleCard(uv + r).rgb) + luma(sampleCard(uv - r).rgb)
                      + luma(sampleCard(uv + float2(r.x, -r.y)).rgb) + luma(sampleCard(uv + float2(-r.x, r.y)).rgb);
-        // Which way round is the text? Along the bar's centre line the letters are the minority, so
-        // whichever extreme is further from the average is the letters' side (dark or light text).
-        float lo = 1.0;
-        float hi = 0.0;
-        float sum = 0.0;
-        float yc = (nameRect.y + nameRect.w) * 0.5;
-        for (int i = 0; i < 12; i++) {
-            float v = luma(sampleCard(float2(nameRect.x + 0.02 + float(i) * 0.058, yc)).rgb);
-            lo = min(lo, v);
-            hi = max(hi, v);
-            sum += v;
+        // Which way round is the text? Compare the lettering rows with the bar's plain margins just
+        // above and below them: whichever way (darker or lighter) strays further from the margins is
+        // the letters' side. (Sampling only the centre line was a coin flip: it hits letters about
+        // half the time, so its average sits between the two.)
+        float bg = 0.0;
+        float darkSide = 0.0;
+        float lightSide = 0.0;
+        for (int i = 0; i < 16; i++) {
+            float x = 0.08 + float(i) * 0.049;     // stays left of the attribute icon
+            bg += luma(sampleCard(float2(x, 0.052)).rgb) + luma(sampleCard(float2(x, 0.1015)).rgb);
         }
-        float mean = sum / 12.0;
-        float polarity = (mean - lo) > (hi - mean) ? 1.0 : -1.0;   // 1 = dark letters
+        bg /= 32.0;
+        for (int i = 0; i < 16; i++) {
+            float x = 0.08 + float(i) * 0.049;
+            for (int j = 0; j < 3; j++) {
+                float v = luma(sampleCard(float2(x, 0.068 + float(j) * 0.01)).rgb);
+                darkSide += max(bg - v - 0.08, 0.0);
+                lightSide += max(v - bg - 0.08, 0.0);
+            }
+        }
+        float polarity = darkSide > lightSide ? 1.0 : -1.0;   // 1 = dark letters
         // A letter pixel is on the letters' side of its surroundings (so the background next to a
         // letter, which is on the other side, isn't picked up).
         float diff = (around * 0.125 - luma(base)) * polarity;
