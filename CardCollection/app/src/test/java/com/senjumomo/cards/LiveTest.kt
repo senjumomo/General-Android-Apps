@@ -42,6 +42,11 @@ class LiveTest {
             pack.joinToString { "${it.name} (${it.rarity})" })
         assertTrue(pack.size == 9)
 
+        val backOk = (java.net.URL(com.senjumomo.cards.packs.CardBack.OFFICIAL_URL).openConnection() as java.net.HttpURLConnection)
+            .apply { setRequestProperty("User-Agent", "CardBinder/2.0 (Android)") }.responseCode
+        println("Official card back: HTTP $backOk")
+        assertTrue(backOk == 200)
+
         val export = System.getenv("CARD_EXPORT") ?: return@runBlocking
         val cards = CollectionJson.parse(File(export).readText()).take(8)
         cards.forEach { c ->

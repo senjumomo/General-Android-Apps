@@ -16,10 +16,13 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 /**
- * The back of a card, drawn by the app at full card resolution (813 × 1185): a bronze frame around a
- * dark swirling vortex. Made once and kept in memory.
+ * The back of a card. The real one is the official TCG back from Yugipedia (927 × 1353), downloaded
+ * once and cached; [get] is a drawn stand-in used only until it's loaded or when offline.
  */
 object CardBack {
+    /** Official English TCG card back, full resolution. */
+    const val OFFICIAL_URL = "https://img.yugipedia.com/e/e5/Back-EN.png"
+
     const val WIDTH = 813
     const val HEIGHT = 1185
 

@@ -75,6 +75,9 @@ class PackOpenActivity : AppCompatActivity() {
     private var currency = "ZAR"
     private var collection: List<Card> = emptyList()
     private val bigImages = mutableMapOf<Long, Bitmap>()
+    /** The official card back once downloaded; the drawn stand-in until then. */
+    private var back: Bitmap? = null
+    private fun backImage(): Bitmap = back ?: CardBack.get()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -160,7 +163,7 @@ class PackOpenActivity : AppCompatActivity() {
             collection = dao.all()
             currency = collection.firstOrNull()?.currency ?: "ZAR"
             usdRate = runCatching { Exchange.usdTo(currency) }.getOrNull()
-            launch(kotlinx.coroutines.Dispatchers.Default) { CardBack.get() }
+            launch { back = fetch(CardBack.OFFICIAL_URL) ?: withContextDefault { CardBack.get() } }
             val art = PackArt.featured(setCards)?.let { fetch(PackArt.croppedArtUrl(it.artworkId)) }
             packBitmap = PackArt.draw(set, art)
             newPack()
@@ -222,9 +225,9 @@ class PackOpenActivity : AppCompatActivity() {
         current.rotation = 0f
         current.alpha = 1f
         current.visibility = View.VISIBLE
-        if (revealed) loadFace(c) else current.setImageBitmap(CardBack.get())
+        if (revealed) loadFace(c) else current.setImageBitmap(backImage())
         nextBack.visibility = if (i + 1 < pack.size) View.VISIBLE else View.INVISIBLE
-        nextBack.setImageBitmap(CardBack.get())
+        nextBack.setImageBitmap(backImage())
         findViewById<TextView>(R.id.counter).text = "${i + 1} / ${pack.size}"
         updateLabels(if (revealed) c else null)
         findViewById<TextView>(R.id.tapHint).text = if (revealed) "Tap for the next card" else "Tap to flip"
@@ -417,6 +420,9 @@ class PackOpenActivity : AppCompatActivity() {
     }
 
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
+
+    private suspend fun <T> withContextDefault(block: () -> T): T =
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { block() }
 
     companion object {
         const val EXTRA_CODE = "code"

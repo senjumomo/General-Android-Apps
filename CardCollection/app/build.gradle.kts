@@ -13,8 +13,8 @@ android {
         applicationId = "com.senjumomo.cards"
         minSdk = 24
         targetSdk = 35
-        versionCode = 8
-        versionName = "5.1"
+        versionCode = 9
+        versionName = "5.2"
     }
 
     buildTypes {
