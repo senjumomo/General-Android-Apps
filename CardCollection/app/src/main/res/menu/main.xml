@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/action_scan" android:icon="@drawable/ic_camera"
+        android:title="Scan a card" app:showAsAction="ifRoom" />
+    <item android:id="@+id/action_view" android:icon="@drawable/ic_grid"
+        android:title="Grid view" app:showAsAction="ifRoom" />
+    <item android:id="@+id/action_refresh" android:icon="@drawable/ic_refresh"
+        android:title="Refresh prices" app:showAsAction="never" />
     <item android:id="@+id/action_import" android:icon="@drawable/ic_import"
-        android:title="Import collection" app:showAsAction="ifRoom" />
+        android:title="Import collection" app:showAsAction="never" />
     <item android:id="@+id/action_export" android:icon="@drawable/ic_export"
-        android:title="Export collection" app:showAsAction="ifRoom" />
+        android:title="Export collection" app:showAsAction="never" />
 </menu>

@@ -32,6 +32,8 @@ class CardForm(root: View) {
     private val infoCard: View = root.findViewById(R.id.infoCard)
     private val added: TextView = root.findViewById(R.id.added)
     val tcgplayer: MaterialButton = root.findViewById(R.id.tcgplayer)
+    val image: android.widget.ImageView = root.findViewById(R.id.image)
+    private val wishlist: com.google.android.material.materialswitch.MaterialSwitch = root.findViewById(R.id.wishlist)
 
     private var original: Card? = null
     private var currency = "ZAR"
@@ -54,7 +56,7 @@ class CardForm(root: View) {
     }
 
     /** Fill the form from [card] (null = new card) and set autocomplete suggestions. */
-    fun bind(card: Card?, sets: List<String>, rarities: List<String>) {
+    fun bind(card: Card?, sets: List<String>, rarities: List<String>, newOnWishlist: Boolean = false) {
         original = card
         currency = card?.currency ?: "ZAR"
         val symbol = Money.symbol(currency).trim()
@@ -72,9 +74,16 @@ class CardForm(root: View) {
         value.setText(card?.valuePerUnitCents?.let(CollectionJson::plain).orEmpty())
         paid.setText(card?.paidPerUnitCents?.let(CollectionJson::plain).orEmpty())
         quantity = card?.quantity ?: 1
+        wishlist.isChecked = card?.wishlist ?: newOnWishlist
+        val imageUrl = card?.let(com.senjumomo.cards.data.CardImages::large)
+        image.visibility = if (imageUrl == null) View.GONE else View.VISIBLE
+        com.senjumomo.cards.data.CardImages.load(image, imageUrl)
 
         infoCard.visibility = if (card == null) View.GONE else View.VISIBLE
-        added.text = card?.let { "Added ${Dates.label(it.dateAdded)} · ${it.gradeType}" }.orEmpty()
+        added.text = card?.let {
+            "Added ${Dates.label(it.dateAdded)} · ${it.gradeType}" +
+                (it.priceUpdatedAt?.let { d -> "\nPrice updated ${Dates.label(d)} from TCGplayer" } ?: "")
+        }.orEmpty()
         tcgplayer.visibility = if (card?.tcgplayerId != null) View.VISIBLE else View.GONE
     }
 
@@ -117,6 +126,7 @@ class CardForm(root: View) {
             quantity = quantity,
             valuePerUnitCents = v!!,
             paidPerUnitCents = p,
+            wishlist = wishlist.isChecked,
         )
     }
 

@@ -30,6 +30,10 @@ data class Card(
     /** ISO-8601 local date-time, e.g. "2026-08-01T23:17:39.479". */
     val dateAdded: String,
     val tag: String = "",
+    /** Fallback image (YGOPRODeck) for cards without a TCGplayer id. "" = looked up, none found. */
+    val imageUrl: String? = null,
+    /** When the value was last refreshed from TCGplayer (ISO-8601). */
+    val priceUpdatedAt: String? = null,
 ) {
     val valueTotalCents: Long get() = valuePerUnitCents * quantity
     val paidTotalCents: Long? get() = paidPerUnitCents?.let { it * quantity }

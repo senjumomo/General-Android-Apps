@@ -6,14 +6,23 @@
     android:clickable="true"
     android:focusable="true"
     app:cardCornerRadius="16dp"
-    app:contentPaddingBottom="12dp"
-    app:contentPaddingTop="12dp">
+    app:contentPaddingBottom="10dp"
+    app:contentPaddingLeft="10dp"
+    app:contentPaddingTop="10dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
         android:orientation="horizontal">
+
+        <com.senjumomo.cards.ui.CardImageView
+            android:id="@+id/image"
+            android:layout_width="48dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="12dp"
+            android:importantForAccessibility="no"
+            app:shapeAppearanceOverlay="@style/CardImage" />
 
         <LinearLayout
             android:layout_width="0dp"

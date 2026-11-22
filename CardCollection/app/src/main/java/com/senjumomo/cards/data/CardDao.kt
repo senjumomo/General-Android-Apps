@@ -29,6 +29,9 @@ interface CardDao {
     @Query("DELETE FROM cards")
     suspend fun deleteAll()
 
+    @Query("UPDATE cards SET imageUrl = :url WHERE id = :id")
+    suspend fun setImageUrl(id: String, url: String)
+
     @Transaction
     suspend fun replaceAll(cards: List<Card>) {
         deleteAll()

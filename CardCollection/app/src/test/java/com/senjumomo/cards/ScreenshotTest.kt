@@ -29,14 +29,24 @@ class ScreenshotTest {
         root.allViews.filterIsInstance<TextInputLayout>().forEach { it.isHintAnimationEnabled = false }
     }
 
-    private fun main(cards: List<Card>, filter: Filter = Filter()): View {
+    private fun main(cards: List<Card>, filter: Filter = Filter(), grid: Boolean = false, wishlist: Boolean = false): View {
         val root = inflate(R.layout.activity_main)
         val shown = filter.apply(cards)
         root.findViewById<RecyclerView>(R.id.list).apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = CardAdapter {}.apply {
-                submit(listOf(Row.Header(Summary.of(shown), filter.isActive)) + shown.map { Row.Item(it) })
+            val a = CardAdapter {}.apply {
+                this.grid = grid
+                submit(listOf(Row.Header(Summary.of(shown), filter.isActive, wishlist, "2026-11-22T10:00:00.000")) + shown.map { Row.Item(it) })
             }
+            layoutManager = if (grid) androidx.recyclerview.widget.GridLayoutManager(context, 3).apply {
+                spanSizeLookup = a.spanLookup(3)
+            } else LinearLayoutManager(context)
+            if (grid) setPadding((12 * resources.displayMetrics.density).toInt(), paddingTop, (12 * resources.displayMetrics.density).toInt(), paddingBottom)
+            adapter = a
+        }
+        if (wishlist) {
+            root.findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav).selectedItemId = R.id.tab_wishlist
+            root.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar).title = "Wishlist"
+            root.findViewById<com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton>(R.id.add).text = "Add to wishlist"
         }
         filter.set?.let { root.findViewById<Chip>(R.id.chipSet).apply { text = it; isChecked = true } }
         return root
@@ -65,6 +75,22 @@ class ScreenshotTest {
             title = "Edit card"; inflateMenu(R.menu.edit)
         }
         CardForm(root).bind(Samples.cards[3], emptyList(), emptyList())
+        paparazzi.snapshot(root)
+    }
+
+    @Test fun grid() = paparazzi.snapshot(main(Samples.cards, grid = true))
+
+    @Test fun wishlist() = paparazzi.snapshot(main(Samples.cards.take(3).map { it.copy(wishlist = true, paidPerUnitCents = null) }, wishlist = true))
+
+    @Test fun stats() {
+        paparazzi.unsafeUpdateConfig(device.copy(screenHeight = 3600))
+        val root = inflate(R.layout.activity_main)
+        root.findViewById<View>(R.id.listPage).visibility = View.GONE
+        root.findViewById<View>(R.id.filterBar).visibility = View.GONE
+        root.findViewById<View>(R.id.statsPage).visibility = View.VISIBLE
+        root.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar).title = "Stats"
+        root.findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav).selectedItemId = R.id.tab_stats
+        com.senjumomo.cards.ui.StatsScreen(root, {}, {}, {}).show(Samples.cards)
         paparazzi.snapshot(root)
     }
 

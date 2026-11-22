@@ -33,9 +33,10 @@ class EditActivity : AppCompatActivity() {
         findViewById<android.view.View>(R.id.content).padForSystemBars()
 
         form = CardForm(findViewById(R.id.root))
+        form.image.setOnClickListener { card?.let { showImage(it) } }
         form.tcgplayer.setOnClickListener {
             card?.tcgplayerId?.let {
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.tcgplayer.com/product/$it")))
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(com.senjumomo.cards.net.Tcgplayer.productPage(it))))
             }
         }
 
@@ -46,7 +47,8 @@ class EditActivity : AppCompatActivity() {
             card = id?.let { dao.get(it) }
             if (savedInstanceState == null) {
                 form.bind(card, all.map { it.setName }.filter { it.isNotBlank() }.distinct().sorted(),
-                    all.map { it.rarity }.filter { it.isNotBlank() }.distinct().sorted())
+                    all.map { it.rarity }.filter { it.isNotBlank() }.distinct().sorted(),
+                    newOnWishlist = intent.getBooleanExtra(EXTRA_WISHLIST, false))
             }
             if (card != null) {
                 toolbar.inflateMenu(R.menu.edit)
@@ -62,6 +64,16 @@ class EditActivity : AppCompatActivity() {
                 finish()
             }
         }
+    }
+
+    private fun showImage(card: Card) {
+        val view = layoutInflater.inflate(R.layout.dialog_image, null)
+        val dialog = android.app.Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+        dialog.setContentView(view)
+        com.senjumomo.cards.data.CardImages.load(view.findViewById(R.id.image), com.senjumomo.cards.data.CardImages.large(card))
+        view.setOnClickListener { dialog.dismiss() }
+        view.findViewById<android.view.View>(R.id.close).setOnClickListener { dialog.dismiss() }
+        dialog.show()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -88,6 +100,7 @@ class EditActivity : AppCompatActivity() {
 
     companion object {
         const val EXTRA_ID = "id"
+        const val EXTRA_WISHLIST = "wishlist"
         private const val STATE_QUANTITY = "quantity"
 
         /** Handed back to the list so it can offer Undo. */
