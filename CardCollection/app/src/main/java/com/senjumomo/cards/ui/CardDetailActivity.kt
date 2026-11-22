@@ -121,14 +121,11 @@ class CardDetailActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun showImage(c: Card) {
-        val v = layoutInflater.inflate(R.layout.dialog_image, null)
-        val dialog = android.app.Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
-        dialog.setContentView(v)
-        CardImages.load(v.findViewById(R.id.image), CardImages.large(c))
-        v.setOnClickListener { dialog.dismiss() }
-        v.findViewById<View>(R.id.close).setOnClickListener { dialog.dismiss() }
-        dialog.show()
+    private fun showImage(card: Card) {
+        startActivity(
+            android.content.Intent(this, com.senjumomo.cards.holo.HoloViewerActivity::class.java)
+                .putExtra(com.senjumomo.cards.holo.HoloViewerActivity.EXTRA_ID, card.id)
+        )
     }
 
     companion object {

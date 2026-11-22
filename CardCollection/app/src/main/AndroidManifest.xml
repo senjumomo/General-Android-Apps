@@ -35,6 +35,11 @@
             android:parentActivityName=".ui.MainActivity"
             android:windowSoftInputMode="adjustResize|stateVisible" />
         <activity
+            android:name=".holo.HoloViewerActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.CardDetailActivity"
+            android:theme="@style/Theme.Cards.Holo" />
+        <activity
             android:name=".ui.ScanActivity"
             android:exported="false"
             android:parentActivityName=".ui.MainActivity"

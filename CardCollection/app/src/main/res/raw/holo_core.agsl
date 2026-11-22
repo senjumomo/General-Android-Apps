@@ -1,0 +1,218 @@
+// Holographic card shading. Shared by the app (AGSL) and the browser test harness (GLSL via defines).
+// The platform prefix must define:  float4 sampleCard(float2 uv)   (uv 0..1 over the card)
+//
+// Effects are positioned in card space (uv), so they look the same at any size. The light moves
+// with [tilt] (-1..1 on each axis, from the gyroscope or a finger drag).
+
+uniform float2 resolution;  // size of the drawn card in pixels
+uniform float2 texel;       // one source-image pixel, in uv
+uniform float2 tilt;        // -1..1
+uniform float time;         // seconds, for the subtle idle shimmer
+uniform float mode;         // rarity, see FOIL_* below
+uniform float4 artRect;     // artwork box in uv (x0, y0, x1, y1)
+uniform float photo;        // 1 = photo of a real card (its foil texture is visible), 0 = clean digital scan
+
+// FOIL modes (keep in sync with HoloStyle.kt)
+// 0 common, 1 rare (silver name), 2 super, 3 ultra (gold name + holo art), 4 secret, 5 prismatic secret,
+// 6 ultimate (embossed), 7 ghost, 8 starlight, 9 collector's, 10 platinum secret, 11 quarter century,
+// 12 gold rare, 13 parallel (whole card foil)
+
+const float TAU = 6.2831853;
+
+float luma(float3 c) { return dot(c, float3(0.299, 0.587, 0.114)); }
+
+float hash21(float2 p) {
+    p = fract(p * float2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
+float3 rainbow(float t) {
+    return 0.5 + 0.5 * cos(TAU * (t + float3(0.0, 0.33, 0.67)));
+}
+
+float3 screenBlend(float3 a, float3 b) { return 1.0 - (1.0 - a) * (1.0 - b); }
+
+// Soft-edged rectangle mask.
+float boxMask(float2 uv, float4 r, float feather) {
+    float2 a = smoothstep(r.xy - feather, r.xy + feather, uv);
+    float2 b = 1.0 - smoothstep(r.zw - feather, r.zw + feather, uv);
+    return a.x * a.y * b.x * b.y;
+}
+
+// Where the reflected light falls on the card.
+float2 glareCenter() { return float2(0.5, 0.45) + tilt * float2(0.85, 0.75); }
+
+// Broad bright band that sweeps across the card as it tilts (how real foil "lights up").
+float sweep(float2 uv, float2 dir, float width) {
+    float d = dot(uv - 0.5, dir) - dot(tilt, float2(0.55, 0.45));
+    return exp(-d * d / (width * width));
+}
+
+// Local detail of the image (the foil texture that's visible in photos of real cards).
+float detail(float2 uv) {
+    float2 o = texel * 1.5;
+    float c = luma(sampleCard(uv).rgb);
+    float n = luma(sampleCard(uv + float2(o.x, 0.0)).rgb) + luma(sampleCard(uv - float2(o.x, 0.0)).rgb)
+            + luma(sampleCard(uv + float2(0.0, o.y)).rgb) + luma(sampleCard(uv - float2(0.0, o.y)).rgb);
+    return clamp(abs(c - n * 0.25) * 6.0, 0.0, 1.0);
+}
+
+// Surface normal from image brightness, for embossed (Ultimate Rare) relief.
+float3 embossNormal(float2 uv) {
+    float2 o = texel * 2.0;
+    float l = luma(sampleCard(uv - float2(o.x, 0.0)).rgb);
+    float r = luma(sampleCard(uv + float2(o.x, 0.0)).rgb);
+    float u = luma(sampleCard(uv - float2(0.0, o.y)).rgb);
+    float d = luma(sampleCard(uv + float2(0.0, o.y)).rgb);
+    return normalize(float3((l - r) * 3.0, (u - d) * 3.0, 1.0));
+}
+
+// Glitter: each cell is a tiny mirror facing a random way; it flashes when it faces the light.
+float3 glitter(float2 uv, float density, float threshold, float colorful) {
+    float2 grid = uv * float2(density, density * 1.457);
+    float2 cell = floor(grid);
+    float2 f = fract(grid) - 0.5;
+    float h1 = hash21(cell);
+    float h2 = hash21(cell + 17.31);
+    float h3 = hash21(cell + 41.7);
+    float2 facing = float2(cos(h1 * TAU), sin(h1 * TAU)) * (0.4 + 0.6 * h2);
+    float align = dot(facing, tilt * 1.15 + float2(sin(time * 0.6 + h3 * 6.0), cos(time * 0.5)) * 0.04);
+    float flash = smoothstep(threshold, 1.0, align + 0.35);
+    float dotShape = smoothstep(0.5, 0.0, length(f));
+    float3 tint = mix(float3(1.0), rainbow(h3 + dot(tilt, float2(0.3, 0.2))), colorful);
+    return tint * flash * dotShape;
+}
+
+// Rainbow holo foil with a sweeping highlight. [grain] lets the image's own foil texture show through.
+float3 holo(float2 uv, float2 dir, float freq, float grain, float saturation) {
+    float phase = dot(uv - 0.5, dir) * freq + tilt.x * 1.4 - tilt.y * 1.1;
+    float3 col = mix(float3(1.0), rainbow(phase), saturation);
+    float band = 0.2 + 0.8 * sweep(uv, normalize(dir + float2(0.3, -0.2)), 0.3);
+    return col * band * grain;
+}
+
+// Secret Rare: fine diagonal lines, each catching a different colour.
+float3 secretLines(float2 uv, float freq, float saturation) {
+    float along = uv.x * 0.75 + uv.y;                 // line direction
+    float s = fract(along * freq);
+    float lines = smoothstep(0.0, 0.35, s) * smoothstep(1.0, 0.65, s);
+    float across = uv.x - uv.y * 0.75;
+    float3 col = mix(float3(1.0), rainbow(across * 2.2 + along * 0.6 + tilt.x * 1.6 + tilt.y * 0.9), saturation);
+    float band = 0.12 + 0.88 * sweep(uv, float2(0.8, 0.6), 0.26);
+    return col * lines * band;
+}
+
+// Metallic foil letters (silver / gold / rainbow).
+float3 metal(float2 uv, float3 tintColor, float rainbowAmount) {
+    float broad = sweep(uv, float2(1.0, 0.35), 0.30);
+    float sharp = sweep(uv, float2(1.0, 0.35), 0.07);
+    float3 base = mix(tintColor, rainbow(uv.x * 1.8 + tilt.x * 1.5), rainbowAmount);
+    return base * (0.38 + 0.75 * broad) + float3(1.0) * sharp * 0.55;
+}
+
+float4 shade(float2 uv) {
+    float3 base = sampleCard(uv).rgb;
+    float3 color = base;
+
+    // --- Masks --------------------------------------------------------------------------------
+    float art = boxMask(uv, artRect, 0.003);
+    float4 nameRect = float4(0.068, 0.046, 0.835, 0.101);
+    float nameBar = boxMask(uv, nameRect, 0.002);
+    // Letters = pixels that differ from the name bar's background colour.
+    float3 bg = (sampleCard(float2(0.30, nameRect.y + 0.004)).rgb + sampleCard(float2(0.55, nameRect.y + 0.004)).rgb
+               + sampleCard(float2(0.78, nameRect.w - 0.004)).rgb + sampleCard(float2(0.12, nameRect.w - 0.004)).rgb) * 0.25;
+    float letters = nameBar * smoothstep(0.10, 0.26, length(base - bg));
+    float inner = boxMask(uv, float4(0.045, 0.032, 0.955, 0.968), 0.004);
+    float border = 1.0 - inner;
+
+    // Foil texture already visible in photos of real cards lights up; clean scans get a gentle grain.
+    float tex = detail(uv);
+    float grain = mix(0.85 + 0.3 * hash21(floor(uv * 420.0)), 0.45 + 1.1 * tex, photo);
+
+    float m = mode;
+    float3 effect = float3(0.0);   // screened over the card
+    float3 sparkle = float3(0.0);  // added on top
+    float darken = 0.0;            // foil looks darker when it isn't catching the light
+
+    if (m < 0.5) {                                  // Common
+    } else if (m < 1.5) {                           // Rare: silver name
+        color = mix(color, metal(uv, float3(0.80, 0.82, 0.86), 0.12), letters * 0.9);
+    } else if (m < 2.5) {                           // Super Rare: holo artwork
+        effect += holo(uv, float2(0.7, 0.7), 1.6, grain, 0.75) * art * 0.55;
+        sparkle += glitter(uv, 160.0, 0.86, 0.6) * art * 0.35;
+        darken = art * 0.12;
+    } else if (m < 3.5) {                           // Ultra Rare: gold name + holo artwork
+        effect += holo(uv, float2(0.7, 0.7), 1.6, grain, 0.75) * art * 0.6;
+        sparkle += glitter(uv, 160.0, 0.86, 0.6) * art * 0.35;
+        color = mix(color, metal(uv, float3(0.98, 0.80, 0.40), 0.0), letters * 0.92);
+        darken = art * 0.12;
+    } else if (m < 4.5 || (m > 9.5 && m < 11.5)) {  // Secret / Platinum Secret / Quarter Century
+        float sat = m > 9.5 && m < 10.5 ? 0.25 : 0.85;
+        // Clean scans have no foil texture of their own, so the pattern carries more of the look.
+        effect += secretLines(uv, 135.0, sat) * art * mix(0.95, mix(0.6, 1.0, tex), photo);
+        effect += holo(uv, float2(0.6, 0.8), 1.2, grain, sat) * art * 0.18;
+        color = mix(color, metal(uv, float3(0.85, 0.85, 0.9), sat), letters * 0.9);
+        if (m > 10.5) sparkle += glitter(uv, 90.0, 0.9, 0.3) * art * 0.5;  // 25th sheen
+        darken = art * 0.18;
+    } else if (m < 5.5) {                           // Prismatic Secret: speckled prism
+        float3 prism = glitter(uv, 230.0, 0.55, 1.0) + glitter(uv + 0.37, 140.0, 0.7, 1.0) * 0.8;
+        effect += prism * art * 0.8 + holo(uv, float2(0.5, 0.9), 2.0, grain, 0.9) * art * 0.3;
+        color = mix(color, metal(uv, float3(0.85, 0.85, 0.9), 0.85), letters * 0.9);
+        darken = art * 0.2;
+    } else if (m < 6.5) {                           // Ultimate: embossed relief, gold-ish name
+        float relief = max(art, border * 0.45) + letters;
+        float3 n = embossNormal(uv);
+        // Light comes from up-left and swings with the tilt, so flat areas stay as printed and
+        // only the raised relief catches it.
+        float3 l = normalize(float3(-0.45 - tilt.x * 0.9, -0.55 - tilt.y * 0.9, 0.7));
+        float diffuse = dot(n, l) - l.z;                     // 0 on flat areas
+        float spec = pow(max(dot(reflect(-l, n), float3(0.0, 0.0, 1.0)), 0.0), 24.0);
+        float flatSpec = pow(max(l.z, 0.0), 24.0);
+        color = mix(color, color * (1.0 + 2.2 * diffuse), relief * 0.9);
+        color += float3(1.0, 0.93, 0.78) * max(spec - flatSpec, 0.0) * relief * 0.9;
+        color = mix(color, metal(uv, float3(0.95, 0.82, 0.55), 0.0), letters * 0.6);
+    } else if (m < 7.5) {                           // Ghost: pale silvery holo artwork
+        float g = luma(color);
+        color = mix(color, float3(g * 0.9 + 0.12), art * 0.7);
+        effect += holo(uv, float2(0.8, 0.6), 1.3, grain, 0.35) * art * 0.65;
+        sparkle += glitter(uv, 180.0, 0.84, 0.2) * art * 0.4;
+        color = mix(color, metal(uv, float3(0.85, 0.87, 0.92), 0.2), letters * 0.9);
+    } else if (m < 8.5) {                           // Starlight: whole card, dense sparkle
+        float area = mix(0.3, 1.0, art);
+        effect += holo(uv, float2(0.7, 0.7), 2.4, grain, 0.85) * 0.4 * area;
+        sparkle += (glitter(uv, 200.0, 0.84, 0.9) * 0.55 + glitter(uv + 0.5, 90.0, 0.9, 0.7) * 0.45) * area;
+        // The whole name bar is foil on these, so letter detection is rough: keep the tint light.
+        color = screenBlend(color, metal(uv, float3(0.5), 0.9) * letters * 0.35);
+        darken = 0.12;
+    } else if (m < 9.5) {                           // Collector's: whole card, fine textured rainbow
+        float area = mix(0.35, 1.0, art);
+        effect += (secretLines(uv, 210.0, 0.9) * 0.35 + holo(uv, float2(0.6, 0.8), 1.8, grain, 0.9) * 0.4) * area;
+        sparkle += glitter(uv, 260.0, 0.82, 1.0) * 0.5 * area;
+        // The whole name bar is foil on these, so letter detection is rough: keep the tint light.
+        color = screenBlend(color, metal(uv, float3(0.5), 0.9) * letters * 0.35);
+        darken = 0.12;
+    } else if (m < 12.5) {                          // Gold Rare: gold name and border
+        color = mix(color, metal(uv, float3(0.98, 0.80, 0.40), 0.0), max(letters, border * 0.85));
+        effect += holo(uv, float2(0.7, 0.7), 1.4, grain, 0.5) * art * 0.3;
+    } else {                                        // Parallel / whole-card foil
+        effect += holo(uv, float2(0.7, 0.7), 2.0, grain, 0.8) * 0.5;
+        sparkle += glitter(uv, 120.0, 0.85, 0.8) * 0.4;
+        darken = 0.1;
+    }
+
+    // Foil dims slightly away from the light, which makes the bright parts pop.
+    float lit = sweep(uv, float2(0.8, 0.6), 0.45);
+    color *= 1.0 - darken * (1.0 - lit);
+    effect *= 1.0 - 0.5 * luma(base);
+    color = screenBlend(color, clamp(effect, 0.0, 1.0));
+    color += sparkle;
+
+    // Glossy surface: every card reflects a soft highlight.
+    float2 gd = uv - glareCenter();
+    gd.y *= 0.75;
+    float glare = exp(-dot(gd, gd) * 5.0) * 0.16 + exp(-dot(gd, gd) * 38.0) * 0.10;
+    color = screenBlend(color, float3(glare));
+
+    return float4(clamp(color, 0.0, 1.0), 1.0);
+}

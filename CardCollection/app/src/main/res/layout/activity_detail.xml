@@ -47,9 +47,19 @@
                 android:layout_width="200dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:contentDescription="Card image. Tap to enlarge"
+                android:contentDescription="Card image. Tap to view it in 3D"
                 android:foreground="?attr/selectableItemBackground"
                 app:shapeAppearanceOverlay="@style/CardImageLarge" />
+
+            <TextView
+                android:id="@+id/holoHint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="✨ Tap the card to see it shine"
+                android:textAppearance="?attr/textAppearanceLabelMedium"
+                android:textColor="?attr/colorPrimary" />
 
             <TextView
                 android:id="@+id/name"

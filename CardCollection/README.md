@@ -11,6 +11,12 @@ Download `apk/CardBinder.apk` to your phone and open it (allow "install unknown 
   updates matching ones by id) or **Replace**.
 - **Card images**: the exact printing from TCGplayer (by `tcgplayer_id`), falling back to YGOPRODeck by
   name. Cached on the phone. Tap the image on a card to view it full screen.
+- **Holo view**: tap a card's image for a full-screen 3D card that tilts with the phone (gyroscope) or
+  your finger, with a foil effect per rarity: silver/gold foil names, holo and Secret Rare line patterns,
+  prismatic glitter, Ultimate Rare emboss, Ghost, Starlight and Collector's whole-card foil, and more.
+  Runs per pixel on the GPU (`res/raw/holo_core.agsl`) on Android 13+, with a simpler sheen on older
+  versions. Uses the TCGplayer photo of the exact printing (whose real foil texture lights up) or
+  YGOPRODeck's clean high-res scan when the photo is low resolution. Preview tool: `tools/holo-preview`.
 - **List or grid view** (toggle in the toolbar).
 - **Price refresh** (menu): current TCGplayer market price × today's USD exchange rate (open.er-api.com).
 - **Wishlist** tab: cards you want, with the cost to complete it. Wishlist cards don't count towards the

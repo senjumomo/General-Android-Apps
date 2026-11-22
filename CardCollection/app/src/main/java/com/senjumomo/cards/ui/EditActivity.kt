@@ -62,13 +62,10 @@ class EditActivity : AppCompatActivity() {
     }
 
     private fun showImage(card: Card) {
-        val view = layoutInflater.inflate(R.layout.dialog_image, null)
-        val dialog = android.app.Dialog(this, android.R.style.Theme_Black_NoTitleBar_Fullscreen)
-        dialog.setContentView(view)
-        com.senjumomo.cards.data.CardImages.load(view.findViewById(R.id.image), com.senjumomo.cards.data.CardImages.large(card))
-        view.setOnClickListener { dialog.dismiss() }
-        view.findViewById<android.view.View>(R.id.close).setOnClickListener { dialog.dismiss() }
-        dialog.show()
+        startActivity(
+            android.content.Intent(this, com.senjumomo.cards.holo.HoloViewerActivity::class.java)
+                .putExtra(com.senjumomo.cards.holo.HoloViewerActivity.EXTRA_ID, card.id)
+        )
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
