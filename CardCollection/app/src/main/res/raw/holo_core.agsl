@@ -238,44 +238,27 @@ float4 shade(float2 uv) {
         effect += holo(uv, float2(0.8, 0.6), 1.3, grain, 0.35) * art * 0.65;
         sparkle += glitter(uv, 180.0, 0.84, 0.2) * art * 0.4;
         color = mix(color, metal(uv, float3(0.85, 0.87, 0.92), 0.2), letters * 0.9);
-    } else if (m < 8.5) {                           // Starlight: whole card, dense starry sparkle
-        // Real Starlights (e.g. CORI Uria): a full-card fine horizontal + vertical grid of foil lines,
-        // glinting where they cross, under a broad rainbow sweep that moves with the tilt and is
-        // strongest at the border; rainbow-silver name.
-        float3 bow = rainbow(uv.x * 1.5 - uv.y * 1.1 + tilt.x * 1.4 - tilt.y * 0.9);   // tighter bands
-        float band = 0.35 + 0.65 * sweep(uv, float2(0.75, 0.65), 0.4);
-        // A fine perpendicular grid of foil micro-lines (horizontal + vertical, square cells, ~5 px
-        // on a phone), over the whole card. Where lines cross, each crossing is a tiny facet that
-        // glints rainbow / silver-white when it faces the light, so glints flash across as it tilts.
-        float2 cells = uv * float2(160.0, 233.0);
-        float2 g = abs(fract(cells) - 0.5) * 2.0;           // 1 on a line, 0 mid-cell
-        float lineV = smoothstep(0.7, 1.0, g.x);
-        float lineH = smoothstep(0.7, 1.0, g.y);
-        float area = mix(0.75, 1.0, art) + border * 0.35;   // frame foil reads strongest
-        effect += bow * (0.12 + band) * area * 0.5;          // the iridescent sheen
-        effect += bow * max(lineV, lineH) * (0.15 + band) * area * 0.45;
-        float2 cell = floor(cells);
-        float h1 = hash21(cell);
-        float h2 = hash21(cell + 9.17);
-        float2 facing = float2(cos(h1 * TAU), sin(h1 * TAU)) * (0.4 + 0.6 * h2);
-        float flash = smoothstep(0.62, 1.0, dot(facing, tilt * 1.15) + 0.42);
-        float crossing = smoothstep(0.5, 1.0, g.x) * smoothstep(0.5, 1.0, g.y);   // glint a bit larger than the lines
-        sparkle += mix(float3(1.0, 0.98, 0.95), rainbow(h2 + dot(tilt, float2(0.4, 0.3))), 0.6)
-                 * crossing * flash * (0.6 + band) * 2.4;
-        // Bigger glints on every other crossing (2×2 cells), the bright specks of the real foil.
-        float2 big = cells * 0.5;
-        float2 bc = floor(big);
-        float2 bf = fract(big) - 0.5;
-        float b1 = hash21(bc + 3.7);
-        float2 bface = float2(cos(b1 * TAU), sin(b1 * TAU)) * (0.4 + 0.6 * hash21(bc + 1.3));
-        float bflash = smoothstep(0.55, 1.0, dot(bface, tilt * 1.15) + 0.45);
-        float dotShape = smoothstep(0.45, 0.0, length(bf));
-        sparkle += mix(float3(1.0, 0.96, 0.88), rainbow(b1 + dot(tilt, float2(0.3, 0.2))), 0.55)
-                 * dotShape * bflash * (0.35 + 1.1 * band);
-        // A light dusting of extra specks between the lines.
-        sparkle += glitter(uv, 180.0, 0.55, 1.0) * mix(float3(1.0), bow, 0.5) * (0.3 + 0.5 * band) * 0.6;
-        color = mix(color, metal(uv, float3(0.9, 0.93, 1.0), 0.35), letters * 0.9);
-        darken = 0.06;
+    } else if (m < 8.5) {                           // Starlight: full-card hairline crosshatch foil
+        // From the user's CORI Uria photo + spec: ultra-fine horizontal + vertical hairlines over the
+        // whole card that only catch prismatic highlights along the specular band as it tilts, over a
+        // soft rainbow sheen. Blended as overlay (not screen/add) so darks and black text stay rich.
+        float3 bow = rainbow(uv.x * 1.5 - uv.y * 1.1 + tilt.x * 1.4 - tilt.y * 0.9);
+        float band = sweep(uv, float2(0.75, 0.65), 0.4);
+        float lit = sweep(uv, float2(0.75, 0.65), 0.18);          // the narrow specular band
+        // Hairlines ~1 px on a phone (cells ~4-5 px): only the outer ~22% of each cell is line.
+        float2 g = abs(fract(uv * float2(160.0, 233.0)) - 0.5) * 2.0;
+        float hair = max(smoothstep(0.76, 0.9, g.x), smoothstep(0.76, 0.9, g.y));
+        // Effect text box (normal frame): keep the text sharp.
+        float textBox = boxMask(uv, float4(0.07, 0.735, 0.93, 0.93), 0.004);
+        float strength = (0.18 + 0.22 * band + border * 0.15) * (1.0 - 0.5 * textBox);
+        float3 tint = mix(float3(0.5), bow, strength);                       // 0.5 = no change in overlay
+        tint += (bow - 0.35) * hair * lit * 0.55 * (1.0 - 0.5 * textBox);   // hairlines glint in the band
+        tint = clamp(tint, 0.0, 1.0);
+        float3 lo = 2.0 * color * tint;
+        float3 hi = 1.0 - 2.0 * (1.0 - color) * (1.0 - tint);
+        color = mix(lo, hi, step(0.5, color));                               // overlay blend
+        color = mix(color, metal(uv, float3(0.9, 0.93, 1.0), 0.35), letters * 0.6);
+        darken = 0.0;
     } else if (m < 9.5) {                           // Collector's: whole card, fine textured rainbow
         float area = mix(0.35, 1.0, art);
         effect += (secretLines(uv, 210.0, 0.9) * 0.35 + holo(uv, float2(0.6, 0.8), 1.8, grain, 0.9) * 0.4) * area;
