@@ -244,15 +244,19 @@ float4 shade(float2 uv) {
         // sweep (gold, pink, cyan, blue) that moves with the tilt and is strongest at the border.
         float3 bow = rainbow(uv.x * 1.5 - uv.y * 1.1 + tilt.x * 1.4 - tilt.y * 0.9);   // tighter bands
         float band = 0.35 + 0.65 * sweep(uv, float2(0.75, 0.65), 0.4);
-        float lineY = uv.y * 520.0 + uv.x * 40.0;          // fine lines, a few degrees off horizontal
+        float lineY = uv.y * 300.0 + uv.x * 24.0;          // fine lines (~3-4 px on a phone), slightly off horizontal
         float lines = 0.55 + 0.45 * sin(lineY * 6.2832);
         float area = mix(0.75, 1.0, art) + border * 0.35;  // frame foil reads strongest
         effect += bow * (0.15 + band) * lines * area * 0.7;
+        // Where the light hits, the lines light up as crisp rainbow streaks (as on the real card).
+        float lit = sweep(uv, float2(0.75, 0.65), 0.2);
+        float streak = smoothstep(0.55, 1.0, 0.5 + 0.5 * sin(lineY * 6.2832));
+        effect += mix(float3(1.0), bow, 0.8) * streak * lit * 0.75;
         // The sparkle: two layers of tiny glinting specks, coloured by the rainbow beneath.
         float3 specks = glitter(uv, 180.0, 0.4, 1.0) * 0.95 + glitter(uv + 0.17, 120.0, 0.52, 0.8) * 0.8
                       + glitter(uv + 0.43, 280.0, 0.35, 1.0) * 0.5;
         // Where the light hits, the specks flare white-gold like the real foil.
-        sparkle += specks * mix(float3(1.0, 0.95, 0.8), bow, 0.5) * (0.45 + 0.85 * band) * mix(0.85, 1.0, art);
+        sparkle += specks * mix(float3(1.0, 0.95, 0.8), bow, 0.5) * (0.45 + 0.85 * band + 1.2 * lit * streak) * mix(0.85, 1.0, art);
         color = mix(color, metal(uv, float3(0.9, 0.93, 1.0), 0.35), letters * 0.9);
         darken = 0.06;
     } else if (m < 9.5) {                           // Collector's: whole card, fine textured rainbow

@@ -147,7 +147,9 @@ not found), TCGplayer as fallback. **Never commit Konami card art or TCGplayer/Y
   GLSL). `HoloShaders.fragment()` adds rounded corners, tear/fade uniforms (defaults = card).
 - Rarity → foil mode in `HoloStyle` (keep in sync with the mode list at the top of the shader).
   Starlight matches a real CORI Uria photo (user chose a moderate strength): coloured sparkle on every
-  part of the card, very fine near-horizontal lines, diagonal rainbow bands strongest on the border.
+  part of the card, near-horizontal lines (300 per card, ~3-4 px; 520 blurred into a sheen on the phone)
+  that light up as crisp rainbow streaks with extra sparkle inside the light band, rainbow bands
+  strongest on the border.
 - Card layout constants (fractions of the card): artwork 0.119/0.180–0.881/0.705 (Pendulum
   0.067/0.178–0.933/0.629); name bar x 0.068–0.835, **lettering spans y 0.057–0.099**, plain margins
   0.045–0.055 and 0.099–0.105. Name foil detects letters as strokes on the text's side of their
