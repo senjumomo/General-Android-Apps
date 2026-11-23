@@ -47,6 +47,10 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Cards.Holo" />
         <activity
+            android:name=".packs.PullBinderActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+        <activity
             android:name=".ui.ScanActivity"
             android:exported="false"
             android:parentActivityName=".ui.MainActivity"

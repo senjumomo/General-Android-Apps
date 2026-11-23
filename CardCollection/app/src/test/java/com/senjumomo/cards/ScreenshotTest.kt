@@ -94,6 +94,91 @@ class ScreenshotTest {
         paparazzi.snapshot(root)
     }
 
+    /** Made-up pull history: 14 packs from two sets, a few big pulls. */
+    private fun pullHistory(): com.senjumomo.cards.packs.PullSummary {
+        val openings = (1L..14L).map {
+            com.senjumomo.cards.packs.PackOpening(it, if (it <= 10) "ROTA" else "MAZE", if (it <= 10) "Rage of the Abyss" else "Maze of Memories",
+                it, "ZAR", 2400, 1900, expectedUltra = 0.29, expectedSecret = 0.125)
+        }
+        fun p(o: Long, set: String, code: String, name: String, rarity: String, cents: Long) = com.senjumomo.cards.packs.Pull(
+            0, o, set, code, name, rarity, com.senjumomo.cards.packs.Tier.of(rarity).ordinal, 1, cents, false)
+        val pulls = (1..63).map { p(1, "Rage of the Abyss", "ROTA-EN%03d".format(it), "Card $it", "Common", 30) } +
+            (1..21).map { p(11, "Maze of Memories", "MAZE-EN%03d".format(it), "Card $it", "Common", 20) } + listOf(
+                p(3, "Rage of the Abyss", "ROTA-EN001", "Abyss Dragon", "Quarter Century Secret Rare", 21450),
+                p(5, "Rage of the Abyss", "ROTA-EN010", "Tidal Knight", "Secret Rare", 8900),
+                p(7, "Rage of the Abyss", "ROTA-EN020", "Coral Sprite", "Ultra Rare", 2100),
+                p(12, "Maze of Memories", "MAZE-EN005", "Maze Warden", "Ultra Rare", 1500),
+                p(9, "Rage of the Abyss", "ROTA-EN030", "Deep Current", "Super Rare", 400),
+            )
+        return com.senjumomo.cards.packs.PullSummary.of(openings, pulls)
+    }
+
+    @Test fun packs() {
+        paparazzi.unsafeUpdateConfig(device.copy(screenHeight = 2800))
+        val root = inflate(R.layout.activity_main)
+        root.findViewById<View>(R.id.listPage).visibility = View.GONE
+        root.findViewById<View>(R.id.filterBar).visibility = View.GONE
+        root.findViewById<View>(R.id.packsPage).visibility = View.VISIBLE
+        root.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar).title = "Open packs"
+        root.findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav).selectedItemId = R.id.tab_packs
+        val screen = com.senjumomo.cards.packs.PacksScreen(root, {}, {})
+        screen.setSets(listOf(
+            com.senjumomo.cards.packs.CardSet("ROTA", "Rage of the Abyss", 101, "2024-10-10", null),
+            com.senjumomo.cards.packs.CardSet("MAZE", "Maze of Memories", 100, "2024-01-25", null),
+            com.senjumomo.cards.packs.CardSet("SUDA", "Supreme Darkness", 101, "2024-08-01", null),
+            com.senjumomo.cards.packs.CardSet("LEDE", "Legacy of Destruction", 101, "2024-04-25", null),
+            com.senjumomo.cards.packs.CardSet("PHNI", "Phantom Nightmare", 101, "2023-11-02", null),
+            com.senjumomo.cards.packs.CardSet("AGOV", "Age of Overlord", 101, "2023-07-27", null),
+        ))
+        screen.setHistory(pullHistory())
+        paparazzi.snapshot(root)
+    }
+
+    @Test fun packsEmpty() {
+        val root = inflate(R.layout.activity_main)
+        root.findViewById<View>(R.id.listPage).visibility = View.GONE
+        root.findViewById<View>(R.id.filterBar).visibility = View.GONE
+        root.findViewById<View>(R.id.packsPage).visibility = View.VISIBLE
+        root.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar).title = "Open packs"
+        root.findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav).selectedItemId = R.id.tab_packs
+        com.senjumomo.cards.packs.PacksScreen(root, {}, {}).setSets(listOf(
+            com.senjumomo.cards.packs.CardSet("ROTA", "Rage of the Abyss", 101, "2024-10-10", null),
+            com.senjumomo.cards.packs.CardSet("MAZE", "Maze of Memories", 100, "2024-01-25", null),
+            com.senjumomo.cards.packs.CardSet("SUDA", "Supreme Darkness", 101, "2024-08-01", null),
+        ))
+        paparazzi.snapshot(root)
+    }
+
+    @Test fun binder() {
+        val root = inflate(R.layout.activity_binder)
+        root.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar).title = "Rage of the Abyss"
+        root.findViewById<View>(R.id.binderMessage).visibility = View.GONE
+        val set = (1..12).map { com.senjumomo.cards.packs.SetCard("Card $it", "ROTA-EN%03d".format(it), "Common", it.toLong(), null, "Effect Monster") }
+        val pulls = listOf(1, 2, 2, 4, 5, 7, 9, 10, 10, 10).mapIndexed { i, n ->
+            com.senjumomo.cards.packs.Pull(0, i.toLong(), "Rage of the Abyss", "ROTA-EN%03d".format(n), "Card $n",
+                when (n) { 2 -> "Quarter Century Secret Rare"; 7 -> "Ultra Rare"; 9 -> "Super Rare"; else -> "Common" },
+                com.senjumomo.cards.packs.Tier.of(when (n) { 2 -> "Quarter Century Secret Rare"; 7 -> "Ultra Rare"; 9 -> "Super Rare"; else -> "Common" }).ordinal,
+                n.toLong(), 100, false)
+        }
+        val entries = com.senjumomo.cards.packs.BinderEntry.build(set, pulls)
+        val got = entries.count { it.pulled }
+        root.findViewById<android.widget.TextView>(R.id.binderCount).text = "$got of ${entries.size} cards"
+        root.findViewById<android.widget.TextView>(R.id.binderPercent).text = "${got * 100 / entries.size}%"
+        root.findViewById<com.google.android.material.progressindicator.LinearProgressIndicator>(R.id.binderBar).apply {
+            // Progress bars only draw progress set once attached (as the app does after loading).
+            addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(v: View) { max = entries.size; setProgressCompat(got, false) }
+                override fun onViewDetachedFromWindow(v: View) {}
+            })
+        }
+        root.findViewById<android.widget.TextView>(R.id.binderStats).text = "10 packs opened · R241.50 pulled · only 5 to go!"
+        root.findViewById<RecyclerView>(R.id.grid).apply {
+            layoutManager = androidx.recyclerview.widget.GridLayoutManager(context, 3)
+            adapter = com.senjumomo.cards.packs.BinderGridAdapter {}.also { it.submit(entries) }
+        }
+        paparazzi.snapshot(root)
+    }
+
     @Test fun detail() {
         paparazzi.unsafeUpdateConfig(device.copy(screenHeight = 3400))
         val root = inflate(R.layout.activity_detail)

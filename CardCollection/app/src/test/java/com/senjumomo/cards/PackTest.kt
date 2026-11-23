@@ -95,4 +95,67 @@ class PackTest {
         assertEquals(11L, cards[0].artworkId)
         assertEquals(Tier.PREMIUM, cards[1].tier)
     }
+
+    @Test
+    fun expectationMatchesOdds() {
+        // Modern set: 1 foil slot per pack; Ultra 1/6, Secret 1/12, QCSR 1/24 → Ultra-or-better ≈ 0.29.
+        val e = com.senjumomo.cards.packs.PackExpectation.of(modern, packs = 4000)
+        assertEquals(1.0 / 6 + 1.0 / 12 + 1.0 / 24, e.ultra, 0.03)
+        assertEquals(1.0 / 12 + 1.0 / 24, e.secret, 0.02)
+        assertEquals(0.9, e.valueUsd, 0.001) // 9 cards × $0.10
+    }
+
+    private fun opening(id: Long, set: String, value: Long, ultra: Double, secret: Double, at: Long = id) =
+        com.senjumomo.cards.packs.PackOpening(id, "SET", set, at, "ZAR", value, 1000, ultra, secret)
+
+    private fun pull(opening: Long, set: String, code: String, rarity: String, value: Long?) =
+        com.senjumomo.cards.packs.Pull(0, opening, set, code, "Card $code", rarity, Tier.of(rarity).ordinal, 1, value, false)
+
+    @Test
+    fun pullSummaryAndLuck() {
+        val openings = (1L..10L).map { opening(it, if (it <= 6) "Alpha" else "Beta", 1500, ultra = 0.3, secret = 0.12) }
+        val pulls = listOf(
+            pull(1, "Alpha", "A-001", "Common", 10), pull(1, "Alpha", "A-001", "Common", 10),
+            pull(2, "Alpha", "A-002", "Ultra Rare", 5000), pull(3, "Alpha", "A-003", "Secret Rare", 9000),
+            pull(4, "Alpha", "A-004", "Ultra Rare", 200), pull(8, "Beta", "B-001", "Ultra Rare", 100),
+            pull(9, "Beta", "B-002", "Super Rare", null),
+        )
+        val s = com.senjumomo.cards.packs.PullSummary.of(openings, pulls)
+        assertEquals(10, s.packs)
+        assertEquals(15000L, s.valueCents)
+        assertEquals(4, s.ultra)                      // 3 Ultra + 1 Secret
+        assertEquals(3.0, s.expectedUltra, 1e-9)
+        // Expected Secrets (1.2) ≥ 1, so luck uses Secrets: 1 / 1.2.
+        val luck = s.luck()!!
+        assertEquals(1 / 1.2, luck.first, 1e-9)
+        assertTrue(luck.second.startsWith("1 Secret Rare or better from 10 packs"))
+        assertEquals("A-003", s.best.first().code)    // most valuable first
+        assertEquals(4, s.progress["alpha"])          // A-001 twice counts once
+        assertEquals(2, s.progress["beta"])
+        assertEquals("Beta", s.recentSets.first().first)
+        // Too few packs: no verdict yet.
+        assertEquals(null, com.senjumomo.cards.packs.PullSummary.of(openings.take(2), pulls).luck())
+    }
+
+    @Test
+    fun binderEntries() {
+        val set = listOf(
+            SetCard("Ten", "S-EN010", "Common", 10, null, "Effect Monster"),
+            SetCard("Two", "S-EN002", "Super Rare", 2, null, "Effect Monster"),
+            SetCard("Two", "S-EN002", "Quarter Century Secret Rare", 2, null, "Effect Monster"),
+            SetCard("One", "S-EN001", "Common", 1, null, "Pendulum Effect Monster"),
+        )
+        val pulls = listOf(
+            pull(1, "S", "S-EN002", "Super Rare", 1), pull(2, "S", "S-EN002", "Quarter Century Secret Rare", 1),
+            pull(2, "S", "S-EN099", "Ultra Rare", 1), // no longer in the set list: still shown
+        )
+        val e = com.senjumomo.cards.packs.BinderEntry.build(set, pulls)
+        assertEquals(listOf("S-EN001", "S-EN002", "S-EN010", "S-EN099"), e.map { it.code })
+        assertEquals(false, e[0].pulled)
+        assertTrue(e[0].pendulum)
+        assertEquals(2, e[1].count)
+        assertEquals("Quarter Century Secret Rare", e[1].bestRarity)
+        assertEquals(true, e[3].pulled)
+    }
 }
+

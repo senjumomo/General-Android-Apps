@@ -142,4 +142,22 @@ class HoloTest {
         val view = android.widget.ImageView(ctx).apply { setImageBitmap(all); adjustViewBounds = true }
         paparazzi.snapshot(view)
     }
+
+    /** The foil gleam on pack and best-pull images, frozen at a few points of its sweep. */
+    @Test
+    fun shine() {
+        val ctx = paparazzi.context
+        val row = android.widget.LinearLayout(ctx).apply { setBackgroundColor(android.graphics.Color.rgb(234, 221, 255)) }
+        // Each view is ~0.09 later in the cycle than its left neighbour (screen position), so step 0.13.
+        listOf(0.04f, 0.17f, 0.30f, 0.43f).forEach { phase ->
+            val v = com.senjumomo.cards.packs.ShineImageView(ctx)
+            v.setImageBitmap(com.senjumomo.cards.packs.CardBack.get())
+            v.scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+            v.shapeAppearanceModel = v.shapeAppearanceModel.withCornerSize(16f)
+            // Screen position offsets the phase; (0,0) here, so the clock alone sets it.
+            v.clock = { (phase * com.senjumomo.cards.packs.ShineImageView.PERIOD_MS).toLong() + 10 * com.senjumomo.cards.packs.ShineImageView.PERIOD_MS }
+            row.addView(v, android.widget.LinearLayout.LayoutParams(260, 380).apply { setMargins(12, 12, 12, 12) })
+        }
+        paparazzi.snapshot(row)
+    }
 }

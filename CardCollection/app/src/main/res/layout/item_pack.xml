@@ -20,7 +20,7 @@
             android:layout_width="match_parent"
             android:layout_height="150dp">
 
-            <ImageView
+            <com.senjumomo.cards.packs.ShineImageView
                 android:id="@+id/packImage"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -70,5 +70,32 @@
             android:layout_height="wrap_content"
             android:textAppearance="?attr/textAppearanceLabelSmall"
             android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <!-- Pull binder progress for this set (simulator pulls) -->
+        <LinearLayout
+            android:id="@+id/packProgressRow"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <com.google.android.material.progressindicator.LinearProgressIndicator
+                android:id="@+id/packProgress"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                app:trackCornerRadius="3dp"
+                app:trackThickness="4dp" />
+
+            <TextView
+                android:id="@+id/packProgressText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:textAppearance="?attr/textAppearanceLabelSmall"
+                android:textColor="?attr/colorOnSurfaceVariant" />
+        </LinearLayout>
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

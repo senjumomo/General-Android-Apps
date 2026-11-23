@@ -65,7 +65,11 @@ class PackOpenActivity : AppCompatActivity() {
 
     private val repo by lazy { PackRepository(this) }
     private val dao by lazy { CardDatabase.get(this).cards() }
+    private val pullDao by lazy { PullDatabase.get(this).pulls() }
+    /** What an average pack of this set holds (for the luck meter). */
+    private var expectation: PackExpectation? = null
     private lateinit var haptics: Haptics
+    private lateinit var sounds: PackSounds
     private lateinit var tilt: TiltTracker
     private lateinit var set: CardSet
 
@@ -116,6 +120,7 @@ class PackOpenActivity : AppCompatActivity() {
             imageUrl = null,
         )
         haptics = Haptics(this)
+        sounds = PackSounds(this)
         tilt = TiltTracker(this)
         packView = findViewById(R.id.pack)
         holo = findViewById(R.id.holo)
@@ -135,6 +140,7 @@ class PackOpenActivity : AppCompatActivity() {
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root)) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             close.translationY = bars.top.toFloat()
+            findViewById<View>(R.id.mute).translationY = bars.top.toFloat()
             findViewById<View>(R.id.packControls).updatePadding(bottom = bars.bottom + dp(28))
             findViewById<View>(R.id.summaryButtons).updatePadding(bottom = bars.bottom + dp(16))
             findViewById<View>(R.id.summaryStage).updatePadding(top = bars.top + dp(56))
@@ -142,16 +148,25 @@ class PackOpenActivity : AppCompatActivity() {
             insets
         }
         close.setOnClickListener { finish() }
+        findViewById<MaterialButton>(R.id.mute).apply {
+            fun show() {
+                setIconResource(if (sounds.muted) R.drawable.ic_volume_off else R.drawable.ic_volume_up)
+                contentDescription = if (sounds.muted) "Sound off" else "Sound on"
+            }
+            show()
+            setOnClickListener { sounds.muted = !sounds.muted; show() }
+        }
 
         packView.onTearProgress = { p ->
             val step = (p * 10).toInt()
-            if (step > lastTick) { lastTick = step; haptics.tick() }
+            if (step > lastTick) { lastTick = step; haptics.tick(); sounds.tearTick() }
             if (p == 0f) lastTick = 0
             // The room goes dark as you cut, so the light from inside stands out.
             fxBack.dim(p * 0.6f, if (p == 0f) 250 else 60)
         }
         packView.onRip = {
             haptics.rip()
+            sounds.rip()
             val (x, y, w) = packView.tearLine().let { Triple(it[0], it[1], it[2]) }
             fxBack.dim(0f, 700)
             fxBack.burst(packView.left + x, packView.top + y, w)
@@ -178,6 +193,9 @@ class PackOpenActivity : AppCompatActivity() {
             }
         }
         findViewById<MaterialButton>(R.id.choosePack).setOnClickListener { finish() }
+        findViewById<MaterialButton>(R.id.openBinder).setOnClickListener {
+            startActivity(PullBinderActivity.intent(this, set))
+        }
 
         findViewById<TextView>(R.id.setName).text = set.name
         load()
@@ -188,6 +206,11 @@ class PackOpenActivity : AppCompatActivity() {
         tilt.start()
         packView.onResume()
         holo.onResume()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        sounds.release()
     }
 
     override fun onPause() {
@@ -211,6 +234,7 @@ class PackOpenActivity : AppCompatActivity() {
             }
             collection = dao.all()
             currency = collection.firstOrNull()?.currency ?: "ZAR"
+            launch { expectation = withContextDefault { PackExpectation.of(setCards) } }
             usdRate = runCatching { Exchange.usdTo(currency) }.getOrNull()
             launch { back = fetch(CardBack.OFFICIAL_URL) ?: withContextDefault { CardBack.get() } }
             val art = PackArt.featured(setCards)?.let { fetch(PackArt.croppedArtUrl(it.artworkId)) }
@@ -255,7 +279,27 @@ class PackOpenActivity : AppCompatActivity() {
 
     // --- Reveal -----------------------------------------------------------------------------------
 
+    /** Save this pack to the pull history (the simulator's own binder, not the collection). */
+    private fun recordOpening() {
+        val cards = pack
+        val exp = expectation ?: PackExpectation.of(setCards)
+        val rate = usdRate
+        val opening = PackOpening(
+            setCode = set.code, setName = set.name, openedAt = System.currentTimeMillis(), currency = currency,
+            valueCents = if (rate == null) null else cards.mapNotNull(::valueCents).sum(),
+            expectedValueCents = rate?.let { (exp.valueUsd * it * 100).roundToLong() },
+            expectedUltra = exp.ultra, expectedSecret = exp.secret,
+        )
+        val pulls = cards.map { c ->
+            Pull(openingId = 0, setName = set.name, code = c.code, name = c.name, rarity = c.rarity, tier = c.tier.ordinal,
+                artworkId = c.artworkId, valueCents = valueCents(c), pendulum = c.type.contains("Pendulum", true))
+        }
+        // Not tied to this screen: closing right after opening still records the pack.
+        PullRecorder.record(pullDao, opening, pulls)
+    }
+
     private fun startReveal() {
+        recordOpening()
         findViewById<View>(R.id.packStage).visibility = View.GONE
         packView.visibility = View.GONE
         findViewById<View>(R.id.revealStage).visibility = View.VISIBLE
@@ -402,6 +446,7 @@ class PackOpenActivity : AppCompatActivity() {
     private fun throwCard(v: View, dir: Float, vx: Float) {
         busy = true
         haptics.tick()
+        sounds.whoosh()
         val end = dir * (findViewById<View>(R.id.root).width + v.width) * 0.75f
         // Keep the flick's speed: faster throws leave quicker.
         val speed = maxOf(abs(vx), dp(1800).toFloat())
@@ -457,6 +502,7 @@ class PackOpenActivity : AppCompatActivity() {
             haptics.buildUp()
             val shake = ObjectAnimator.ofFloat(current, View.ROTATION, 0f, -2f, 2f, -2f, 2f, 0f)
             shake.duration = if (c.tier >= Tier.SECRET) 1100 else 650
+            sounds.buildUp(shake.duration)
             shake.start()
             current.postDelayed({ if (c.tier >= Tier.ULTRA) spin(c) else doFlip(c, slow = true) }, shake.duration)
         } else {
@@ -477,6 +523,7 @@ class PackOpenActivity : AppCompatActivity() {
                 }
             }).start()
         haptics.flip()
+        sounds.flip()
     }
 
     /** Big pulls spin round one and a half times, back to face, landing with a flare. */
@@ -484,6 +531,7 @@ class PackOpenActivity : AppCompatActivity() {
         val face = bigImages[c.artworkId]
         var showingFace = false
         haptics.flip()
+        sounds.flip()
         ValueAnimator.ofFloat(0f, 540f).apply {
             duration = 1150
             interpolator = DecelerateInterpolator(1.5f)
@@ -524,10 +572,12 @@ class PackOpenActivity : AppCompatActivity() {
         val r = cardRect()
         if (c.tier >= Tier.SUPER) {
             haptics.bigReveal()
+            sounds.reveal(big = c.tier >= Tier.ULTRA)
             fxFront.flare(r.right - r.width() * 0.12f, r.top + r.height() * 0.08f, tierColor(c.tier))
             fxFront.twinkle(r, count = if (c.tier >= Tier.ULTRA) 7 else 5, color = tierColor(c.tier))
         } else {
             fxFront.twinkle(r, count = 3)
+            if (c.tier >= Tier.RARE) sounds.twinkle()
         }
         glow.animate().alpha(if (c.tier >= Tier.ULTRA) 0.55f else 0f).setDuration(600).start()
         // Ultra Rares and better: show it shining in 3D.
@@ -552,6 +602,15 @@ class PackOpenActivity : AppCompatActivity() {
         val total = pack.mapNotNull(::valueCents).sum()
         findViewById<TextView>(R.id.summaryValue).text =
             if (usdRate == null) "Prices unavailable offline" else "This pack ≈ ${Money.format(total, currency)}"
+        // How far along this set's pull binder is (this pack included).
+        val binder = findViewById<MaterialButton>(R.id.openBinder)
+        binder.text = "Set binder"
+        lifecycleScope.launch {
+            kotlinx.coroutines.delay(300) // let the pack's record land first
+            val got = pullDao.pullsFrom(set.name).map { it.code.uppercase() }.distinct().size
+            val total = setCards.map { it.code.uppercase() }.distinct().size
+            binder.text = "Set binder · $got of $total cards"
+        }
         val list = findViewById<RecyclerView>(R.id.pulls)
         list.layoutManager = GridLayoutManager(this, 3)
         list.adapter = PullAdapter(pack.reversed())  // best first
@@ -658,6 +717,16 @@ class PackOpenActivity : AppCompatActivity() {
         fun intent(context: Context, set: CardSet) = Intent(context, PackOpenActivity::class.java)
             .putExtra(EXTRA_CODE, set.code).putExtra(EXTRA_NAME, set.name)
             .putExtra(EXTRA_COUNT, set.cardCount).putExtra(EXTRA_DATE, set.date)
+
+        /** Label colour for a tier that reads on the app's own (light or dark) surfaces. */
+        fun tierColorOn(t: Tier, light: Boolean): Int = if (!light) tierColor(t) else when (t) {
+            Tier.COMMON -> Color.rgb(96, 96, 108)
+            Tier.RARE -> Color.rgb(80, 88, 110)
+            Tier.SUPER -> Color.rgb(16, 104, 176)
+            Tier.ULTRA -> Color.rgb(160, 104, 0)
+            Tier.SECRET -> Color.rgb(180, 36, 140)
+            Tier.PREMIUM -> Color.rgb(0, 128, 118)
+        }
 
         /** Glow / label colour for a tier. */
         fun tierColor(t: Tier): Int = when (t) {

@@ -23,6 +23,13 @@ Download `apk/CardBinder.apk` to your phone and open it (allow "install unknown 
   value, New/Owned tags and a wishlist button. Pull rates are approximate (Konami doesn't publish odds):
   7 Commons + 1 Rare/Super + 1 foil slot where Ultra ≈ 1 in 6, Secret ≈ 1 in 12, Quarter Century ≈ 1 in 24,
   Starlight ≈ 1 in 288. It's a simulator: nothing is added to your collection unless you choose to.
+  Swipe cards away; Rares and better flip by themselves with a build-up, light effects and sound
+  (mute button top right; sounds are synthesised by `tools/sounds/make_sounds.py`). Hold ⏩ to skip
+  to the big pull.
+- **Pull binder** (Packs tab): every pack you open is saved (separately from your collection): packs
+  opened, value pulled, a luck meter (your Secret/Ultra pulls vs what the odds predict for the packs you
+  opened), a best-pulls shelf (tap for 3D), and a binder per set: every card in colour once pulled,
+  greyed out until then, with completion bars on the set tiles.
 - **List or grid view** (toggle in the toolbar).
 - **Price refresh** (menu): current TCGplayer market price × today's USD exchange rate (open.er-api.com).
 - **Wishlist** tab: cards you want, with the cost to complete it. Wishlist cards don't count towards the

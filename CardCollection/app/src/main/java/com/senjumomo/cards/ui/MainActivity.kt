@@ -116,6 +116,15 @@ class MainActivity : AppCompatActivity() {
             findViewById(R.id.packsPage),
             onOpen = { startActivity(com.senjumomo.cards.packs.PackOpenActivity.intent(this, it)) },
             onRetry = ::loadPacks,
+            onBinder = { startActivity(com.senjumomo.cards.packs.PullBinderActivity.intent(this, it)) },
+            onPull = { p ->
+                startActivity(
+                    android.content.Intent(this, com.senjumomo.cards.holo.HoloViewerActivity::class.java)
+                        .putExtra(com.senjumomo.cards.holo.HoloViewerActivity.EXTRA_NAME, p.name)
+                        .putExtra(com.senjumomo.cards.holo.HoloViewerActivity.EXTRA_RARITY, p.rarity)
+                        .putExtra(com.senjumomo.cards.holo.HoloViewerActivity.EXTRA_IMAGE, com.senjumomo.cards.packs.PackArt.cardSmallUrl(p.artworkId))
+                )
+            },
         )
         bottomNav.setOnItemSelectedListener { showTab(it.itemId); true }
         list.addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -155,6 +164,16 @@ class MainActivity : AppCompatActivity() {
         chipRarity.setOnClickListener {
             chooseValue("Rarity", "All rarities", cards.map { it.rarity }, filter.rarity) {
                 filter = filter.copy(rarity = it)
+            }
+        }
+
+        // Pack-opening history (simulator pulls) for the Packs tab.
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                val pulls = com.senjumomo.cards.packs.PullDatabase.get(this@MainActivity).pulls()
+                kotlinx.coroutines.flow.combine(pulls.observeOpenings(), pulls.observePulls()) { o, p ->
+                    com.senjumomo.cards.packs.PullSummary.of(o, p)
+                }.collect { packs.setHistory(it) }
             }
         }
 

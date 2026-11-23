@@ -177,7 +177,23 @@ Preview tools (see `CardCollection/tools/holo-preview/README.md`):
   Super+). Ultra+ spin 540° back→face (`spin`), rarity label pops in. "Hold" button fast-forwards
   (flips/throws every 110 ms) and stops at an Ultra+ so the big pull is never skipped.
   Inspired by the user's Pokémon TCG Pocket video: same kind of effects, none of its assets.
+- **Sounds** (`PackSounds`, SoundPool, mute remembered): synthesised WAVs in `res/raw/pack_*.wav` from
+  `tools/sounds/make_sounds.py` (noise/filters/sine partials only; never add recorded/borrowed audio).
+  Tear tick, rip + shimmer, whoosh (throw), flip, build-up (rate-matched to the shake), reveal chimes.
+- **Pull history / binder** (simulator only): separate Room DB `pulls.db` (`PullDatabase`: `openings`,
+  `pulls`) so the collection DB is never touched or migrated. Recorded when the pack rips
+  (`PullRecorder`, outlives the screen). `PackExpectation` simulates 400 packs of the set for expected
+  value and Ultra+/Secret+ counts per pack; `PullSummary.luck()` compares actual vs expected (Secret+ if
+  ≥1 expected, else Ultra+, else value; needs ≥3 packs). Packs tab header (`view_pull_header`, first item
+  of a ConcatAdapter, full span): stats, luck, best pulls (`ShineImageView`, tap → HoloViewer), set
+  binders → `PullBinderActivity` (set list + pulls → `BinderEntry.build`; pulled in colour, missing grey).
+  Set tiles show binder progress; the pack summary has a "Set binder" button.
+- `ShineImageView`: foil gleam sweeping across pack/best-pull images; phase offset by screen position so
+  it ripples and moves with scrolling; sleeps between sweeps; off when system animations are off.
+- Paparazzi quirks: progress bars only draw progress set after attach; Coil placeholders are async (set
+  the placeholder with `setImageResource` first or snapshots flake).
 
 ### Ideas not built yet (pack opening round 2)
 
-Sound effects, open a whole box, pack history and best pulls.
+Open a whole box, special reveals for Starlight/Ghost/QCSR, god packs, share a pull, "was it worth it"
+(sealed pack price vs pulls), achievements.
