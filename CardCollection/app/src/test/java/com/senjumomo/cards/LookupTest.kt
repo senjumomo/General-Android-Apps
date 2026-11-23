@@ -21,6 +21,15 @@ class LookupTest {
         assertEquals("RA01-EN001", SetCode.find("RA01 - EN0O1")) // spaces and O-for-0
         assertNull(SetCode.find("2026-001 ATK/2500 DEF/2100"))
         assertNull(SetCode.find("no code here"))
+        // Common camera misreads.
+        assertEquals("MAMA-EN081", SetCode.find("MAMA–EN081"))          // en dash
+        assertEquals("MAMA-EN081", SetCode.find("MAMA_EN08I"))          // underscore, I for 1
+        assertEquals("ROTA-EN010", SetCode.find("ROTA - EN0lO"))        // l for 1, O for 0
+        assertEquals("MAMA-EN081", SetCode.find("Replica MAMAEN081 x")) // dash lost
+        assertEquals("LDS3-EN112", SetCode.find("LDS3EN1I2"))
+        assertNull(SetCode.find("X-SAB"))                               // no digit: a word
+        assertNull(SetCode.find("ATTENTION"))                           // "EN" inside a word
+        assertNull(SetCode.find("KONAMI-SOLD"))
     }
 
     @Test

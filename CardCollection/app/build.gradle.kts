@@ -13,8 +13,11 @@ android {
         applicationId = "com.senjumomo.cards"
         minSdk = 24
         targetSdk = 35
-        versionCode = 11
-        versionName = "5.4"
+        versionCode = 12
+        versionName = "5.5"
+        // Only 64-bit ARM (every current phone): the bundled text recognition's native code for
+        // other CPUs would otherwise make the APK ~50 MB.
+        ndk { abiFilters += "arm64-v8a" }
     }
 
     buildTypes {
@@ -52,7 +55,9 @@ dependencies {
     implementation("androidx.camera:camera-camera2:1.4.1")
     implementation("androidx.camera:camera-lifecycle:1.4.1")
     implementation("androidx.camera:camera-view:1.4.1")
-    implementation("com.google.android.gms:play-services-mlkit-text-recognition:19.0.1")
+    // Bundled text recognition: the model ships inside the app, so scanning works without Google Play
+    // services (and without waiting for a model download).
+    implementation("com.google.mlkit:text-recognition:16.0.1")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20240303") // real org.json for JVM tests

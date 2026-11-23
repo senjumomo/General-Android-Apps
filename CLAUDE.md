@@ -118,6 +118,17 @@ Images: YGOPRODeck scans everywhere (matched by set code, saved in `Card.imageUr
 not found), TCGplayer as fallback. **Never commit Konami card art or TCGplayer/YGOPRODeck images**
 (tests use made-up cards; real art is only downloaded into `app/build/`).
 
+### Scanning (`ScanActivity`)
+
+- **Bundled** ML Kit text recognition (`com.google.mlkit:text-recognition`), not the Play-services one:
+  the user's phone may lack Google Play services / the model download (scanner "detected nothing").
+  APK is arm64-v8a only (`abiFilters`), else the OCR native libs make it ~50 MB (now ~20 MB).
+- Analysis frames 1920×1080 (`ResolutionSelector`): at the default 640×480 a 1.5 mm set code is ~12 px
+  tall, below OCR's ~16 px. Tap the preview to focus. Recognition errors are shown on screen; a live
+  hint says whether text/codes are being seen. A code seen twice in the last 6 frames is confirmed.
+- `SetCode` tolerates OCR slips: dash variants or a lost dash (only with a real region code), O/Q/D→0,
+  I/L→1, Z→2, S→5, B→8 in the number (which must contain a real digit).
+
 ### Product decisions (from the user)
 
 - Tapping a card opens a **read-only** detail screen; editing only via the Edit button.
