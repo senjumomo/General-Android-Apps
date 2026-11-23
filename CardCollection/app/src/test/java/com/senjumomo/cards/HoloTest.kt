@@ -235,5 +235,45 @@ class HoloTest {
         }
         paparazzi.snapshot(row)
     }
+
+    /** Round-2 effects frozen: tearing (glow + flakes), the rip (flash + confetti), a Secret landing. */
+    @Test
+    fun packEffects2() {
+        val ctx = paparazzi.context
+        val back = com.senjumomo.cards.packs.CardBack.get()
+        val pw = 412
+        val ph = 860
+        fun panel(at: Long, setup: (com.senjumomo.cards.packs.PackFx, android.graphics.RectF) -> Unit): android.graphics.Bitmap {
+            val frame = android.widget.FrameLayout(ctx)
+            frame.setBackgroundResource(R.drawable.holo_bg)
+            val fx = com.senjumomo.cards.packs.PackFx(ctx)
+            var clock = 10_000L
+            fx.now = { clock }
+            fx.starfieldTilt = { 0.3f to -0.2f }
+            val iv = android.widget.ImageView(ctx).apply { setImageBitmap(back); scaleType = android.widget.ImageView.ScaleType.FIT_XY }
+            val cw = (pw * 0.62f).toInt(); val ch = cw * back.height / back.width; val top = (ph * 0.24f).toInt()
+            frame.addView(fx, android.widget.FrameLayout.LayoutParams(-1, -1))
+            frame.addView(iv, android.widget.FrameLayout.LayoutParams(cw, ch).apply { gravity = android.view.Gravity.CENTER_HORIZONTAL; topMargin = top })
+            frame.measure(android.view.View.MeasureSpec.makeMeasureSpec(pw, android.view.View.MeasureSpec.EXACTLY),
+                android.view.View.MeasureSpec.makeMeasureSpec(ph, android.view.View.MeasureSpec.EXACTLY))
+            frame.layout(0, 0, pw, ph)
+            val left = (pw - cw) / 2f
+            setup(fx, android.graphics.RectF(left, top.toFloat(), left + cw, top + ch.toFloat()))
+            clock = at
+            val bmp = android.graphics.Bitmap.createBitmap(pw, ph, android.graphics.Bitmap.Config.ARGB_8888)
+            frame.draw(android.graphics.Canvas(bmp))
+            return bmp
+        }
+        val pink = android.graphics.Color.rgb(255, 120, 220)
+        val frames = listOf(
+            panel(10_250) { fx, r -> fx.dim(0.6f); fx.tearGlow(r.centerX(), r.top + 30f, r.width(), 0.7f); repeat(8) { fx.flakes(r.left + r.width() * 0.6f, r.top + 30f, 30f, 3) } },
+            panel(10_200) { fx, r -> fx.flash(); fx.burst(r.centerX(), r.top + 30f, r.width()); fx.confetti(r.centerX(), r.top + 30f, 70, spread = 0.8f) },
+            panel(10_700) { fx, r -> fx.rainbow(true); fx.sparkleRain(400, pink, 80); fx.confetti(pw / 2f, -10f, 90, gold = true, spread = 1.0f, down = true); fx.shootingStars(3, pink) },
+        )
+        val all = android.graphics.Bitmap.createBitmap(pw * frames.size, ph, android.graphics.Bitmap.Config.ARGB_8888)
+        val c = android.graphics.Canvas(all)
+        frames.forEachIndexed { i, b -> c.drawBitmap(b, (i * pw).toFloat(), 0f, null) }
+        paparazzi.snapshot(android.widget.ImageView(ctx).apply { setImageBitmap(all); adjustViewBounds = true })
+    }
 }
 

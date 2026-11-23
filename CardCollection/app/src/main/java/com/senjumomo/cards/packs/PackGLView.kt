@@ -62,10 +62,14 @@ class PackGLView @JvmOverloads constructor(
         renderMode = RENDERMODE_CONTINUOUSLY
     }
 
+    /** When the pack started dropping in (it falls in spinning and lands with a bounce). */
+    @Volatile private var introStart = 0L
+
     fun setPack(bitmap: Bitmap) {
         renderer.pack = bitmap
         tearProgress = 0f
         ripStart = 0L
+        introStart = SystemClock.uptimeMillis()
     }
 
     val isOpened get() = ripStart != 0L
@@ -180,8 +184,17 @@ class PackGLView @JvmOverloads constructor(
             GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
 
             if (t == 0f) {
-                draw(shadowProgram, w, h, ax, ay, -tiltX * 0.05f, -0.06f - tiltY * 0.04f, 1.03f, 0f, 0f, 0f, 0f)
-                draw(cardProgram, w, h, ax, ay, 0f, 0f, 1f, 0f, 0f, tearProgress, 0f)
+                // Entrance: drops in from above with a turn, lands with a little bounce; the shadow
+                // tightens as it comes down.
+                val k = ((SystemClock.uptimeMillis() - introStart) / INTRO_MS.toFloat()).coerceIn(0f, 1f)
+                val fall = (1f - k).let { it * it * it }
+                val bounce = if (k > 0.6f) sin((k - 0.6f) / 0.4f * Math.PI.toFloat()) * 0.05f * (1f - k) * 2.5f else 0f
+                val oy = fall * 2.6f + bounce
+                val rz = fall * 0.6f
+                val ex = ax + fall * 0.9f                                   // tipped back while falling
+                val sc = 1f + fall * 0.15f
+                draw(shadowProgram, w, h, ax, ay, -tiltX * 0.05f, -0.06f - tiltY * 0.04f, 1.03f + fall * 0.3f, rz, 0f, 0f, 1f - k)
+                draw(cardProgram, w, h, ex, ay, 0f, oy, sc, rz, 0f, tearProgress, 0f)
             } else {
                 // The rest of the pack drops away and fades...
                 val drop = t * t
@@ -272,5 +285,6 @@ class PackGLView @JvmOverloads constructor(
 
     companion object {
         const val RIP_MS = 900L
+        const val INTRO_MS = 750L
     }
 }

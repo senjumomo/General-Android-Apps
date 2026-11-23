@@ -130,6 +130,11 @@ class PackOpenActivity : AppCompatActivity() {
         fxBack = findViewById(R.id.fxBack)
         fxFront = findViewById(R.id.fxFront)
         cardArea = findViewById(R.id.cardArea)
+        // A faint starfield behind everything that shifts with the phone's tilt (depth).
+        fxBack.starfieldTilt = if (tilt.available) ({ tilt.x to tilt.y }) else ({
+            val s = android.os.SystemClock.uptimeMillis() / 1000f
+            kotlin.math.sin(s * 0.3f) * 0.4f to kotlin.math.cos(s * 0.23f) * 0.3f
+        })
         current.cameraDistance = 9000 * resources.displayMetrics.density
         if (tilt.available) {
             packView.externalTilt = { tilt.x to tilt.y }
@@ -177,13 +182,21 @@ class PackOpenActivity : AppCompatActivity() {
             if (p == 0f) lastTick = 0
             // The room goes dark as you cut, so the light from inside stands out.
             fxBack.dim(p * 0.6f, if (p == 0f) 250 else 60)
+            // Light leaks out of the cut, and foil flakes come off where the finger is.
+            val (x, y, w) = packView.tearLine().let { Triple(packView.left + it[0], packView.top + it[1], it[2]) }
+            fxBack.tearGlow(x, y, w, p)
+            if (p > 0f) fxBack.flakes(x - w / 2 + w * p, y, w * 0.08f, 2)
         }
         packView.onRip = {
             haptics.rip()
             sounds.rip()
             val (x, y, w) = packView.tearLine().let { Triple(it[0], it[1], it[2]) }
             fxBack.dim(0f, 700)
+            fxBack.tearGlow(0f, 0f, 0f, 0f)
             fxBack.burst(packView.left + x, packView.top + y, w)
+            fxBack.flash()
+            fxBack.confetti(packView.left + x, packView.top + y, 70, spread = 0.8f)
+            shake(findViewById(R.id.packStage), dp(7).toFloat(), 320)
             findViewById<View>(R.id.tearHint).animate().alpha(0f).setDuration(150).start()
             findViewById<View>(R.id.openButton).visibility = View.INVISIBLE
         }
@@ -317,11 +330,25 @@ class PackOpenActivity : AppCompatActivity() {
         findViewById<View>(R.id.packStage).visibility = View.GONE
         packView.visibility = View.GONE
         findViewById<View>(R.id.revealStage).visibility = View.VISIBLE
+        // The cards rise out of the pack's opening, tipping up towards you.
         val area = findViewById<View>(R.id.cardArea)
-        area.translationY = dp(220).toFloat()
+        area.cameraDistance = 9000 * resources.displayMetrics.density
+        area.translationY = dp(300).toFloat()
+        area.scaleX = 0.55f; area.scaleY = 0.55f
+        area.rotationX = 58f
         area.alpha = 0f
-        area.animate().translationY(0f).alpha(1f).setDuration(380).setInterpolator(DecelerateInterpolator()).start()
+        area.animate().translationY(0f).scaleX(1f).scaleY(1f).rotationX(0f).alpha(1f).setDuration(620)
+            .setInterpolator(OvershootInterpolator(1.1f)).start()
         showCard(0)
+    }
+
+    /** A short, decaying shake (camera-shake feel) of [v] by up to [amount] px. */
+    private fun shake(v: View, amount: Float, ms: Long) {
+        val steps = 8
+        val xs = FloatArray(steps + 1) { i -> if (i == steps) 0f else amount * (1f - i / steps.toFloat()) * (if (i % 2 == 0) 1 else -1) }
+        val ys = FloatArray(steps + 1) { i -> if (i == steps) 0f else amount * 0.5f * (1f - i / steps.toFloat()) * (if (i % 3 == 0) -1 else 1) }
+        ObjectAnimator.ofFloat(v, View.TRANSLATION_X, *xs).setDuration(ms).start()
+        ObjectAnimator.ofFloat(v, View.TRANSLATION_Y, *ys).setDuration(ms).start()
     }
 
     /** Commons come out face up; Rares and better start face down for a proper reveal. */
@@ -589,6 +616,13 @@ class PackOpenActivity : AppCompatActivity() {
             sounds.reveal(big = c.tier >= Tier.ULTRA)
             fxFront.flare(r.right - r.width() * 0.12f, r.top + r.height() * 0.08f, tierColor(c.tier))
             fxFront.twinkle(r, count = if (c.tier >= Tier.ULTRA) 7 else 5, color = tierColor(c.tier))
+            if (c.tier >= Tier.ULTRA) fxFront.sparkleRain(2600, tierColor(c.tier), if (c.tier >= Tier.SECRET) 80 else 50)
+            if (c.tier >= Tier.SECRET) {
+                // The rarest: the screen shakes, gold confetti showers down, shooting stars cross.
+                shake(findViewById(R.id.revealStage), dp(if (c.tier >= Tier.PREMIUM) 10 else 6).toFloat(), 420)
+                fxFront.confetti(fxFront.width / 2f, -dp(10).toFloat(), if (c.tier >= Tier.PREMIUM) 140 else 90, gold = true, spread = 1.0f, down = true)
+                fxFront.shootingStars(if (c.tier >= Tier.PREMIUM) 5 else 3, tierColor(c.tier))
+            }
         } else {
             fxFront.twinkle(r, count = 3)
             if (c.tier >= Tier.RARE) sounds.twinkle()

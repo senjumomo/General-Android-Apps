@@ -139,8 +139,94 @@ class PackFx @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
         return rainbowFrom + (rainbowTo - rainbowFrom) * (t * t * (3 - 2 * t))
     }
 
+    // --- Starfield (parallax with the phone's tilt) ----------------------------------------------------
+
+    /** Tilt (-1..1 each axis) for the starfield's parallax; null = no starfield. */
+    var starfieldTilt: (() -> Pair<Float, Float>)? = null
+    private val field = List(110) { floatArrayOf(rnd.nextFloat(), rnd.nextFloat(), 0.2f + rnd.nextFloat() * 0.8f, rnd.nextFloat()) }
+
+    // --- Particles: foil flakes, confetti, sparkle rain, shooting stars --------------------------------
+
+    private class Particle(
+        val x0: Float, val y0: Float, val vx: Float, val vy: Float, val g: Float, val size: Float,
+        val color: Int, val spin: Float, val start: Long, val life: Float, val shape: Int,
+    )
+
+    private val particles = mutableListOf<Particle>()
+
+    /** Little foil flakes shed from a tear at ([x], [y]) along a [width]-wide line. */
+    fun flakes(x: Float, y: Float, width: Float, count: Int) {
+        val t = now()
+        repeat(count) {
+            particles += Particle(
+                x + (rnd.nextFloat() - 0.5f) * width, y, (rnd.nextFloat() - 0.5f) * 220 * density,
+                -(60 + rnd.nextFloat() * 220) * density, 520 * density, (3 + rnd.nextFloat() * 4) * density,
+                hue(rnd.nextFloat() * 360f, 0.25f, 1f, 1f), 6 + rnd.nextFloat() * 14, t, 0.9f + rnd.nextFloat() * 0.6f, FLAKE,
+            )
+        }
+        postInvalidateOnAnimation()
+    }
+
+    /** A burst of spinning foil confetti from ([x], [y]); [gold] for the rarest pulls. */
+    fun confetti(x: Float, y: Float, count: Int, gold: Boolean = false, spread: Float = 1f, down: Boolean = false) {
+        val t = now()
+        repeat(count) {
+            val a = ((if (down) PI / 2 else -PI / 2) + (rnd.nextFloat() - 0.5f) * 2.6f * spread).toFloat()
+            val speed = (if (down) 60 + rnd.nextFloat() * 260 else 250 + rnd.nextFloat() * 650) * density
+            val c = if (gold) hue(38f + rnd.nextFloat() * 18f, 0.35f + rnd.nextFloat() * 0.4f, 1f, 1f)
+                else hue(rnd.nextFloat() * 360f, 0.55f, 1f, 1f)
+            particles += Particle(x, y, cos(a) * speed, sin(a) * speed, 900 * density, (5 + rnd.nextFloat() * 6) * density,
+                c, 5 + rnd.nextFloat() * 16, t + (rnd.nextFloat() * 60).toLong(), 1.6f + rnd.nextFloat() * 0.9f, FLAKE)
+        }
+        postInvalidateOnAnimation()
+    }
+
+    /** Sparkles drifting down the whole screen for [ms]. */
+    fun sparkleRain(ms: Long, color: Int, count: Int = 60) {
+        val t = now()
+        repeat(count) {
+            particles += Particle(rnd.nextFloat() * width, -20 * density, (rnd.nextFloat() - 0.5f) * 40 * density,
+                (90 + rnd.nextFloat() * 160) * density, 30 * density, (8 + rnd.nextFloat() * 12) * density,
+                if (rnd.nextFloat() < 0.5f) Color.WHITE else color, 2 + rnd.nextFloat() * 3,
+                t + (rnd.nextFloat() * ms).toLong(), 2.5f + rnd.nextFloat() * 2f, SPARKLE)
+        }
+        postInvalidateOnAnimation()
+    }
+
+    /** A few shooting stars streaking across the top half. */
+    fun shootingStars(count: Int, color: Int = Color.WHITE) {
+        val t = now()
+        repeat(count) { i ->
+            val fromLeft = rnd.nextBoolean()
+            val speed = (900 + rnd.nextFloat() * 600) * density
+            particles += Particle(if (fromLeft) -40 * density else width + 40 * density, rnd.nextFloat() * height * 0.45f,
+                if (fromLeft) speed else -speed, speed * 0.35f, 0f, 2.5f * density, color, 0f,
+                t + i * 260L + (rnd.nextFloat() * 200).toLong(), 1.1f, SHOOTING)
+        }
+        postInvalidateOnAnimation()
+    }
+
+    // --- Flash and tear glow -------------------------------------------------------------------------
+
+    private var flashStart = -1L
+    private var flashMs = 1L
+
+    fun flash(ms: Long = 280) { flashStart = now(); flashMs = ms; postInvalidateOnAnimation() }
+
+    private var tearX = 0f
+    private var tearY = 0f
+    private var tearW = 0f
+    private var tearAmount = 0f
+
+    /** Light leaking out of the cut as it's torn ([progress] 0..1). */
+    fun tearGlow(x: Float, y: Float, width: Float, progress: Float) {
+        tearX = x; tearY = y; tearW = width; tearAmount = progress
+        postInvalidateOnAnimation()
+    }
+
     /** Stop everything at once (new pack). */
     fun clear() {
+        particles.clear(); flashStart = -1; tearAmount = 0f
         dimFrom = 0f; dimTo = 0f; burstStart = -1; flareStart = -1; stars.clear()
         rainbowFrom = 0f; rainbowTo = 0f
         invalidate()
@@ -164,6 +250,8 @@ class PackFx @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
     override fun onDraw(canvas: Canvas) {
         val t = now()
         var animating = false
+
+        starfieldTilt?.let { drawStarfield(canvas, t, it()); animating = true }
 
         val rb = rainbowNow()
         if (rb > 0f) { drawRainbow(canvas, t, rb); animating = true }
@@ -193,7 +281,101 @@ class PackFx @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
             if (e < 1f) { drawFlare(canvas, e); animating = true } else flareStart = -1
         }
 
+        if (tearAmount > 0f) drawTearGlow(canvas)
+
+        particles.removeAll { (t - it.start) / 1000f > it.life || it.y0 > height + 200 * density }
+        for (p in particles) drawParticle(canvas, p, t)
+        if (particles.isNotEmpty()) animating = true
+
+        if (flashStart >= 0) {
+            val e = (t - flashStart) / flashMs.toFloat()
+            if (e < 1f) {
+                paint.reset()
+                paint.color = Color.argb(((1f - e) * (1f - e) * 210).toInt(), 255, 250, 240)
+                canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+                animating = true
+            } else flashStart = -1
+        }
+
         if (animating) postInvalidateOnAnimation()
+    }
+
+    private fun drawStarfield(canvas: Canvas, t: Long, tilt: Pair<Float, Float>) {
+        val w = width.toFloat()
+        val h = height.toFloat()
+        val s = t / 1000f
+        paint.reset()
+        val shift = 28 * density
+        for (f in field) {
+            // Deeper stars (small depth) move less: parallax.
+            val x = ((f[0] * w + tilt.first * shift * f[2] * 2) % w + w) % w
+            val y = ((f[1] * h + tilt.second * shift * f[2] * 2) % h + h) % h
+            val tw = 0.55f + 0.45f * sin(s * (1.2f + f[3] * 2.5f) + f[3] * 40f)
+            paint.color = Color.argb((tw * (70 + 120 * f[2])).toInt(), 220, 225, 255)
+            canvas.drawCircle(x, y, (0.5f + f[2] * 1.1f) * density, paint)
+        }
+    }
+
+    private fun drawTearGlow(canvas: Canvas) {
+        val r = tearW * (0.55f + 0.25f * tearAmount)
+        paint.reset(); additive(paint)
+        paint.shader = RadialGradient(tearX, tearY, r,
+            intArrayOf(Color.argb((tearAmount * 200).toInt(), 255, 245, 220), Color.argb((tearAmount * 90).toInt(), 200, 170, 255), Color.TRANSPARENT),
+            floatArrayOf(0f, 0.4f, 1f), Shader.TileMode.CLAMP)
+        canvas.save(); canvas.scale(1f, 0.35f, tearX, tearY)
+        canvas.drawCircle(tearX, tearY, r, paint)
+        canvas.restore()
+        paint.shader = null
+    }
+
+    private val rect = RectF()
+
+    private fun drawParticle(canvas: Canvas, p: Particle, now: Long) {
+        val tt = (now - p.start) / 1000f
+        if (tt < 0f) return
+        val k = tt / p.life
+        val x = p.x0 + p.vx * tt
+        val y = p.y0 + p.vy * tt + 0.5f * p.g * tt * tt
+        val fade = if (k < 0.75f) 1f else 1f - (k - 0.75f) / 0.25f
+        when (p.shape) {
+            FLAKE -> {
+                // A spinning foil square: its visible height flips with the spin and it glints face-on.
+                val flip = cos(p.spin * tt)
+                paint.reset()
+                val glint = flip * flip
+                paint.color = withAlpha(blend(p.color, Color.WHITE, glint * glint * 0.7f), fade)
+                canvas.save()
+                canvas.rotate(p.spin * tt * 40f, x, y)
+                rect.set(x - p.size / 2, y - p.size * 0.35f * kotlin.math.abs(flip) - 0.5f, x + p.size / 2, y + p.size * 0.35f * kotlin.math.abs(flip) + 0.5f)
+                canvas.drawRect(rect, paint)
+                canvas.restore()
+            }
+            SPARKLE -> {
+                val tw = 0.5f + 0.5f * sin(tt * p.spin * 6f + p.x0)
+                drawStar(canvas, x + sin(tt * 2f + p.x0) * 10 * density, y, p.size * (0.6f + 0.4f * tw), tt * 60f, p.color, fade * (0.5f + 0.5f * tw))
+            }
+            SHOOTING -> {
+                val len = 90 * density
+                val dx = p.vx / kotlin.math.hypot(p.vx, p.vy)
+                val dy = p.vy / kotlin.math.hypot(p.vx, p.vy)
+                paint.reset()
+                paint.strokeWidth = p.size
+                paint.strokeCap = Paint.Cap.ROUND
+                paint.shader = LinearGradient(x, y, x - dx * len, y - dy * len, withAlpha(p.color, fade), Color.TRANSPARENT, Shader.TileMode.CLAMP)
+                canvas.drawLine(x, y, x - dx * len, y - dy * len, paint)
+                paint.shader = null
+                drawStar(canvas, x, y, p.size * 5, 0f, p.color, fade)
+            }
+        }
+    }
+
+    private fun blend(a: Int, b: Int, k: Float): Int {
+        val m = k.coerceIn(0f, 1f)
+        return Color.rgb(
+            (Color.red(a) + (Color.red(b) - Color.red(a)) * m).toInt(),
+            (Color.green(a) + (Color.green(b) - Color.green(a)) * m).toInt(),
+            (Color.blue(a) + (Color.blue(b) - Color.blue(a)) * m).toInt(),
+        )
     }
 
     private fun drawRainbow(canvas: Canvas, t: Long, amount: Float) {
@@ -314,5 +496,8 @@ class PackFx @JvmOverloads constructor(context: Context, attrs: AttributeSet? = 
         const val STAR_MS = 650L
         const val FLARE_MS = 800L
         const val RAINBOW_FADE_MS = 500L
+        private const val FLAKE = 0
+        private const val SPARKLE = 1
+        private const val SHOOTING = 2
     }
 }
