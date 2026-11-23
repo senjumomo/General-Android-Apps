@@ -40,7 +40,7 @@ const frames = framesArg ? JSON.parse(require('fs').readFileSync(framesArg, 'utf
       U(p,'uShapeAspect',l=>gl.uniform1f(l,PH/PW)); U(p,'uCornerRadius',l=>gl.uniform1f(l,0.012)); U(p,'uFade',l=>gl.uniform1f(l,fade));
       if (p === card) { U(p,'uImage',l=>gl.uniform1i(l,0)); U(p,'uSrc',l=>gl.uniform4f(l,0,0,1,1)); U(p,'texel',l=>gl.uniform2f(l,1/PW,1/PH));
         U(p,'tilt',l=>gl.uniform2f(l,tx,ty)); U(p,'time',l=>gl.uniform1f(l,0)); U(p,'mode',l=>gl.uniform1f(l,13)); U(p,'photo',l=>gl.uniform1f(l,0));
-        U(p,'artRect',l=>gl.uniform4f(l,0,0,1,1)); U(p,'uTearY',l=>gl.uniform1f(l,TEAR_Y)); U(p,'uTearMode',l=>gl.uniform1f(l,mode)); U(p,'uTearProgress',l=>gl.uniform1f(l,prog)); }
+        U(p,'artRect',l=>gl.uniform4f(l,0,0,1,1)); U(p,'uTearY',l=>gl.uniform1f(l,TEAR_Y)); U(p,'uTearMode',l=>gl.uniform1f(l,mode)); U(p,'uTearProgress',l=>gl.uniform1f(l,prog)); U(p,'uPillow',l=>gl.uniform1f(l,1)); }
       const loc = gl.getAttribLocation(p,'aCorner'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
       gl.drawArrays(gl.TRIANGLE_STRIP,0,4); };
     const pad = 10, label = 20;

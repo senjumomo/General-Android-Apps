@@ -177,6 +177,8 @@ Preview tools (see `CardCollection/tools/holo-preview/README.md`):
 - Pack wrapper is generated (`PackArt`: featured top card art + crimped foil ends), since official
   pack images are low-res, sometimes boxes or Japanese. Rendered with the shared shader (`PackGLView`):
   swipe the top to tear (glowing tear line), the strip peels off sideways, the pack drops away.
+  Packs get `uPillow = 1`: 3D foil-bag lighting from a height field (puffy body, crinkles, ridged
+  crimps at y<0.085 / >0.93), tilt-driven specular, sides pinched toward the crimps. Preview: gl-pack.js.
 - `PackGenerator`: 9 cards = 7 Commons + 1 Rare (or a Super in sets with no Rares) + 1 foil slot (Ultra
   1/6, Secret 1/12, QCSR/Prismatic/Platinum 1/24, Collector's 1/48, Starlight/Ghost 1/288); all-foil sets
   fill every slot from the foil distribution. Approximate community odds, covered by a 20k-pack test.

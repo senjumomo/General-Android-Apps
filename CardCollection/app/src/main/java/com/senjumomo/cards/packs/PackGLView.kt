@@ -232,6 +232,7 @@ class PackGLView @JvmOverloads constructor(
                 f1("photo", 0f)
                 f4("artRect", 0f, 0f, 1f, 1f)
                 f1("uTearY", PackArt.TEAR_Y); f1("uTearMode", tearMode); f1("uTearProgress", progress)
+                f1("uPillow", 1f)
             }
             val loc = GLES20.glGetAttribLocation(prog, "aCorner")
             GLES20.glEnableVertexAttribArray(loc)
