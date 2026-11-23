@@ -2,6 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root"
+    android:clipChildren="false"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/holo_bg">
@@ -98,6 +99,8 @@
     <!-- Stage 2: revealing the cards one by one -->
     <FrameLayout
         android:id="@+id/revealStage"
+        android:clipChildren="false"
+        android:clipToPadding="false"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clickable="true"
@@ -123,6 +126,8 @@
 
         <FrameLayout
             android:id="@+id/cardArea"
+            android:clipChildren="false"
+            android:clipToPadding="false"
             android:layout_width="260dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center">
