@@ -165,7 +165,8 @@ class PackOpenActivity : AppCompatActivity() {
             setOnClickListener {
                 haptics.enabled = !haptics.enabled
                 show()
-                Snackbar.make(findViewById(R.id.root), if (haptics.enabled) "Vibration on" else "Vibration off", Snackbar.LENGTH_SHORT).show()
+                // (this@PackOpenActivity: inside apply, a bare findViewById searches the button itself.)
+                Snackbar.make(this@PackOpenActivity.findViewById(R.id.root), if (haptics.enabled) "Vibration on" else "Vibration off", Snackbar.LENGTH_SHORT).show()
                 if (haptics.enabled) haptics.flip() // a little buzz to show it's back
             }
         }

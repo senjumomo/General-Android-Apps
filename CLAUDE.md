@@ -157,6 +157,10 @@ not found), TCGplayer as fallback. **Never commit Konami card art or TCGplayer/Y
   Descenders (J tail) reach 0.108; the bar's bottom bevel starts at 0.1089 on every frame, so the mask
   ends at 0.1075. Card fills 1.72 of the GL view's height (not 1.84) and the shadow fades out near the
   view's edges (`uViewSize`), else a tilted card's shadow is clipped into a hard line.
+- Kotlin pitfall: inside `someView.apply { … }` a bare `findViewById` is the *view's* (searches its
+  children → null). Use `this@Activity.findViewById` (a Snackbar on null crashed the vibration switch).
+- Crashes are saved by `CrashLog` (installed in `CardsApp`) and shown once on the next launch with a
+  "Copy details" button: ask the user to paste it when something closes unexpectedly.
 - GLSL ES pitfalls: `pow(x, y)` with negative `x` is undefined (square instead); identifiers ending `_`
   are fine but `half` is reserved; loops need constant bounds.
 

@@ -83,6 +83,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         dao = CardDatabase.get(this).cards()
+        showLastCrash()
 
         root = findViewById(R.id.root)
         appBar = findViewById(R.id.appBar)
@@ -285,6 +286,20 @@ class MainActivity : AppCompatActivity() {
                 .onSuccess { packs.setSets(it) }
                 .onFailure { packs.showError() }
         }
+    }
+
+    /** If the app crashed last time, say so and offer the error to copy (it's otherwise invisible). */
+    private fun showLastCrash() {
+        val report = com.senjumomo.cards.CrashLog.take(this) ?: return
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle("Card Binder closed unexpectedly")
+            .setMessage("Sorry about that. Copy the details below and send them over so it can be fixed.\n\n" + report.take(1500))
+            .setPositiveButton("Copy details") { _, _ ->
+                val clip = getSystemService(android.content.ClipboardManager::class.java)
+                clip.setPrimaryClip(android.content.ClipData.newPlainText("Card Binder crash", report))
+            }
+            .setNegativeButton("Close", null)
+            .show()
     }
 
     /** From Stats: jump to the collection filtered to one set or rarity. */

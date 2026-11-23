@@ -12,7 +12,7 @@ class Haptics(context: Context) {
 
     var enabled: Boolean
         get() = prefs.getBoolean("vibrate", true)
-        set(value) { prefs.edit().putBoolean("vibrate", value).apply(); if (!value) vibrator?.cancel() }
+        set(value) { prefs.edit().putBoolean("vibrate", value).apply(); if (!value) runCatching { vibrator?.cancel() } }
 
     private val vibrator: Vibrator? = if (Build.VERSION.SDK_INT >= 31) {
         (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)?.defaultVibrator
@@ -23,12 +23,15 @@ class Haptics(context: Context) {
     private fun compose(vararg prims: Pair<Int, Float>, fallbackMs: Long) {
         val v = vibrator ?: return
         if (!enabled || !v.hasVibrator()) return
-        if (Build.VERSION.SDK_INT >= 30 && v.areAllPrimitivesSupported(*prims.map { it.first }.toIntArray())) {
-            val c = VibrationEffect.startComposition()
-            prims.forEach { (p, s) -> c.addPrimitive(p, s) }
-            v.vibrate(c.compose())
-        } else {
-            v.vibrate(VibrationEffect.createOneShot(fallbackMs, VibrationEffect.DEFAULT_AMPLITUDE))
+        // A buzz is never worth a crash (some phones refuse effects).
+        runCatching {
+            if (Build.VERSION.SDK_INT >= 30 && v.areAllPrimitivesSupported(*prims.map { it.first }.toIntArray())) {
+                val c = VibrationEffect.startComposition()
+                prims.forEach { (p, s) -> c.addPrimitive(p, s) }
+                v.vibrate(c.compose())
+            } else {
+                v.vibrate(VibrationEffect.createOneShot(fallbackMs, VibrationEffect.DEFAULT_AMPLITUDE))
+            }
         }
     }
 
