@@ -205,5 +205,35 @@ class HoloTest {
         }
         paparazzi.snapshot(row)
     }
+
+    /** Set tiles in the Packs tab: a pack image, a wide box image (sits on its blurred copy), no image. */
+    @Test
+    fun packTiles() {
+        val ctx = paparazzi.context
+        val row = android.widget.LinearLayout(ctx).apply { setBackgroundColor(android.graphics.Color.rgb(17, 19, 24)); setPadding(24, 24, 24, 24) }
+        val pack = com.senjumomo.cards.packs.CardBack.get()
+        val box = android.graphics.Bitmap.createBitmap(600, 380, android.graphics.Bitmap.Config.ARGB_8888).also {
+            val c = android.graphics.Canvas(it); c.drawColor(android.graphics.Color.rgb(40, 30, 60))
+            c.drawBitmap(pack, null, android.graphics.Rect(40, 40, 250, 340), null); c.drawBitmap(pack, null, android.graphics.Rect(330, 40, 540, 340), null)
+        }
+        listOf(Triple("Stardust Overdrive", pack, 44), Triple("Magnificent Mavens", box, 20), Triple("Quarter Century Bonanza", null, 5)).forEach { (name, img, owned) ->
+            val v = android.view.LayoutInflater.from(ctx).inflate(R.layout.item_pack, row, false)
+            if (img != null) {
+                v.findViewById<android.widget.ImageView>(R.id.packImage).setImageBitmap(img)
+                v.findViewById<android.widget.ImageView>(R.id.packBackdrop).setImageBitmap(img)
+            } else {
+                v.findViewById<android.view.View>(R.id.packImage).visibility = android.view.View.GONE
+                v.findViewById<android.view.View>(R.id.packBackdrop).visibility = android.view.View.GONE
+                v.findViewById<android.widget.TextView>(R.id.packCodeTile).apply { visibility = android.view.View.VISIBLE; text = "RA03" }
+            }
+            v.findViewById<android.widget.TextView>(R.id.packName).text = name
+            v.findViewById<android.widget.TextView>(R.id.packDate).text = "2009 · 100 cards"
+            v.findViewById<android.widget.TextView>(R.id.packOwned).text = "✓ $owned owned"
+            v.findViewById<android.view.View>(R.id.packProgressRow).visibility = android.view.View.VISIBLE
+            v.findViewById<android.widget.TextView>(R.id.packProgressText).text = "17/100"
+            row.addView(v, android.widget.LinearLayout.LayoutParams(0, -2, 1f))
+        }
+        paparazzi.snapshot(row)
+    }
 }
 

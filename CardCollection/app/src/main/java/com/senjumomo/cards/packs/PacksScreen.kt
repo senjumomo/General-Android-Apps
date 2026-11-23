@@ -14,7 +14,6 @@ import com.google.android.material.button.MaterialButton
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.senjumomo.cards.R
 import com.senjumomo.cards.data.Card
-import com.senjumomo.cards.data.Dates
 import com.senjumomo.cards.ui.Money
 
 /**
@@ -205,23 +204,33 @@ class PacksScreen(
         inner class H(v: View) : RecyclerView.ViewHolder(v) {
             fun bind(s: CardSet) {
                 val image = itemView.findViewById<ImageView>(R.id.packImage)
+                val backdrop = itemView.findViewById<ImageView>(R.id.packBackdrop)
                 val tile = itemView.findViewById<TextView>(R.id.packCodeTile)
                 if (s.imageUrl != null) {
                     tile.visibility = View.GONE
                     image.visibility = View.VISIBLE
+                    backdrop.visibility = View.VISIBLE
+                    image.setImageDrawable(null)
+                    backdrop.setImageDrawable(null)
                     image.load(s.imageUrl) { crossfade(true) }
+                    // The same picture, blurred, fills the frame behind it (boxes and odd shapes sit neatly).
+                    backdrop.load(s.imageUrl) { crossfade(true) }
+                    if (android.os.Build.VERSION.SDK_INT >= 31) backdrop.setRenderEffect(
+                        android.graphics.RenderEffect.createBlurEffect(28f, 28f, android.graphics.Shader.TileMode.CLAMP)
+                    )
                 } else {
                     image.visibility = View.GONE
+                    backdrop.visibility = View.GONE
                     tile.visibility = View.VISIBLE
                     tile.text = s.code
                 }
                 itemView.findViewById<TextView>(R.id.packName).text = s.name
                 itemView.findViewById<TextView>(R.id.packDate).text =
-                    if (s.date.isNotBlank()) "${Dates.label(s.date)} · ${s.cardCount} cards" else "${s.cardCount} cards"
+                    if (s.date.length >= 4) "${s.date.take(4)} · ${s.cardCount} cards" else "${s.cardCount} cards"
                 val count = owned[s.name.lowercase()] ?: 0
                 itemView.findViewById<TextView>(R.id.packOwned).apply {
                     visibility = if (count > 0) View.VISIBLE else View.GONE
-                    text = "You own $count"
+                    text = "✓ $count owned"
                 }
                 val pulled = history.progress[s.name.lowercase()] ?: 0
                 itemView.findViewById<View>(R.id.packProgressRow).visibility = if (pulled > 0) View.VISIBLE else View.GONE
