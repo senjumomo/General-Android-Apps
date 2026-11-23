@@ -238,25 +238,43 @@ float4 shade(float2 uv) {
         effect += holo(uv, float2(0.8, 0.6), 1.3, grain, 0.35) * art * 0.65;
         sparkle += glitter(uv, 180.0, 0.84, 0.2) * art * 0.4;
         color = mix(color, metal(uv, float3(0.85, 0.87, 0.92), 0.2), letters * 0.9);
-    } else if (m < 8.5) {                           // Starlight: full-card hairline crosshatch foil
-        // From the user's CORI Uria photo + spec: ultra-fine horizontal + vertical hairlines over the
-        // whole card that only catch prismatic highlights along the specular band as it tilts, over a
-        // soft rainbow sheen. Blended as overlay (not screen/add) so darks and black text stay rich.
-        float3 bow = rainbow(uv.x * 1.5 - uv.y * 1.1 + tilt.x * 1.4 - tilt.y * 0.9);
-        float band = sweep(uv, float2(0.75, 0.65), 0.4);
-        float lit = sweep(uv, float2(0.75, 0.65), 0.18);          // the narrow specular band
-        // Hairlines ~1 px on a phone (cells ~4-5 px): only the outer ~22% of each cell is line.
-        float2 g = abs(fract(uv * float2(160.0, 233.0)) - 0.5) * 2.0;
-        float hair = max(smoothstep(0.76, 0.9, g.x), smoothstep(0.76, 0.9, g.y));
-        // Effect text box (normal frame): keep the text sharp.
+    } else if (m < 8.5) {                           // Starlight (matched to a real CORI Uria)
+        // The foil is a lattice of tiny round dots. Light makes whole ROWS and COLUMNS of dots flare
+        // together (horizontal/vertical streaks of dots, crossing like crossroads), each row its own
+        // colour, different rows lighting up as the card tilts. The print sits on top: dark ink
+        // blocks the foil, so outlines and dark areas stay dark. The text box only has faint specks.
+        float2 cells = uv * float2(120.0, 175.0);           // square cells, ~8 px on a phone
+        float2 id = floor(cells);
+        float2 f = fract(cells) - 0.5;
+        float jitter = hash21(id + 0.7);
+        float dotMask = smoothstep(0.46, 0.12, length(f)) * (0.45 + 0.55 * jitter);   // round, varied
+        // Rows light up in bundles of neighbours (a smooth phase down the card), sweeping with the
+        // tilt; columns the same, weaker. Where a lit row meets a lit column: the crossroads.
+        float rowPhase = fract(id.y * 0.021 + 0.35 * sin(id.y * 0.083) + tilt.y * 1.3 + tilt.x * 0.5);
+        float colPhase = fract(id.x * 0.027 + 0.35 * sin(id.x * 0.071 + 1.3) + tilt.x * 1.3 - tilt.y * 0.5);
+        float rowLit = smoothstep(0.09, 0.0, abs(rowPhase - 0.5));
+        float colLit = smoothstep(0.07, 0.0, abs(colPhase - 0.5)) * 0.7;
+        float region = sweep(uv, float2(0.75, 0.65), 0.38);   // streaks are strongest where the light hits
+        float lit = max(rowLit, colLit) * (0.3 + 0.7 * region);
+        float3 rowColor = rainbow(rowPhase * 0.7 + uv.x * 0.35 + 0.1);
+        float3 colColor = rainbow(colPhase * 0.7 + uv.y * 0.35 + 0.5);
+        float3 dotColor = mix(rowColor, colColor, colLit / max(rowLit + colLit, 0.001));
+        // A faint glow of all dots so the lattice is felt even between streaks.
+        float idle = 0.06 + 0.1 * region;
+        // Dark ink blocks the foil (it shines through the light parts of the print only).
+        float through = smoothstep(0.12, 0.5, luma(base));
         float textBox = boxMask(uv, float4(0.07, 0.735, 0.93, 0.93), 0.004);
-        float strength = (0.18 + 0.22 * band + border * 0.15) * (1.0 - 0.5 * textBox);
-        float3 tint = mix(float3(0.5), bow, strength);                       // 0.5 = no change in overlay
-        tint += (bow - 0.35) * hair * lit * 0.55 * (1.0 - 0.5 * textBox);   // hairlines glint in the band
-        tint = clamp(tint, 0.0, 1.0);
+        float3 dots = mix(float3(1.0, 0.97, 0.92), dotColor, 0.85) * dotMask * (lit * 2.1 + idle);
+        sparkle += dots * through * (1.0 - textBox) * mix(0.8, 1.0, art);
+        // Text box: sparse faint pastel specks only.
+        sparkle += glitter(uv, 140.0, 0.75, 0.7) * textBox * 0.35 * through;
+        // Soft rainbow sheen (overlay, so darks stay rich), strongest on the border.
+        float3 bow = rainbow(uv.x * 1.5 - uv.y * 1.1 + tilt.x * 1.4 - tilt.y * 0.9);
+        float strength = (0.12 + 0.18 * region + border * 0.15) * (1.0 - 0.6 * textBox);
+        float3 tint = clamp(mix(float3(0.5), bow, strength), 0.0, 1.0);
         float3 lo = 2.0 * color * tint;
         float3 hi = 1.0 - 2.0 * (1.0 - color) * (1.0 - tint);
-        color = mix(lo, hi, step(0.5, color));                               // overlay blend
+        color = mix(lo, hi, step(0.5, color));
         color = mix(color, metal(uv, float3(0.9, 0.93, 1.0), 0.35), letters * 0.6);
         darken = 0.0;
     } else if (m < 9.5) {                           // Collector's: whole card, fine textured rainbow

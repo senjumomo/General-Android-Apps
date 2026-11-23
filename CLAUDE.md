@@ -146,10 +146,11 @@ not found), TCGplayer as fallback. **Never commit Konami card art or TCGplayer/Y
 - One shared shader core: `res/raw/holo_core.agsl` (AGSL type names; `HoloShaders` adds `#define`s for
   GLSL). `HoloShaders.fragment()` adds rounded corners, tear/fade uniforms (defaults = card).
 - Rarity → foil mode in `HoloStyle` (keep in sync with the mode list at the top of the shader).
-  Starlight (user's CORI Uria photo + written spec, refined): ~1 px horizontal + vertical hairline
-  crosshatch over the whole card that only glints prismatic inside the narrow specular band; soft
-  rainbow sheen; OVERLAY blend (not screen/add) so darks and black text stay rich; half strength over
-  the effect text box; no dot glitter. The user found screen-blended glitter "too opaque".
+  Starlight (matched to a close-up of the user's real CORI Uria; took many rounds, don't regress):
+  a lattice of round dots (~8 px cells, varied size/brightness); whole ROWS and COLUMNS of dots light
+  up together in bundles that sweep with the tilt (the "crossroads"), each row its own colour; dark
+  ink blocks the foil (dots × luma) so outlines/darks stay dark; text box gets only faint sparse
+  specks; soft overlay rainbow sheen. Not lines, not streaks, not uniform glitter, not screen-blended.
 - Card layout constants (fractions of the card): artwork 0.119/0.180–0.881/0.705 (Pendulum
   0.067/0.178–0.933/0.629); name bar x 0.068–0.835, **lettering spans y 0.057–0.099**, plain margins
   0.045–0.055 and 0.099–0.105. Name foil detects letters as strokes on the text's side of their
