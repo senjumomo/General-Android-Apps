@@ -219,6 +219,7 @@ class PackGLView @JvmOverloads constructor(
             f1("uScale", scale); f1("uAspect", aspect); f1("uRotZ", rotZ)
             f1("uShapeAspect", PackArt.HEIGHT.toFloat() / PackArt.WIDTH); f1("uCornerRadius", 0.012f)
             f1("uFade", fade)
+            f2("uViewSize", width.toFloat(), height.toFloat())
             if (prog == cardProgram) {
                 GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
                 GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, texture)

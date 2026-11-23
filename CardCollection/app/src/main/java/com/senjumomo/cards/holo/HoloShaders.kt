@@ -106,6 +106,7 @@ void main() {
 precision mediump float;
 uniform float uShapeAspect;
 uniform float uFade;
+uniform vec2 uViewSize;          // view size in pixels; 0 = no edge fade
 varying vec2 vUv;
 void main() {
     float asp = uShapeAspect > 0.0 ? uShapeAspect : 86.0 / 59.0;
@@ -113,6 +114,12 @@ void main() {
     vec2 half_ = vec2(0.5, 0.5 * asp) - 0.08;
     float d = length(max(abs(p) - half_, 0.0));
     float a = 0.55 * (1.0 - smoothstep(0.0, 0.08, d)) * (1.0 - uFade);
+    // Fade out towards the view's edges, so a tilted card's shadow never ends in a hard clipped line.
+    if (uViewSize.x > 0.0) {
+        vec2 q = gl_FragCoord.xy / uViewSize;
+        float m = min(min(q.x, 1.0 - q.x), min(q.y, 1.0 - q.y));
+        a *= smoothstep(0.0, 0.09, m);
+    }
     gl_FragColor = vec4(0.0, 0.0, 0.0, a);
 }
 """

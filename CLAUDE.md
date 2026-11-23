@@ -143,6 +143,9 @@ not found), TCGplayer as fallback. **Never commit Konami card art or TCGplayer/Y
   Two contrast rings (far 0.012/0.008 for thick strokes, near 0.0055/0.0045 for squeezed long names,
   whose letters sit closer than the far ring) gated by brightness relative to bar vs. letter level. Don't sample a "background colour" (hits
   the bevel → whole bar turns metallic) and don't trim the mask inside 0.099 (cuts letter bottoms).
+  Descenders (J tail) reach 0.108; the bar's bottom bevel starts at 0.1089 on every frame, so the mask
+  ends at 0.1075. Card fills 1.72 of the GL view's height (not 1.84) and the shadow fades out near the
+  view's edges (`uViewSize`), else a tilted card's shadow is clipped into a hard line.
 - GLSL ES pitfalls: `pow(x, y)` with negative `x` is undefined (square instead); identifiers ending `_`
   are fine but `half` is reserved; loops need constant bounds.
 

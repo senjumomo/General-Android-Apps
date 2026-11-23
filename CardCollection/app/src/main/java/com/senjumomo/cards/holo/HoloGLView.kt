@@ -148,9 +148,10 @@ class HoloGLView @JvmOverloads constructor(
             updateTilt()
 
             // Card size: fill the view, keeping card proportions, with room to tilt.
-            var h = 1.84f
+            // (A bit under the full height so the shadow below has room when the card tilts.)
+            var h = 1.72f
             var w = h * 59f / 86f
-            if (w > aspect * 1.84f) { w = aspect * 1.84f; h = w * 86f / 59f }
+            if (w > aspect * 1.72f) { w = aspect * 1.72f; h = w * 86f / 59f }
             val angleX = -tiltY * 0.30f   // ~17°
             val angleY = tiltX * 0.30f
 
@@ -196,6 +197,7 @@ class HoloGLView @JvmOverloads constructor(
             uniform(prog, "uOffset") { GLES20.glUniform2f(it, ox, oy) }
             uniform(prog, "uScale") { GLES20.glUniform1f(it, scale) }
             uniform(prog, "uAspect") { GLES20.glUniform1f(it, aspect) }
+            uniform(prog, "uViewSize") { GLES20.glUniform2f(it, width.toFloat(), height.toFloat()) }
             val loc = GLES20.glGetAttribLocation(prog, "aCorner")
             GLES20.glEnableVertexAttribArray(loc)
             GLES20.glVertexAttribPointer(loc, 2, GLES20.GL_FLOAT, false, 0, quad)

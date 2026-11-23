@@ -28,10 +28,10 @@ const VW = parseInt(process.env.VW || '300'), VH = Math.round(VW * 1.4); // a ph
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-0.5,-0.5, 0.5,-0.5, -0.5,0.5, 0.5,0.5]), gl.STATIC_DRAW);
     const U = (p, n, f) => { const l = gl.getUniformLocation(p, n); if (l) f(l); };
     const aspect = VW / VH;
-    let h = 1.84, w = h * 59 / 86; if (w > aspect * 1.84) { w = aspect * 1.84; h = w * 86 / 59; }
+    let h = 1.72, w = h * 59 / 86; if (w > aspect * 1.72) { w = aspect * 1.72; h = w * 86 / 59; }
     const draw = (p, ax, ay, ox, oy, sc) => { gl.useProgram(p);
       U(p, 'uCardSize', l => gl.uniform2f(l, w, h)); U(p, 'uAngles', l => gl.uniform2f(l, ax, ay));
-      U(p, 'uOffset', l => gl.uniform2f(l, ox, oy)); U(p, 'uScale', l => gl.uniform1f(l, sc)); U(p, 'uAspect', l => gl.uniform1f(l, aspect));
+      U(p, 'uOffset', l => gl.uniform2f(l, ox, oy)); U(p, 'uScale', l => gl.uniform1f(l, sc)); U(p, 'uAspect', l => gl.uniform1f(l, aspect)); U(p, 'uViewSize', l => gl.uniform2f(l, VW, VH));
       const loc = gl.getAttribLocation(p, 'aCorner'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4); };
     const pad = 10, label = 20;

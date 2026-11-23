@@ -130,7 +130,9 @@ float4 shade(float2 uv) {
     // (Works for dark-on-light and light-on-dark names, and ignores the bar's bevel and gradient.)
     // Lettering spans y 0.057..0.099 on every frame; the bar's plain margins (0.045..0.055 and
     // 0.099..0.105) separate it from the bar's edges, so the mask ends inside those margins.
-    float nameBar = boxMask(uv, float4(nameRect.x, 0.050, nameRect.z, 0.104), 0.0015);
+    // Descenders (the tail of a J) reach y 0.108; the bar's bottom bevel starts at 0.1089 on every
+    // frame, so the mask runs to just above it.
+    float nameBar = boxMask(uv, float4(nameRect.x, 0.050, nameRect.z, 0.1075), 0.0008);
     float letters = 0.0;
     if (nameBar > 0.0) {
         float around = ring(uv, float2(0.012, 0.008));
