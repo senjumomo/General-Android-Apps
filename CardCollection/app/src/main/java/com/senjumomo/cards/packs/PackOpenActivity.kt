@@ -634,6 +634,11 @@ class PackOpenActivity : AppCompatActivity() {
             CardLookup.baseRarity(it.rarity).equals(CardLookup.baseRarity(c.rarity), true)
     }
 
+    private fun wished(c: SetCard) = collection.any {
+        it.wishlist && it.code.equals(c.code, true) &&
+            CardLookup.baseRarity(it.rarity).equals(CardLookup.baseRarity(c.rarity), true)
+    }
+
     private fun addToWishlist(c: SetCard) {
         lifecycleScope.launch {
             val rate = usdRate
@@ -670,9 +675,24 @@ class PackOpenActivity : AppCompatActivity() {
                 tag.text = if (have) "✓ Owned" else "New"
                 tag.backgroundTintList = ColorStateList.valueOf(if (have) Color.rgb(70, 70, 84) else Color.rgb(255, 196, 64))
                 tag.setTextColor(if (have) Color.WHITE else Color.BLACK)
-                itemView.findViewById<MaterialButton>(R.id.want).apply {
+                itemView.findViewById<android.widget.ImageButton>(R.id.want).apply {
+                    // Outline heart to add; a filled pink heart once it's on the wishlist.
+                    val wanted = wished(c)
                     visibility = if (have) View.GONE else View.VISIBLE
-                    setOnClickListener { addToWishlist(c) }
+                    setImageResource(if (wanted) R.drawable.ic_heart else R.drawable.ic_heart_outline)
+                    imageTintList = ColorStateList.valueOf(if (wanted) Color.rgb(255, 110, 170) else Color.rgb(200, 200, 214))
+                    contentDescription = if (wanted) "On your wishlist" else "Add to wishlist"
+                    isEnabled = !wanted
+                    setOnClickListener {
+                        addToWishlist(c)
+                        setImageResource(R.drawable.ic_heart)
+                        imageTintList = ColorStateList.valueOf(Color.rgb(255, 110, 170))
+                        contentDescription = "On your wishlist"
+                        isEnabled = false
+                        animate().scaleX(1.3f).scaleY(1.3f).setDuration(120).withEndAction {
+                            animate().scaleX(1f).scaleY(1f).setDuration(160).start()
+                        }.start()
+                    }
                 }
                 itemView.setOnClickListener {
                     startActivity(

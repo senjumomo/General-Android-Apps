@@ -160,4 +160,36 @@ class HoloTest {
         }
         paparazzi.snapshot(row)
     }
+
+    /** Pack summary tiles: a new card, one already wishlisted (filled heart), one owned (no heart). */
+    @Test
+    fun pullTiles() {
+        val ctx = paparazzi.context
+        val row = android.widget.LinearLayout(ctx).apply { setBackgroundColor(android.graphics.Color.rgb(21, 21, 28)); setPadding(24, 24, 24, 24) }
+        listOf(Triple("Ashtraya Mikumari-no-Mikoto", "Super Rare", 0), Triple("Siren Vortex of Atlantis", "Super Rare", 1),
+            Triple("Stratiae the Stratasmasher", "Common", 2)).forEach { (name, rarity, state) ->
+            val v = android.view.LayoutInflater.from(ctx).inflate(R.layout.item_pull, row, false)
+            v.findViewById<android.widget.ImageView>(R.id.image).setImageBitmap(com.senjumomo.cards.packs.CardBack.get())
+            v.findViewById<android.widget.TextView>(R.id.name).text = name
+            v.findViewById<android.widget.TextView>(R.id.rarity).apply {
+                text = rarity; setTextColor(com.senjumomo.cards.packs.PackOpenActivity.tierColor(com.senjumomo.cards.packs.Tier.of(rarity)))
+            }
+            v.findViewById<android.widget.TextView>(R.id.value).text = "R8.06"
+            v.findViewById<android.widget.TextView>(R.id.tag).apply {
+                text = if (state == 2) "✓ Owned" else "New"
+                backgroundTintList = android.content.res.ColorStateList.valueOf(if (state == 2) android.graphics.Color.rgb(70, 70, 84) else android.graphics.Color.rgb(255, 196, 64))
+                setTextColor(if (state == 2) android.graphics.Color.WHITE else android.graphics.Color.BLACK)
+            }
+            v.findViewById<android.widget.ImageButton>(R.id.want).apply {
+                visibility = if (state == 2) android.view.View.GONE else android.view.View.VISIBLE
+                if (state == 1) {
+                    setImageResource(R.drawable.ic_heart)
+                    imageTintList = android.content.res.ColorStateList.valueOf(android.graphics.Color.rgb(255, 110, 170))
+                }
+            }
+            row.addView(v, android.widget.LinearLayout.LayoutParams(0, -2, 1f))
+        }
+        paparazzi.snapshot(row)
+    }
 }
+
