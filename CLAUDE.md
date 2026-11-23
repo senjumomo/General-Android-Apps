@@ -150,7 +150,8 @@ not found), TCGplayer as fallback. **Never commit Konami card art or TCGplayer/Y
   a lattice of round dots (~8 px cells, varied size/brightness); whole ROWS and COLUMNS of dots light
   up together in bundles that sweep with the tilt (the "crossroads"), each row its own colour; dark
   ink blocks the foil (dots × luma) so outlines/darks stay dark; text box gets only faint sparse
-  specks; soft overlay rainbow sheen. Not lines, not streaks, not uniform glitter, not screen-blended.
+  specks; soft overlay rainbow sheen; bloom (halo round lit dots, glow along lit bands, soft flare
+  where a lit row crosses a lit column). Not lines, not streaks, not uniform glitter, not screen-blended.
 - Card layout constants (fractions of the card): artwork 0.119/0.180–0.881/0.705 (Pendulum
   0.067/0.178–0.933/0.629); name bar x 0.068–0.835, **lettering spans y 0.057–0.099**, plain margins
   0.045–0.055 and 0.099–0.105. Name foil detects letters as strokes on the text's side of their
