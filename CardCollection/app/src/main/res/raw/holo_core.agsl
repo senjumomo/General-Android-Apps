@@ -239,24 +239,41 @@ float4 shade(float2 uv) {
         sparkle += glitter(uv, 180.0, 0.84, 0.2) * art * 0.4;
         color = mix(color, metal(uv, float3(0.85, 0.87, 0.92), 0.2), letters * 0.9);
     } else if (m < 8.5) {                           // Starlight: whole card, dense starry sparkle
-        // Real Starlights (e.g. CORI Uria): thousands of tiny bright specks over every part of the
-        // card, each a different colour, on very fine near-horizontal lines, under a broad rainbow
-        // sweep (gold, pink, cyan, blue) that moves with the tilt and is strongest at the border.
+        // Real Starlights (e.g. CORI Uria): a full-card fine horizontal + vertical grid of foil lines,
+        // glinting where they cross, under a broad rainbow sweep that moves with the tilt and is
+        // strongest at the border; rainbow-silver name.
         float3 bow = rainbow(uv.x * 1.5 - uv.y * 1.1 + tilt.x * 1.4 - tilt.y * 0.9);   // tighter bands
         float band = 0.35 + 0.65 * sweep(uv, float2(0.75, 0.65), 0.4);
-        float lineY = uv.y * 300.0 + uv.x * 24.0;          // fine lines (~3-4 px on a phone), slightly off horizontal
-        float lines = 0.55 + 0.45 * sin(lineY * 6.2832);
-        float area = mix(0.75, 1.0, art) + border * 0.35;  // frame foil reads strongest
-        effect += bow * (0.15 + band) * lines * area * 0.7;
-        // Where the light hits, the lines light up as crisp rainbow streaks (as on the real card).
-        float lit = sweep(uv, float2(0.75, 0.65), 0.2);
-        float streak = smoothstep(0.55, 1.0, 0.5 + 0.5 * sin(lineY * 6.2832));
-        effect += mix(float3(1.0), bow, 0.8) * streak * lit * 0.75;
-        // The sparkle: two layers of tiny glinting specks, coloured by the rainbow beneath.
-        float3 specks = glitter(uv, 180.0, 0.4, 1.0) * 0.95 + glitter(uv + 0.17, 120.0, 0.52, 0.8) * 0.8
-                      + glitter(uv + 0.43, 280.0, 0.35, 1.0) * 0.5;
-        // Where the light hits, the specks flare white-gold like the real foil.
-        sparkle += specks * mix(float3(1.0, 0.95, 0.8), bow, 0.5) * (0.45 + 0.85 * band + 1.2 * lit * streak) * mix(0.85, 1.0, art);
+        // A fine perpendicular grid of foil micro-lines (horizontal + vertical, square cells, ~5 px
+        // on a phone), over the whole card. Where lines cross, each crossing is a tiny facet that
+        // glints rainbow / silver-white when it faces the light, so glints flash across as it tilts.
+        float2 cells = uv * float2(160.0, 233.0);
+        float2 g = abs(fract(cells) - 0.5) * 2.0;           // 1 on a line, 0 mid-cell
+        float lineV = smoothstep(0.7, 1.0, g.x);
+        float lineH = smoothstep(0.7, 1.0, g.y);
+        float area = mix(0.75, 1.0, art) + border * 0.35;   // frame foil reads strongest
+        effect += bow * (0.12 + band) * area * 0.5;          // the iridescent sheen
+        effect += bow * max(lineV, lineH) * (0.15 + band) * area * 0.45;
+        float2 cell = floor(cells);
+        float h1 = hash21(cell);
+        float h2 = hash21(cell + 9.17);
+        float2 facing = float2(cos(h1 * TAU), sin(h1 * TAU)) * (0.4 + 0.6 * h2);
+        float flash = smoothstep(0.62, 1.0, dot(facing, tilt * 1.15) + 0.42);
+        float crossing = smoothstep(0.5, 1.0, g.x) * smoothstep(0.5, 1.0, g.y);   // glint a bit larger than the lines
+        sparkle += mix(float3(1.0, 0.98, 0.95), rainbow(h2 + dot(tilt, float2(0.4, 0.3))), 0.6)
+                 * crossing * flash * (0.6 + band) * 2.4;
+        // Bigger glints on every other crossing (2×2 cells), the bright specks of the real foil.
+        float2 big = cells * 0.5;
+        float2 bc = floor(big);
+        float2 bf = fract(big) - 0.5;
+        float b1 = hash21(bc + 3.7);
+        float2 bface = float2(cos(b1 * TAU), sin(b1 * TAU)) * (0.4 + 0.6 * hash21(bc + 1.3));
+        float bflash = smoothstep(0.55, 1.0, dot(bface, tilt * 1.15) + 0.45);
+        float dotShape = smoothstep(0.45, 0.0, length(bf));
+        sparkle += mix(float3(1.0, 0.96, 0.88), rainbow(b1 + dot(tilt, float2(0.3, 0.2))), 0.55)
+                 * dotShape * bflash * (0.35 + 1.1 * band);
+        // A light dusting of extra specks between the lines.
+        sparkle += glitter(uv, 180.0, 0.55, 1.0) * mix(float3(1.0), bow, 0.5) * (0.3 + 0.5 * band) * 0.6;
         color = mix(color, metal(uv, float3(0.9, 0.93, 1.0), 0.35), letters * 0.9);
         darken = 0.06;
     } else if (m < 9.5) {                           // Collector's: whole card, fine textured rainbow
