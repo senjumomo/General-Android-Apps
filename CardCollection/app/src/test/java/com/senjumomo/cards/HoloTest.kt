@@ -191,5 +191,19 @@ class HoloTest {
         }
         paparazzi.snapshot(row)
     }
+
+    /** Pack screen's top-right switches: vibration and sound, on and off. */
+    @Test
+    fun feedbackIcons() {
+        val ctx = paparazzi.context
+        val row = android.widget.LinearLayout(ctx).apply { setBackgroundColor(android.graphics.Color.rgb(21, 21, 28)); setPadding(24, 24, 24, 24) }
+        listOf(R.drawable.ic_vibration, R.drawable.ic_volume_up, R.drawable.ic_vibration_off, R.drawable.ic_volume_off).forEach { icon ->
+            row.addView(com.google.android.material.button.MaterialButton(ctx, null, com.google.android.material.R.attr.materialIconButtonStyle).apply {
+                setIconResource(icon)
+                iconTint = android.content.res.ColorStateList.valueOf(android.graphics.Color.WHITE)
+            })
+        }
+        paparazzi.snapshot(row)
+    }
 }
 

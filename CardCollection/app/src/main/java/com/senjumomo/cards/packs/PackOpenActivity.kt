@@ -140,7 +140,7 @@ class PackOpenActivity : AppCompatActivity() {
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.root)) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             close.translationY = bars.top.toFloat()
-            findViewById<View>(R.id.mute).translationY = bars.top.toFloat()
+            findViewById<View>(R.id.feedbackButtons).translationY = bars.top.toFloat()
             findViewById<View>(R.id.packControls).updatePadding(bottom = bars.bottom + dp(28))
             findViewById<View>(R.id.summaryButtons).updatePadding(bottom = bars.bottom + dp(16))
             findViewById<View>(R.id.summaryStage).updatePadding(top = bars.top + dp(56))
@@ -155,6 +155,19 @@ class PackOpenActivity : AppCompatActivity() {
             }
             show()
             setOnClickListener { sounds.muted = !sounds.muted; show() }
+        }
+        findViewById<MaterialButton>(R.id.vibrate).apply {
+            fun show() {
+                setIconResource(if (haptics.enabled) R.drawable.ic_vibration else R.drawable.ic_vibration_off)
+                contentDescription = if (haptics.enabled) "Vibration on" else "Vibration off"
+            }
+            show()
+            setOnClickListener {
+                haptics.enabled = !haptics.enabled
+                show()
+                Snackbar.make(findViewById(R.id.root), if (haptics.enabled) "Vibration on" else "Vibration off", Snackbar.LENGTH_SHORT).show()
+                if (haptics.enabled) haptics.flip() // a little buzz to show it's back
+            }
         }
 
         packView.onTearProgress = { p ->

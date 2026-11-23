@@ -298,14 +298,31 @@
         app:icon="@drawable/ic_close"
         app:iconTint="#FFFFFF" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/mute"
-        style="@style/Widget.Material3.Button.IconButton"
+    <!-- Vibration and sound switches (remembered) -->
+    <LinearLayout
+        android:id="@+id/feedbackButtons"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="top|end"
         android:layout_margin="12dp"
-        android:contentDescription="Sound on"
-        app:icon="@drawable/ic_volume_up"
-        app:iconTint="#FFFFFF" />
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/vibrate"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Vibration on"
+            app:icon="@drawable/ic_vibration"
+            app:iconTint="#FFFFFF" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/mute"
+            style="@style/Widget.Material3.Button.IconButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="Sound on"
+            app:icon="@drawable/ic_volume_up"
+            app:iconTint="#FFFFFF" />
+    </LinearLayout>
 </FrameLayout>

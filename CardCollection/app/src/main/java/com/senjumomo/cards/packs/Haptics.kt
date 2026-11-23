@@ -6,8 +6,14 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 
-/** Small vibration vocabulary for pack opening. */
+/** Small vibration vocabulary for pack opening. Can be switched off (remembered). */
 class Haptics(context: Context) {
+    private val prefs = context.getSharedPreferences("packs", Context.MODE_PRIVATE)
+
+    var enabled: Boolean
+        get() = prefs.getBoolean("vibrate", true)
+        set(value) { prefs.edit().putBoolean("vibrate", value).apply(); if (!value) vibrator?.cancel() }
+
     private val vibrator: Vibrator? = if (Build.VERSION.SDK_INT >= 31) {
         (context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as? VibratorManager)?.defaultVibrator
     } else {
@@ -16,7 +22,7 @@ class Haptics(context: Context) {
 
     private fun compose(vararg prims: Pair<Int, Float>, fallbackMs: Long) {
         val v = vibrator ?: return
-        if (!v.hasVibrator()) return
+        if (!enabled || !v.hasVibrator()) return
         if (Build.VERSION.SDK_INT >= 30 && v.areAllPrimitivesSupported(*prims.map { it.first }.toIntArray())) {
             val c = VibrationEffect.startComposition()
             prims.forEach { (p, s) -> c.addPrimitive(p, s) }

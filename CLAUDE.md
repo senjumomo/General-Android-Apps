@@ -188,6 +188,7 @@ Preview tools (see `CardCollection/tools/holo-preview/README.md`):
   Super+). Ultra+ spin 540° back→face (`spin`), rarity label pops in. "Hold" button fast-forwards
   (flips/throws every 110 ms) and stops at an Ultra+ so the big pull is never skipped.
   Inspired by the user's Pokémon TCG Pocket video: same kind of effects, none of its assets.
+- **Vibration switch** next to mute (`Haptics.enabled`, prefs "packs"/"vibrate", default on).
 - **Sounds** (`PackSounds`, SoundPool, mute remembered): synthesised WAVs in `res/raw/pack_*.wav` from
   `tools/sounds/make_sounds.py` (noise/filters/sine partials only; never add recorded/borrowed audio).
   Tear tick, rip + shimmer, whoosh (throw), flip, build-up (rate-matched to the shake), reveal chimes.
