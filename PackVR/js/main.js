@@ -143,9 +143,22 @@ for (let i = 0; i < 2; i++) {
   const c = renderer.xr.getController(i);
   scene.add(c);
   const p = makePointer(c, "xr");
+  p.index = i;
   c.addEventListener("selectstart", () => { p.down = true; p.pendingDown = true; });
   c.addEventListener("selectend", () => { p.down = false; p.pendingUp = true; });
-  c.addEventListener("connected", (e) => { p.gamepad = e.data?.gamepad || null; });
+  c.addEventListener("connected", (e) => { p.gamepad = e.data?.gamepad || null; p.isHand = !!e.data?.hand; });
+  c.addEventListener("disconnected", () => { p.isHand = false; });
+}
+// Direct touch: with hand tracking you can reach out and pinch things where they float.
+const handPtrs = [];
+for (let i = 0; i < 2; i++) {
+  const hand = renderer.xr.getHand(i);
+  scene.add(hand);
+  const anchor = new THREE.Object3D();                  // the pinch point (follows the wrist's turn)
+  scene.add(anchor);
+  const p = makePointer(anchor, "hand");
+  Object.assign(p, { hand, index: i, near: null, tracked: false });
+  handPtrs.push(p);
 }
 const mouseObj = new THREE.Object3D();
 scene.add(mouseObj);
@@ -169,6 +182,62 @@ function rayOnPlane(p, group) {
   const t = _n.dot(_g.clone().sub(_o)) / denom;
   if (t < 0) return null;
   return group.worldToLocal(_pt.copy(_o).addScaledVector(_d, t));
+}
+
+/** The pointer's position on [group]'s plane, in the group's coordinates: the pinch point for a hand, else the ray. */
+function pointerLocal(p, group) {
+  if (p.kind === "hand") {
+    p.obj.updateWorldMatrix(true, false);
+    return group.worldToLocal(_pt.setFromMatrixPosition(p.obj.matrixWorld));
+  }
+  return rayOnPlane(p, group);
+}
+
+const _s = new THREE.Vector3(), _lp = new THREE.Vector3();
+/** The closest target within reach of a pinch at [pos] (world coordinates), as a hit like a ray's. */
+function nearestTarget(pos, targets) {
+  let best = null;
+  for (const mesh of targets) {
+    const g = mesh.geometry.parameters;
+    if (!g?.width) continue;
+    mesh.updateWorldMatrix(true, false);
+    const sc = mesh.getWorldScale(_s).x || 1;
+    const lp = mesh.worldToLocal(_lp.copy(pos));
+    const reachZ = 0.06 / sc, margin = 0.035 / sc;     // 6 cm in front of / behind it, 3.5 cm beyond its edges
+    if (Math.abs(lp.z) > reachZ || Math.abs(lp.x) > g.width / 2 + margin || Math.abs(lp.y) > g.height / 2 + margin) continue;
+    if (!best || Math.abs(lp.z) < best.dz) {
+      best = { object: mesh, point: pos.clone(), uv: new THREE.Vector2(lp.x / g.width + 0.5, lp.y / g.height + 0.5), dz: Math.abs(lp.z) };
+    }
+  }
+  return best;
+}
+
+const _ja = new THREE.Vector3(), _jb = new THREE.Vector3(), _jm = new THREE.Vector3();
+const jointPos = (hand, name, out) => { const j = hand.joints?.[name]; return j && j.visible ? j.getWorldPosition(out) : null; };
+
+/** One hand: where its pinch is, what's within reach, and when it pinches (thumb and index finger meet). */
+function updateHandPointer(p, targets) {
+  const thumb = jointPos(p.hand, "thumb-tip", _ja), index = jointPos(p.hand, "index-finger-tip", _jb);
+  p.tracked = !!(thumb && index);
+  if (!p.tracked) {                                     // tracking lost: let go
+    if (p.down) { p.down = false; p.pendingUp = true; }
+    p.near = null; p.reticle.visible = false;
+    return;
+  }
+  const mid = _jm.copy(thumb).add(index).multiplyScalar(0.5);
+  p.obj.position.copy(mid);
+  const wrist = p.hand.joints?.wrist;
+  if (wrist?.visible) wrist.getWorldQuaternion(p.obj.quaternion);
+  p.obj.updateMatrixWorld(true);
+  const gap = thumb.distanceTo(index);
+  if (!p.down) p.near = nearestTarget(mid, targets);
+  if (!p.down && p.near && gap < 0.024) { p.down = true; p.pendingDown = true; p.hit = p.near; }
+  else if (p.down && gap > 0.042) { p.down = false; p.pendingUp = true; }
+  if (!p.down) p.hit = p.near;
+  p.reticle.visible = true;
+  p.reticle.position.copy(mid);
+  p.reticle.scale.setScalar(p.down ? 1.1 : p.near ? 2 : 1);
+  p.reticle.material.color.set(p.down ? 0xffd970 : p.near ? 0x66ddff : 0xffffff);
 }
 
 function grab(p, owner) {
@@ -206,15 +275,23 @@ function updatePointers(dt) {
   for (const p of pointers) {
     const active = p.kind === "mouse" ? !renderer.xr.isPresenting : renderer.xr.isPresenting;
     if (!active) { p.reticle.visible = false; continue; }
+    // A hand that is touching something uses direct pinching; its pointing ray stays out of the way.
+    const touching = p.kind === "xr" && p.isHand && handPtrs[p.index]?.near;
+    if (p.kind === "hand") updateHandPointer(p, targets);
+    else {
+      p.obj.updateWorldMatrix(true, false);
+      _o.setFromMatrixPosition(p.obj.matrixWorld);
+      _d.set(0, 0, -1).transformDirection(p.obj.matrixWorld);
+      raycaster.set(_o, _d);
+      const hit = touching ? null : raycaster.intersectObjects(targets, false)[0] || null;
+      p.hit = hit;
+      p.reticle.visible = !touching;
+      p.reticle.position.copy(hit ? hit.point : _o.clone().addScaledVector(_d, 0.5));
+      p.reticle.scale.setScalar(hit ? 1.4 : 0.7);
+    }
+    if (p.kind === "hand" && !p.tracked) continue;
     p.obj.updateWorldMatrix(true, false);
     _o.setFromMatrixPosition(p.obj.matrixWorld);
-    _d.set(0, 0, -1).transformDirection(p.obj.matrixWorld);
-    raycaster.set(_o, _d);
-    const hit = raycaster.intersectObjects(targets, false)[0] || null;
-    p.hit = hit;
-    p.reticle.visible = true;
-    p.reticle.position.copy(hit ? hit.point : _o.clone().addScaledVector(_d, 0.5));
-    p.reticle.scale.setScalar(hit ? 1.4 : 0.7);
 
     // Hand speed (for throwing)
     p.hist.push({ t: performance.now(), pos: _o.clone() });
@@ -225,7 +302,7 @@ function updatePointers(dt) {
     }
 
     // Edges are latched by the events, so a tap shorter than a frame still counts.
-    const downEdge = p.pendingDown || (p.down && !p.was);
+    const downEdge = !touching && (p.pendingDown || (p.down && !p.was));
     const upEdge = p.pendingUp || (!p.down && p.was);
     if (downEdge) onDown(p);
     if (p.down) onDrag(p);
@@ -245,8 +322,8 @@ function onDown(p) {
   else if (kind === "pack") {
     if (!owner.ready) { setHint("Still getting the cards ready…"); return; }
     const fromTop = 1 - h.uv.y;
-    if (fromTop < 0.17 && !owner.torn) {                  // the top strip: tear it
-      const lp = rayOnPlane(p, owner.group);
+    if (fromTop < 0.2 && !owner.torn) {                   // the top strip: tear it
+      const lp = pointerLocal(p, owner.group);
       p.tear = { owner, x0: lp ? lp.x : 0, lastStep: 0 };
     } else grab(p, owner);
   }
@@ -254,7 +331,7 @@ function onDown(p) {
 function onDrag(p) {
   if (!p.tear) return;
   const { owner } = p.tear;
-  const lp = rayOnPlane(p, owner.group);
+  const lp = pointerLocal(p, owner.group);
   if (!lp || owner.torn) return;
   const prog = Math.min(1, Math.abs(lp.x - p.tear.x0) / (PACK_W * 0.7));
   if (prog > owner.tearP) {
@@ -319,7 +396,7 @@ function buildShelf() {
     tween(0.6 + i * 0.1, (k) => { p.group.scale.setScalar(0.85 * easeOut(clamp01(k))); p.group.position.z = p.baseZ + 0.4 * (1 - easeOut(clamp01(k))); });
     shelf.push(p);
   });
-  setHint("Pinch a pack to pick it");
+  setHint("Pinch a pack to pick it (reach out, or point and pinch)");
   infoLabel.userData.set([]);
 }
 
@@ -552,7 +629,7 @@ function placeWorld() {
   fwd.y = 0;
   if (fwd.lengthSq() < 1e-4) fwd.set(0, 0, -1);
   fwd.normalize();
-  world.position.copy(head).addScaledVector(fwd, 0.6);
+  world.position.copy(head).addScaledVector(fwd, 0.55);   // within arm's reach
   world.position.y = head.y - 0.2;
   world.rotation.set(0, Math.atan2(-fwd.x, -fwd.z), 0);    // its +Z faces you
   world.updateMatrixWorld(true);
@@ -669,7 +746,7 @@ async function init() {
   $("flat").addEventListener("click", startFlat);
   $("mute").addEventListener("change", (e) => { sound.muted = e.target.checked; });
   window.__packvr = {                                   // for automated tests (tools/e2e.mjs)
-    state, startFlat, startAR, pointers,
+    state, startFlat, startAR, pointers, handPtrs,
     get pack() { return pack; }, cards, shelf,
     toWorld(local) { const v = new THREE.Vector3(...local); world.localToWorld(v); return v.toArray(); },
     project(local) { const v = new THREE.Vector3(...local); world.localToWorld(v); v.project(camera); return { x: (v.x + 1) / 2 * innerWidth, y: (1 - v.y) / 2 * innerHeight }; },

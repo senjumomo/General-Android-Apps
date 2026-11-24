@@ -235,6 +235,11 @@ Preview tools (see `CardCollection/tools/holo-preview/README.md`):
 - Test without a headset: `PackVR/tools/e2e.mjs` (flat preview) and `e2e-xr.mjs` (emulated Quest 3 via IWER,
   `forceInstall` because headless Chromium has its own empty WebXR). Real-headset feel/performance is
   untested: say so. Pointer taps can be shorter than a frame: edges are latched by `pendingDown/Up`.
+- Hands: far pinch = the system `select` ray; **direct touch** = `handPtrs` (thumb-tip/index-tip joints,
+  pinch when they're < 2.4 cm apart, released > 4.2 cm; the pinch point follows the wrist's rotation; a
+  target is "near" within 6 cm in front/behind and 3.5 cm beyond its edges). While a hand is near
+  something its ray is suppressed (`touching`). The user has no working controllers: hands are the main
+  input. `e2e-xr.mjs` modes: controller / `HANDS=1` / `DIRECT=1` (emulated fingers close before moving in).
 
 ### Ideas not built yet (pack opening round 2)
 

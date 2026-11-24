@@ -9,8 +9,9 @@ passthrough cameras; you pick one, tear it open by hand, and the cards come out 
    Deploy from a branch → pick the branch, folder `/ (root)`), then open
    `https://<user>.github.io/<repo>/PackVR/` in the Quest Browser.
 2. Pick a set, tap **Enter AR**, and allow it. The packs appear about 60 cm in front of you at chest height.
-3. **Pinch a pack** (or pull the controller trigger, aiming at it) to pick it. The set's top card appears
-   on its wrapper.
+3. **Reach out and pinch a pack** with thumb and index finger to pick it (or, for things out of reach,
+   point at it and pinch; with controllers, aim and pull the trigger). The set's top card appears on its
+   wrapper.
 4. **Pinch the top edge and drag across** to tear it. Rare and better cards flip by themselves with a
    build-up; Ultra Rares and better spin and burst.
 5. **Grab a card** to turn it in your hand (the foil follows how you tilt it and where your head is).
@@ -34,7 +35,8 @@ passthrough cameras; you pick one, tear it open by hand, and the cards come out 
 
 ## Testing without a headset
 `node PackVR/tools/e2e.mjs` runs the flat preview in headless Chromium (mouse as the hand);
-`node PackVR/tools/e2e-xr.mjs` (or `HANDS=1 node …` for bare-hand pinching, no controllers) runs an emulated Quest 3 (Meta's IWER, `tools/iwer.min.js`) through a real
+`node PackVR/tools/e2e-xr.mjs` (`HANDS=1` pointing and pinching with bare hands, `DIRECT=1` reaching out and
+touching with bare hands, no controllers) runs an emulated Quest 3 (Meta's IWER, `tools/iwer.min.js`) through a real
 `immersive-ar` session with a pointing, pinching controller. Both go through pick → tear → 9 cards → summary
 and save screenshots. They need Playwright installed globally and use curl for the real network data.
 What they can't check: how it feels on the headset (comfort, hand tracking, performance, haptics, sound).
