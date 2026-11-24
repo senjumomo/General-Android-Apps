@@ -4,6 +4,7 @@
 import { createRequire } from "node:module";
 import { execFileSync, execSync, spawn } from "node:child_process";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import crypto from "node:crypto";
 
@@ -12,7 +13,7 @@ const { chromium } = require(execSync("npm root -g").toString().trim() + "/playw
 
 export async function launch(out, { width = 1000, height = 700, port = 8765, init = null } = {}) {
   const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
-  const cache = path.join(out, "cache");
+  const cache = process.env.PACKVR_CACHE || path.join(os.tmpdir(), "packvr-cache");     // shared by all runs: real data is fetched once
   fs.mkdirSync(cache, { recursive: true });
   const server = spawn("python3", ["-m", "http.server", String(port), "--bind", "127.0.0.1"], { cwd: root, stdio: "ignore" });
   await new Promise((r) => setTimeout(r, 800));
@@ -30,14 +31,20 @@ export async function launch(out, { width = 1000, height = 700, port = 8765, ini
   const browser = await chromium.launch({ args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--autoplay-policy=no-user-gesture-required"] });
   const page = await browser.newPage({ viewport: { width, height } });
   const errors = [];
-  page.on("console", (m) => { if (m.type() === "error" || (m.type() === "warning" && !/GL Driver Message/.test(m.text()))) errors.push(m.type() + ": " + m.text()); });
+  page.on("console", (m) => {
+    if (m.type() === "error" || (m.type() === "warning" && !/GL Driver Message/.test(m.text()))) {
+      const url = m.location()?.url;
+      errors.push(m.type() + ": " + m.text() + (url && !m.text().includes(url) ? ` [${url}]` : ""));
+    }
+  });
   page.on("pageerror", (e) => errors.push("PAGEERROR: " + e.message));
   if (init) await page.addInitScript(init);
   await page.route(/^https:\/\//, async (route) => {
+    const url = route.request().url();
     try {
-      const { body, type } = fetchExternal(route.request().url());
+      const { body, type } = fetchExternal(url);
       await route.fulfill({ body, contentType: type, headers: { "access-control-allow-origin": "*" } });
-    } catch (e) { await route.abort(); }
+    } catch (e) { console.log("[harness] couldn't fetch " + url); await route.abort(); }
   });
 
   const h = {

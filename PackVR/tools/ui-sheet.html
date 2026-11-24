@@ -1,0 +1,49 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>UI sheet</title>
+<!-- A contact sheet of the AR page's UI pieces (icons, buttons, panels) drawn exactly as in the scene,
+     shown on a passthrough-ish background. Open via the dev server: http://127.0.0.1:8765/tools/ui-sheet.html -->
+<style>
+  body { margin: 0; background: #5a6a52 repeating-conic-gradient(#657560 0% 25%, #566350 0% 50%) 0 0 / 40px 40px; font: 12px system-ui; color: #fff; padding: 20px; }
+  .row { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end; margin-bottom: 22px; }
+  canvas { background: transparent; display: block; }
+  small { display: block; opacity: .7; margin-bottom: 4px; }
+</style>
+<script type="importmap">{ "imports": { "three": "../vendor/three.module.js" } }</script>
+<body>
+<script type="module">
+import * as UI from "../js/ui.js";
+const SCALE = 0.5;                       // CSS px per mm (a 340 mm panel shows 170 px wide... times the texture's own density)
+const add = (row, wm, hm, draw, st, note) => {
+  const s = UI.surface(wm, hm); draw(s.ctx, s.w, s.h, st);
+  const c = s.cv; c.style.width = wm * 1000 * 1.3 + "px"; c.style.height = hm * 1000 * 1.3 + "px";
+  const box = document.createElement("div"); if (note) { const n = document.createElement("small"); n.textContent = note; box.append(n); }
+  box.append(c); row.append(box);
+};
+const row = () => { const r = document.createElement("div"); r.className = "row"; document.body.append(r); return r; };
+
+let r = row();
+for (const name of UI.ICON_NAMES) add(r, 0.072, 0.088, UI.drawRound, { icon: name, label: name }, name);
+r = row();
+add(r, 0.072, 0.088, UI.drawRound, { icon: "exit", label: "Confirm", tone: "danger" }, "danger");
+add(r, 0.072, 0.088, UI.drawRound, { icon: "again", label: "Another", tone: "primary" }, "primary");
+add(r, 0.072, 0.088, UI.drawRound, { icon: "undo", label: "Previous", disabled: true }, "disabled");
+add(r, 0.16, 0.042, UI.drawPill, { text: "Open another pack", icon: "again", tone: "primary" }, "pill primary");
+add(r, 0.16, 0.042, UI.drawPill, { text: "Back to shelf", icon: "shelf" }, "pill glass");
+for (const y of ["All", "2026", "2019", "2002"]) add(r, 0.056, 0.034, UI.drawChip, { text: y, active: y === "2019" }, "chip " + y);
+r = row();
+add(r, 0.36, 0.064, UI.drawHint, { main: "Pinch a pack to pick it", sub: "Newest sets · 1–5 of 214" }, "hint");
+add(r, 0.36, 0.05, UI.drawHint, { main: "Pinch the top edge and drag across to tear it open" }, "hint (long)");
+r = row();
+add(r, 0.32, 0.07, UI.drawInfo, { name: "Heosvarog the Mechanical Dawn", rarity: "Super Rare", price: "R6.27", tier: 2 }, "info super");
+add(r, 0.32, 0.07, UI.drawInfo, { name: "Rubysapphirus, the Adamant Jewel of the Spirit World", rarity: "Common", price: "R1.20", tier: 0 }, "info long, common");
+add(r, 0.32, 0.07, UI.drawInfo, { name: "Blue-Eyes White Dragon", rarity: "Secret Rare", price: "R1,420.00", tier: 4 }, "info secret");
+r = row();
+add(r, 0.24, 0.05, UI.drawTag, { name: "Rage of the Abyss", sub: "ROTA · 2023" }, "tag");
+add(r, 0.24, 0.05, UI.drawTag, { name: "Legendary Duelists: Magical Hero", sub: "LEDE · 2022" }, "tag long");
+add(r, 0.34, 0.05, UI.drawBanner, { text: "ULTRA RARE", color: "#ffcd50" }, "banner");
+add(r, 0.34, 0.05, UI.drawBanner, { text: "STARLIGHT RARE", color: "#aaf0ff" }, "banner 2");
+add(r, 0.14, 0.012, UI.drawPips, { n: 9, at: 3 }, "pips");
+add(r, 0.3, 0.05, UI.drawTitle, { text: "Jump to a year", sub: "Sets newest first" }, "title");
+document.title = "ready";
+</script>

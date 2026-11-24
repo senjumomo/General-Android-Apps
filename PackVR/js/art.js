@@ -1,8 +1,9 @@
-// 2D drawing for the AR scene: the pack wrapper (a port of the app's PackArt), the card-back fallback,
-// rounded corners for the card back, and floating text labels.
+// 2D drawing for the AR scene: the pack wrapper (a port of the app's PackArt), the card-back fallback and
+// rounded corners for the card back. (Text panels and buttons are in ui.js.)
 import * as THREE from "three";
 
-export const PACK_PX = { w: 640, h: 1110 };
+export const PACK_PX = { w: 640, h: 1110 };           // the wrapper is designed on this grid …
+const PACK_SCALE = 1.25;                              // … and drawn this much bigger so it stays sharp up close
 const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
 
 function rgbToHsv(r, g, b) {
@@ -75,8 +76,9 @@ function crimp(ctx, y0, y1, w, top) {
 export function drawPack(set, art) {
   const { w: W, h: H } = PACK_PX;
   const cv = document.createElement("canvas");
-  cv.width = W; cv.height = H;
+  cv.width = Math.round(W * PACK_SCALE); cv.height = Math.round(H * PACK_SCALE);
   const ctx = cv.getContext("2d");
+  ctx.scale(PACK_SCALE, PACK_SCALE);
   const accent = art ? averageColor(art) : hashColor(set.name);
   const dark = mix(accent, [0, 0, 0], 0.72), midc = mix(accent, [0, 0, 0], 0.35), darkest = mix(accent, [0, 0, 0], 0.85);
 
@@ -140,36 +142,4 @@ export function roundedMask() {
   ctx.fillStyle = "#fff";
   ctx.beginPath(); ctx.roundRect(0, 0, 128, 186, 7); ctx.fill();
   return new THREE.CanvasTexture(cv);
-}
-
-/** A floating text label. set(lines) redraws it; each line is { text, color?, size? }. */
-export function makeLabel(width, height, { pill = true, px = 640 } = {}) {
-  const cv = document.createElement("canvas");
-  cv.width = px; cv.height = Math.round(px * (height / width));
-  const ctx = cv.getContext("2d");
-  const tex = new THREE.CanvasTexture(cv);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(width, height),
-    new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
-  mesh.renderOrder = 50;
-  mesh.userData.set = (lines) => {
-    ctx.clearRect(0, 0, cv.width, cv.height);
-    if (pill && lines.length) {
-      ctx.fillStyle = "rgba(10,10,16,0.62)";
-      ctx.beginPath(); ctx.roundRect(4, 4, cv.width - 8, cv.height - 8, cv.height * 0.22); ctx.fill();
-    }
-    const total = lines.reduce((a, l) => a + (l.size || 1), 0);
-    let y = 0;
-    for (const l of lines) {
-      const share = ((l.size || 1) / total) * cv.height;
-      let fs = share * 0.62;
-      ctx.font = `bold ${fs}px system-ui, sans-serif`;
-      while (ctx.measureText(l.text).width > cv.width * 0.92 && fs > 10) { fs -= 2; ctx.font = `bold ${fs}px system-ui, sans-serif`; }
-      ctx.fillStyle = l.color || "#fff"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText(l.text, cv.width / 2, y + share / 2);
-      y += share;
-    }
-    tex.needsUpdate = true;
-  };
-  return mesh;
 }

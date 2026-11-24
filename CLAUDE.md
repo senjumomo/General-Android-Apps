@@ -239,7 +239,29 @@ Preview tools (see `CardCollection/tools/holo-preview/README.md`):
   pinch when they're < 2.4 cm apart, released > 4.2 cm; the pinch point follows the wrist's rotation; a
   target is "near" within 6 cm in front/behind and 3.5 cm beyond its edges). While a hand is near
   something its ray is suppressed (`touching`). The user has no working controllers: hands are the main
-  input. `e2e-xr.mjs` modes: controller / `HANDS=1` / `DIRECT=1` (emulated fingers close before moving in).
+  input. `e2e-xr.mjs` modes: controller / `HANDS=1` / `DIRECT=1` (emulated fingers close before moving in;
+  buttons are touched with open fingers that pinch once on the button, because fingers closing in mid-air
+  also fire the pointing ray at whatever it hits). Tracking lost mid-grab = let go at once (a card never
+  stays frozen in the air). The stage is placed from the headset's pose (`readHead`: the plain `camera`
+  only gets it when rendering, a frame late, which once put the stage at the default height).
+- **UI is crisp on purpose** (the user said the first version looked low-res): `js/ui.js` draws every panel,
+  button and icon in millimetres into canvases at ~5400 px/m (mipmaps + anisotropy); never go back to
+  640 px labels. `tools/ui-sheet.html` shows all of it (look at it after changing a look). Atmosphere in
+  `js/fx.js` (additive quads: `renderOrder` −20…−5 behind cards, 30–55 in front; thins out via `fx.setLevel`
+  when the headset drops below ~52 fps; `?fx=0|1|2` pins it, tests use `?fx=2`). Graphics setting on the
+  start page: Sharp = framebuffer ×1.25 + foveation 0.4, Smooth = ×1.0 + 1.0 (untested on a headset).
+- **Navigation** (the user complained they couldn't go back once a pack was open): the menu bar (`dockBtn`,
+  tilted toward the eyes) is always there: Shelf/Back, Previous (undo the last throw), Skip (to the summary),
+  Sets (year picker → shelf of that year), Recenter, Sound, Exit. Mid-pack Shelf and Exit ask "Sure?" (press
+  again within 3.5 s; `?confirm=30` stretches it for the slow emulator). The shelf is a window of 5 over the newest-first set list (Newer/Older page it).
+  Summary: "Open another pack" = same set straight away (set data is cached), "Back to shelf", pinch a card
+  to inspect it. Screens are rebuilt by `clearScene()`; tweens carry an `epoch` so leaving a screen drops
+  its pending callbacks, and `state.token` abandons async loads. Buttons are pinched, not poked (a poke
+  near the resting hands would misfire).
+- **GitHub Pages caches ~10 min and the page is several modules**: run `python3 PackVR/tools/stamp.py` after
+  changing `js/` or `gen/` (it rewrites the import map in `index.html` with a hash of the code).
+- The repo was public only so Pages could serve it; the user set it back to private ("for now"), which on a
+  free plan takes the Pages site offline until it's public again.
 
 ### Ideas not built yet (pack opening round 2)
 

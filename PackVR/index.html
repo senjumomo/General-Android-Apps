@@ -5,42 +5,82 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Card Binder AR: pack opening</title>
 <style>
-  :root { color-scheme: dark; }
-  html, body { margin: 0; height: 100%; background: radial-gradient(ellipse at 50% 30%, #2a2740, #0a0a10 70%); font-family: system-ui, sans-serif; color: #f0f0f8; overflow: hidden; }
+  :root { color-scheme: dark; --gold: #ffcd50; --pink: #ff78dc; --ink: #1a1226; }
+  html, body { margin: 0; height: 100%; background: radial-gradient(ellipse at 50% 20%, #2f2a4c, #0b0a14 72%); font-family: system-ui, "Segoe UI", Roboto, sans-serif; color: #f4f4fc; overflow: hidden; }
   canvas#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
-  #menu { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; }
-  .card { width: min(560px, 100%); background: rgba(24, 22, 36, 0.92); border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
-  h1 { margin: 0 0 4px; font-size: 26px; }
-  p { margin: 4px 0 14px; color: #b8b8c8; line-height: 1.4; }
-  input[type=search] { width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 12px; border: 1px solid #44405a; background: #14121e; color: #fff; font-size: 16px; }
-  select { width: 100%; margin-top: 8px; padding: 8px; border-radius: 12px; border: 1px solid #44405a; background: #14121e; color: #fff; font-size: 16px; }
-  .row { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
-  button { flex: 1; min-width: 160px; padding: 16px; border-radius: 16px; border: 0; font-size: 18px; font-weight: 700; cursor: pointer; }
-  button.primary { background: linear-gradient(135deg, #ffcd50, #ff78dc); color: #1a1226; }
-  button.secondary { background: #2e2a44; color: #e8e8f4; }
-  button:disabled { opacity: 0.4; cursor: default; }
+  #menu { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; overflow-y: auto; }
+  .card { width: min(680px, 100%); max-height: 100%; display: flex; flex-direction: column; box-sizing: border-box; background: linear-gradient(180deg, rgba(40, 36, 68, 0.92), rgba(20, 18, 34, 0.94)); border: 1px solid rgba(255,255,255,0.16); border-radius: 28px; padding: 26px; box-shadow: 0 24px 70px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12); }
+  .head { display: flex; gap: 20px; align-items: center; margin-bottom: 16px; }
+  #preview { width: 96px; height: 166px; flex: none; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); background: #14121e; }
+  h1 { margin: 0 0 4px; font-size: 30px; letter-spacing: 0.2px; }
+  h1 span { background: linear-gradient(135deg, var(--gold), var(--pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  p { margin: 0 0 10px; color: #bcbcd2; line-height: 1.45; font-size: 15px; }
+  #pickName { font-size: 19px; font-weight: 700; }
+  #pickSub { font-size: 14px; color: #a9a9c4; margin-top: 2px; min-height: 18px; }
+  input[type=search] { width: 100%; box-sizing: border-box; padding: 14px 16px; border-radius: 14px; border: 1px solid #4a4666; background: #121020; color: #fff; font-size: 17px; }
+  #setList { margin-top: 10px; height: 216px; overflow-y: auto; border-radius: 14px; border: 1px solid #3a3654; background: #100e1c; padding: 4px; box-sizing: border-box; }
+  button.set { display: flex; width: 100%; align-items: center; gap: 12px; text-align: left; padding: 11px 12px; margin: 0; min-width: 0; border-radius: 10px; border: 0; background: transparent; color: #e8e8f4; font-size: 16px; font-weight: 500; cursor: pointer; }
+  button.set .code { flex: none; min-width: 58px; font-size: 12px; font-weight: 700; letter-spacing: 0.6px; color: #a8a8c8; background: #24213a; border-radius: 6px; padding: 3px 7px; text-align: center; }
+  button.set .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  button.set .yr { flex: none; color: #8f8fb0; font-size: 14px; }
+  button.set.sel { background: linear-gradient(135deg, rgba(255,205,80,0.22), rgba(255,120,220,0.22)); box-shadow: inset 0 0 0 1px rgba(255,205,80,0.55); }
+  button.set.sel .code { background: rgba(255,205,80,0.25); color: #ffe6a0; }
+  .row { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+  .row button { flex: 1; min-width: 180px; padding: 18px; border-radius: 18px; border: 0; font-size: 19px; font-weight: 800; cursor: pointer; }
+  button.primary { background: linear-gradient(135deg, var(--gold), var(--pink)); color: var(--ink); box-shadow: 0 8px 24px rgba(255,120,220,0.25); }
+  button.secondary { background: #2e2a46; color: #e8e8f4; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.14); }
+  button:disabled { opacity: 0.4; cursor: default; box-shadow: none; }
+  .opts { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; margin-top: 14px; font-size: 14px; color: #bcbcd2; }
+  .opts label { display: inline-flex; gap: 8px; align-items: center; }
+  select { padding: 7px 10px; border-radius: 10px; border: 1px solid #4a4666; background: #14121e; color: #fff; font-size: 14px; }
+  input[type=checkbox] { width: 18px; height: 18px; accent-color: #ffcd50; }
   #status, #arNote { font-size: 14px; color: #a8a8c0; margin-top: 10px; min-height: 18px; }
-  label.mute { font-size: 14px; color: #b8b8c8; display: inline-flex; gap: 8px; align-items: center; margin-top: 12px; }
+  @media (max-width: 520px) { .card { padding: 18px; } #preview { width: 72px; height: 125px; } h1 { font-size: 24px; } #setList { height: 180px; } }
 </style>
-<script type="importmap">{ "imports": { "three": "./vendor/three.module.js" } }</script>
+<script type="importmap">{ "imports": {
+    "three": "./vendor/three.module.js",
+    "./gen/holo_shaders.js": "./gen/holo_shaders.js?v=f98b48c8",
+    "./js/art.js": "./js/art.js?v=f98b48c8",
+    "./js/fx.js": "./js/fx.js?v=f98b48c8",
+    "./js/main.js": "./js/main.js?v=f98b48c8",
+    "./js/packs.js": "./js/packs.js?v=f98b48c8",
+    "./js/shaders.js": "./js/shaders.js?v=f98b48c8",
+    "./js/sound.js": "./js/sound.js?v=f98b48c8",
+    "./js/ui.js": "./js/ui.js?v=f98b48c8"
+  } }</script>
 </head>
 <body>
 <canvas id="gl"></canvas>
 <div id="menu">
   <div class="card">
-    <h1>Card Binder AR</h1>
-    <p>Pick a set, then put on the headset view: packs float in front of you. Pinch the top edge of a pack and drag across to tear it open.</p>
-    <input id="filter" type="search" placeholder="Search sets" autocomplete="off">
-    <select id="setList" size="7" aria-label="Set"></select>
+    <div class="head">
+      <canvas id="preview" width="240" height="416"></canvas>
+      <div>
+        <h1>Card Binder <span>AR</span></h1>
+        <p>Open booster packs in mixed reality. Pick a set, put the headset on, and tear the pack open with your hands.</p>
+        <div id="pickName">Loading…</div>
+        <div id="pickSub"></div>
+      </div>
+    </div>
+    <input id="filter" type="search" placeholder="Search sets by name or code" autocomplete="off">
+    <div id="setList" role="listbox" aria-label="Set"></div>
     <div class="row">
       <button id="enterAR" class="primary" disabled>Enter AR</button>
       <button id="flat" class="secondary">Preview on screen</button>
     </div>
-    <label class="mute"><input id="mute" type="checkbox"> Mute sounds</label>
+    <div class="opts">
+      <label>Graphics
+        <select id="quality" aria-label="Graphics quality">
+          <option value="sharp">Sharp</option>
+          <option value="smooth">Smooth (lighter)</option>
+        </select>
+      </label>
+      <label><input id="mute" type="checkbox"> Mute sounds</label>
+    </div>
     <div id="status"></div>
     <div id="arNote"></div>
   </div>
 </div>
-<script type="module" src="./js/main.js"></script>
+<script type="module" src="./js/main.js?v=f98b48c8"></script>
 </body>
 </html>
