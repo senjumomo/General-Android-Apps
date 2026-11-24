@@ -1,12 +1,13 @@
 # General Android Apps
 
 Personal Android apps for one user (South Africa, prices in rand, phone on Android 17). Two independent
-Gradle projects; each builds on its own.
+Gradle projects (each builds on its own) plus a small web project, `PackVR/`.
 
 | Folder | App | Package |
 |---|---|---|
 | `UtilitiesCalculator/` | **Utilities**: monthly water/electricity bill → message for the landlord, with history and trends | `com.senjumomo.utilities` |
 | `CardCollection/` | **Card Binder**: Yu-Gi-Oh! collection tracker with holo card viewer and pack opening simulator | `com.senjumomo.cards` |
+| `PackVR/` | **Card Binder AR**: pack opening in mixed reality on the Meta Quest (a WebXR web page, not Android) | n/a |
 
 Each folder has a README with features and build/test commands. Read it before changing that app.
 
@@ -220,6 +221,20 @@ Preview tools (see `CardCollection/tools/holo-preview/README.md`):
   it ripples and moves with scrolling; sleeps between sweeps; off when system animations are off.
 - Paparazzi quirks: progress bars only draw progress set after attach; Coil placeholders are async (set
   the placeholder with `setImageResource` first or snapshots flake).
+
+### PackVR (Meta Quest AR pack opening): separate from the app, web only
+
+- A WebXR page (three.js vendored, no build step) the user opens in the Quest Browser over HTTPS
+  (GitHub Pages). `immersive-ar` + `local-floor`, hands or controllers via `select` events (pinch = select).
+  The main Android app is untouched; the only sharing is `PackVR/sync_from_app.py`, which COPIES the foil
+  shader (`holo_core.agsl` + the wrapper in `HoloShaders.kt`) into `PackVR/gen/holo_shaders.js` and the
+  pack sounds into `PackVR/sounds/`. Re-run it after changing the app's shaders/sounds; don't edit `gen/`.
+- Card images must go through the wsrv.nl relay (images.ygoprodeck.com has no CORS header, so a page can't
+  use them as WebGL textures); the API, exchange-rate and Yugipedia hosts allow CORS. Textures for the holo
+  shader need `flipY = false` (the app's UVs run top-down).
+- Test without a headset: `PackVR/tools/e2e.mjs` (flat preview) and `e2e-xr.mjs` (emulated Quest 3 via IWER,
+  `forceInstall` because headless Chromium has its own empty WebXR). Real-headset feel/performance is
+  untested: say so. Pointer taps can be shorter than a frame: edges are latched by `pendingDown/Up`.
 
 ### Ideas not built yet (pack opening round 2)
 
