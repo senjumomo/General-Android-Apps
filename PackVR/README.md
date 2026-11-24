@@ -34,7 +34,7 @@ passthrough cameras; you pick one, tear it open by hand, and the cards come out 
 
 ## Testing without a headset
 `node PackVR/tools/e2e.mjs` runs the flat preview in headless Chromium (mouse as the hand);
-`node PackVR/tools/e2e-xr.mjs` runs an emulated Quest 3 (Meta's IWER, `tools/iwer.min.js`) through a real
+`node PackVR/tools/e2e-xr.mjs` (or `HANDS=1 node …` for bare-hand pinching, no controllers) runs an emulated Quest 3 (Meta's IWER, `tools/iwer.min.js`) through a real
 `immersive-ar` session with a pointing, pinching controller. Both go through pick → tear → 9 cards → summary
 and save screenshots. They need Playwright installed globally and use curl for the real network data.
 What they can't check: how it feels on the headset (comfort, hand tracking, performance, haptics, sound).

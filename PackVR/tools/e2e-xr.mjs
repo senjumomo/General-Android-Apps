@@ -1,7 +1,7 @@
 // End-to-end check of the real headset path: an emulated Meta Quest 3 (Meta's IWER) starts an
 // immersive-ar session, and an emulated controller points at things and pulls its trigger (a pinch
 // does the same). Verifies picking, tearing, grabbing and throwing through the XR input code.
-//   node PackVR/tools/e2e-xr.mjs [outDir] [setName]
+//   node PackVR/tools/e2e-xr.mjs [outDir] [setName]          (HANDS=1: bare hands, pinching, no controllers)
 import fs from "node:fs";
 import path from "node:path";
 import { launch } from "./harness.mjs";
@@ -15,11 +15,14 @@ const t = await launch(out, {
       const device = new IWER.XRDevice(IWER.metaQuest3);
       device.installRuntime({ forceInstall: true });   // replace headless Chromium's own (empty) WebXR
       device.position.set(0, 1.6, 0);
+      const hands = ${process.env.HANDS ? "true" : "false"};
+      if (hands) device.primaryInputMode = "hand";
+      const input = () => (hands ? device.hands.right : device.controllers.right);
       window.__device = device;
       const norm = (v) => { const l = Math.hypot(...v); return v.map((x) => x / l); };
       // Point the right controller from [o] at [target] (a ray runs along the controller's -Z).
       window.__aim = (o, target) => {
-        const c = device.controllers.right;
+        const c = input();
         c.position.set(...o);
         const a = [0, 0, -1], b = norm([target[0] - o[0], target[1] - o[1], target[2] - o[2]]);
         const dot = a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
@@ -28,7 +31,7 @@ const t = await launch(out, {
         else { const cx = [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]; q = norm([cx[0], cx[1], cx[2], 1 + dot]); }
         c.quaternion.set(q[0], q[1], q[2], q[3]);
       };
-      window.__trigger = (v) => device.controllers.right.updateButtonValue("trigger", v);
+      window.__trigger = (v) => (hands ? device.hands.right.updatePinchValue(v) : device.controllers.right.updateButtonValue("trigger", v));
     })();`,
 });
 const { page, hook, sleep, shot, wait } = t;
@@ -42,7 +45,7 @@ console.log("AR available:", await hook(() => !document.getElementById("enterAR"
 await page.fill("#filter", setName);
 await page.click("#enterAR");
 await wait(() => __packvr.state.phase === "shelf", null, "enter AR / place the shelf", 30000);
-console.log("session mode:", await hook(() => __packvr.state.mode), "| world placed at", (await world([0, 0, 0])).map((v) => +v.toFixed(2)));
+console.log("input:", process.env.HANDS ? "hands (pinch)" : "controller (trigger)", "| session mode:", await hook(() => __packvr.state.mode), "| world placed at", (await world([0, 0, 0])).map((v) => +v.toFixed(2)));
 await sleep(1500);
 await shot("xr-1-shelf");
 
