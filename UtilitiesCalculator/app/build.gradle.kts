@@ -12,8 +12,8 @@ android {
         applicationId = "com.senjumomo.utilities"
         minSdk = 24
         targetSdk = 35
-        versionCode = 7
-        versionName = "5.2"
+        versionCode = 8
+        versionName = "5.3"
     }
 
     buildTypes {
@@ -39,6 +39,5 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.9.3")
     implementation("com.google.android.material:material:1.12.0")
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.robolectric:robolectric:4.14.1") // simulated finger drags (CollapsingScrollTest)
     testImplementation("org.json:json:20240303") // real org.json for JVM tests
 }

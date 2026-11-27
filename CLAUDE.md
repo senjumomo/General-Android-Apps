@@ -77,8 +77,14 @@ dynamic colour, dark mode. Data in SharedPreferences (`utilities`), history stor
   **Collapsing header is our own** (`Collapsing.kt`): `CollapsingRoot` (nested-scroll parent) shrinks
   `CollapsingHero` (`progress` 0..1) before the page scrolls; views tagged `compact` are the thin strip it
   ends as, everything else is the full panel (clipped, cross-faded). The header shrinks `Collapse.SPEED`
-  (2x) px per px of finger (1:1 felt like resistance on the phone: ~250dp of dragging before the page
-  moved) and settles open/closed when the finger lifts and no fling is running. Panels are
+  (1.5x) px per px of finger and settles open/closed when the finger lifts and no fling is running.
+  **It must resize/relayout synchronously inside the nested-scroll callback** (`CollapsingRoot.layoutNow`):
+  `NestedScrollingChildHelper` reads the scroll view's window position before and after the parent
+  callback and `NestedScrollView` shifts each touch event by that offset, so a relayout on the next
+  frame reports "didn't move" and the next touch is misread (lost movement = "resistance", doubled =
+  "jumpy"; this was the 5.1/5.2 bug, confirmed from the AndroidX bytecode). Not covered by a test: a
+  Robolectric finger-drag test was tried but Maven kept returning 429 for
+  `nativeruntime-dist-compat`; worth retrying later (simulate DOWN/MOVEs, assert the page follows). Panels are
   `FadeLinearLayout` (no offscreen layer while fading); `HeroDrawable` builds its shaders once per width.
   "Message ready" sits on the TOTAL OWING row (it overflowed beside the month pill at the user's text
   size; `bigText` snapshot = fontScale 1.3 guards this). Maths in `Collapse` (unit-tested);
