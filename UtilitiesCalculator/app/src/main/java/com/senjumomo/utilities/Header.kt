@@ -12,9 +12,7 @@ import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.drawable.Drawable
-import android.util.AttributeSet
 import androidx.core.graphics.ColorUtils
-import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.color.MaterialColors
 
 /**
@@ -96,16 +94,5 @@ class HeroDrawable(context: Context) : Drawable() {
         hsl[1] = (hsl[1] * 1.05f).coerceAtMost(1f)
         hsl[2] = (hsl[2] + lightness).coerceIn(0.08f, 0.92f)
         return ColorUtils.HSLToColor(hsl)
-    }
-}
-
-/** An app bar that paints [HeroDrawable] behind the toolbar and the big header content. */
-class HeaderAppBar @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null,
-    defStyleAttr: Int = com.google.android.material.R.attr.appBarLayoutStyle,
-) : AppBarLayout(context, attrs, defStyleAttr) {
-    init {
-        background = HeroDrawable(context)
     }
 }

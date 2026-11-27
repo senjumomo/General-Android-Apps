@@ -40,8 +40,9 @@ class BillScreen(
     private val elecUsed: TextView = root.findViewById(R.id.elecUsed)
     private val totalView: TextView = root.findViewById(R.id.total)
     private val totalHint: TextView = root.findViewById(R.id.totalHint)
-    private val toolbarTotal: TextView = root.findViewById(R.id.toolbarTotal)
+    private val compactTotal: TextView = root.findViewById(R.id.compactTotal)
     private val splitBar: SplitBarView = root.findViewById(R.id.splitBar)
+    private val compactSplit: SplitBarView = root.findViewById(R.id.compactSplit)
     private val messageReady: View = root.findViewById(R.id.messageReady)
     private val messageCard: View = root.findViewById(R.id.messageCard)
     private val messageView: TextView = root.findViewById(R.id.message)
@@ -175,13 +176,16 @@ class BillScreen(
         val elecPart = elecCost ?: BigDecimal.ZERO
         val owing = debtValue + waterPart + elecPart
         total.set(owing, anim)
-        toolbarTotal.text = Bill.money(owing)
+        compactTotal.text = Bill.money(owing)
         legendDebt.set(debtValue, anim)
         legendWater.set(waterPart, anim)
         legendElec.set(elecPart, anim)
-        splitBar.setShares(Shares.of(debtValue, waterPart, elecPart), anim)
+        val shares = Shares.of(debtValue, waterPart, elecPart)
+        splitBar.setShares(shares, anim)
+        compactSplit.setShares(shares, anim)
         splitBar.contentDescription =
             "Debt ${Bill.money(debtValue)}, water ${Bill.money(waterPart)}, electricity ${Bill.money(elecPart)}"
+        compactSplit.contentDescription = splitBar.contentDescription
 
         if (waterCost != null && elecCost != null) {
             val b = Bill(debtValue, prev!!, curr!!, klPrice!!, tokenCount!!, tokPrice!!)

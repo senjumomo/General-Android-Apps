@@ -25,8 +25,9 @@ Download `apk/UtilitiesCalculator.apk` to your phone and open it (allow "install
 
 ### Look and feel
 - **Header**: a deep gradient (follows your wallpaper colours on Android 12+) with the big total, a bar
-  showing how it splits between debt, water and electricity, and a "Message ready" shortcut. When you scroll
-  it away, a small total stays in the toolbar.
+  showing how it splits between debt, water and electricity, and a "Message ready" shortcut. Scroll the page
+  and the header shrinks down to a thin strip (total + split bar) that stays put; scroll back to the top and
+  it grows again. It also folds down by itself while the keyboard is open.
 - **Water is always blue, electricity amber, debt rose, totals indigo**, so they're recognisable at a glance
   (these colours don't follow the wallpaper; the header and the message bubble do).
 - Big meter-style number boxes, a −/+ stepper for tokens, and the message shown as a chat bubble.

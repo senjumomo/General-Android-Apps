@@ -36,7 +36,8 @@ class ScreenshotTest {
         root.findViewById<View>(R.id.historyPage).visibility = View.VISIBLE
         root.findViewById<View>(R.id.heroCalc).visibility = View.GONE
         root.findViewById<View>(R.id.heroHistory).visibility = View.VISIBLE
-        root.findViewById<View>(R.id.toolbarTotal).visibility = View.GONE
+        root.findViewById<View>(R.id.compactCalc).visibility = View.GONE
+        root.findViewById<View>(R.id.compactHistory).visibility = View.VISIBLE
         root.findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav)
             .selectedItemId = R.id.tab_history
         root.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar).title = "History"
@@ -69,11 +70,23 @@ class ScreenshotTest {
 
     @Test fun filled() = paparazzi.snapshot(calculate(example))
 
-    /** What the top looks like once the big header has scrolled away: a small total in the toolbar. */
-    @Test fun collapsed() {
+    private fun collapsed(progress: Float, dark: Boolean = false): View {
+        if (dark) paparazzi.unsafeUpdateConfig(device.copy(nightMode = NightMode.NIGHT))
         val root = calculate(example)
-        root.findViewById<View>(R.id.heroArea).visibility = View.GONE
-        root.findViewById<View>(R.id.toolbarTotal).alpha = 1f
+        root.findViewById<CollapsingHero>(R.id.heroArea).progress = progress
+        return root
+    }
+
+    /** The header part-way through shrinking, and fully shrunk to its strip. */
+    @Test fun headerHalf() = paparazzi.snapshot(collapsed(0.5f))
+
+    @Test fun headerCollapsed() = paparazzi.snapshot(collapsed(1f))
+
+    @Test fun headerCollapsedDark() = paparazzi.snapshot(collapsed(1f, dark = true))
+
+    @Test fun historyCollapsed() {
+        val root = history(sampleHistory)
+        root.findViewById<CollapsingHero>(R.id.heroArea).progress = 1f
         paparazzi.snapshot(root)
     }
 

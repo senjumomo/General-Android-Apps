@@ -72,9 +72,15 @@ dynamic colour, dark mode. Data in SharedPreferences (`utilities`), history stor
 - History tab: header with the average month + sparkline, trend cards (bar chart of last 12 months +
   average/latest/lowest/highest) per measure, then a card per saved month. `Trends.kt` is pure and
   unit-tested; `BarChartView` has gradient bars, a value bubble, dashed average line, grow-in animation.
-- **Look (v5, "make it gorgeous")**: `HeaderAppBar` paints `HeroDrawable` (gradient from the theme's
+- **Look (v5, "make it gorgeous")**: `HeaderBar` paints `HeroDrawable` (gradient from the theme's
   `heroBase` attr = colorPrimary in light, colorPrimaryContainer in dark, so it follows Material You).
-  The header is the app bar's scrolling part; `toolbarTotal` fades in as it scrolls away.
+  **Collapsing header is our own** (`Collapsing.kt`): `CollapsingRoot` (nested-scroll parent) shrinks
+  `CollapsingHero` (`progress` 0..1) before the page scrolls; views tagged `compact` are the thin strip it
+  ends as, everything else is the full panel (clipped, cross-faded). Maths in `Collapse` (unit-tested);
+  Paparazzi renders any state by setting `progress` (`headerHalf`, `headerCollapsed`, ...). It also folds
+  while the keyboard is open (`MainActivity`, root layout listener). Don't go back to `AppBarLayout`: its
+  scroll range stops at the first child without scroll flags, so a pinned toolbar above a scrolling child
+  meant the header never collapsed at all (v5.0 shipped that way).
   Fixed palettes in `colors.xml`/`Palette.kt` (water blue, electricity amber, debt rose, total indigo).
   Type is Manrope (`res/font`, OFL, converted from the fontsource woff2 files); every M3 text appearance
   is overridden in `themes.xml`. Avoid `textStyle="bold"` (use a weight-specific `@font/manrope_*`).

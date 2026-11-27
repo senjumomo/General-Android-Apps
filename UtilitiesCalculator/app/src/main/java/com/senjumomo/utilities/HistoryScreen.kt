@@ -23,6 +23,7 @@ class HistoryScreen(private val root: View, private val onClick: (HistoryEntry) 
     private val empty: View = root.findViewById(R.id.historyEmpty)
     private val avgView: TextView = root.findViewById(R.id.historyAvg)
     private val captionView: TextView = root.findViewById(R.id.historyCaption)
+    private val compactAvg: TextView = root.findViewById(R.id.compactAvg)
     private val sparkline: SparklineView = root.findViewById(R.id.sparkline)
     private val inflater = LayoutInflater.from(root.context)
     private val context = root.context
@@ -37,6 +38,7 @@ class HistoryScreen(private val root: View, private val onClick: (HistoryEntry) 
         monthsHeader.visibility = if (has) View.VISIBLE else View.GONE
         if (!has) {
             avgView.text = "—"
+            compactAvg.text = "—"
             captionView.text = "Save a month to start your trends"
             sparkline.setData(emptyList())
             return
@@ -62,6 +64,7 @@ class HistoryScreen(private val root: View, private val onClick: (HistoryEntry) 
     private fun showHeader(recent: List<HistoryEntry>) {
         val owing = Trend.of(recent) { it.owing }!!
         avgView.text = Bill.money(owing.average)
+        compactAvg.text = Bill.money(owing.average)
         captionView.text = if (recent.size == 1) {
             "Based on ${Months.label(recent.first().month)}"
         } else {

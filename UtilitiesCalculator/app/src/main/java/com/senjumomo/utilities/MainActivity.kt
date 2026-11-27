@@ -7,11 +7,11 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
-import android.widget.TextView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
@@ -26,15 +26,18 @@ class MainActivity : AppCompatActivity() {
     private lateinit var history: HistoryStore
 
     private lateinit var root: View
-    private lateinit var appBar: AppBarLayout
     private lateinit var toolbar: MaterialToolbar
     private lateinit var bottomNav: BottomNavigationView
     private lateinit var calculatePage: View
     private lateinit var historyPage: View
-    private lateinit var heroArea: View
+    private lateinit var heroArea: CollapsingHero
     private lateinit var heroCalc: View
     private lateinit var heroHistory: View
-    private lateinit var toolbarTotal: TextView
+    private lateinit var compactCalc: View
+    private lateinit var compactHistory: View
+
+    private var keyboardShown = false
+    private var collapsedForKeyboard = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // The header is a deep gradient in both light and dark, so the status bar icons stay light.
@@ -47,7 +50,6 @@ class MainActivity : AppCompatActivity() {
         history = HistoryStore(prefs)
 
         root = findViewById(R.id.root)
-        appBar = findViewById(R.id.appBar)
         toolbar = findViewById(R.id.toolbar)
         bottomNav = findViewById(R.id.bottomNav)
         calculatePage = findViewById(R.id.calculatePage)
@@ -55,7 +57,8 @@ class MainActivity : AppCompatActivity() {
         heroArea = findViewById(R.id.heroArea)
         heroCalc = findViewById(R.id.heroCalc)
         heroHistory = findViewById(R.id.heroHistory)
-        toolbarTotal = findViewById(R.id.toolbarTotal)
+        compactCalc = findViewById(R.id.compactCalc)
+        compactHistory = findViewById(R.id.compactHistory)
 
         // The bottom navigation already sits above the system nav bar; only the keyboard matters.
         padForSystemBars(findViewById(R.id.content), includeNavBar = false)
@@ -64,11 +67,21 @@ class MainActivity : AppCompatActivity() {
         screen = BillScreen(root, prefs)
         historyScreen = HistoryScreen(root, ::showEntry)
 
-        // Once the big header has scrolled away, a small total appears in the toolbar instead.
-        appBar.addOnOffsetChangedListener { _, offset ->
-            val range = heroArea.height.coerceAtLeast(1).toFloat()
-            val gone = (-offset / range).coerceIn(0f, 1f)
-            toolbarTotal.alpha = ((gone - 0.55f) / 0.35f).coerceIn(0f, 1f)
+        // With the keyboard up there is little room, so the big header folds down to its thin strip
+        // (the total stays visible while you type) and comes back when the keyboard closes.
+        root.viewTreeObserver.addOnGlobalLayoutListener {
+            val shown = ViewCompat.getRootWindowInsets(root)?.isVisible(WindowInsetsCompat.Type.ime()) == true
+            if (shown == keyboardShown) return@addOnGlobalLayoutListener
+            keyboardShown = shown
+            if (shown) {
+                if (heroArea.progress < 1f) {
+                    collapsedForKeyboard = true
+                    heroArea.animateTo(1f)
+                }
+            } else if (collapsedForKeyboard) {
+                collapsedForKeyboard = false
+                heroArea.animateTo(0f)
+            }
         }
 
         toolbar.setOnMenuItemClickListener {
@@ -141,7 +154,10 @@ class MainActivity : AppCompatActivity() {
         }
         heroCalc.visibility = if (calc) View.VISIBLE else View.GONE
         heroHistory.visibility = if (calc) View.GONE else View.VISIBLE
-        toolbarTotal.visibility = if (calc) View.VISIBLE else View.GONE
+        compactCalc.visibility = if (calc) View.VISIBLE else View.GONE
+        compactHistory.visibility = if (calc) View.GONE else View.VISIBLE
+        // Each tab starts with the full header.
+        if (animate) heroArea.animateTo(0f) else heroArea.progress = 0f
         toolbar.title = if (calc) "Utilities" else "History"
         toolbar.menu.findItem(R.id.action_new_month).isVisible = calc
         if (!calc) historyScreen.playIntro()

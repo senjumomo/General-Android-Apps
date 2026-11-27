@@ -7,7 +7,7 @@
     android:paddingStart="22dp"
     android:paddingTop="8dp"
     android:paddingEnd="22dp"
-    android:paddingBottom="30dp">
+    android:paddingBottom="22dp">
 
     <TextView
         android:id="@+id/historyLabel"
