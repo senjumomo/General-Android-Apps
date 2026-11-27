@@ -24,7 +24,7 @@ object Collapse {
      * The header shrinks this many px per px of finger movement. Above 1 it folds away quickly
      * instead of making you drag the whole way before the page starts to move.
      */
-    const val SPEED = 2f
+    const val SPEED = 1.5f
 
     /** Header height for a collapse [progress] (0 = full, 1 = compact). */
     fun height(natural: Int, compact: Int, progress: Float): Int {
@@ -198,6 +198,24 @@ class CollapsingRoot @JvmOverloads constructor(
     private val hero: CollapsingHero? get() = findViewById(R.id.heroArea)
     private var activeScrolls = 0
 
+    /**
+     * Resize the header and move the page *right now*, not on the next frame. The scrolling page
+     * asks "where am I on screen?" straight after we answer, to correct for being moved under the
+     * finger. A late relayout answers "nowhere new", so the next touch event is misread: motion is
+     * lost (feels like resistance) or doubled (jumpy). This was the 5.1/5.2 bug.
+     * (Switchable only so a test can prove the difference.)
+     */
+    var layoutImmediately = true
+
+    private fun layoutNow() {
+        if (!layoutImmediately || width == 0 || height == 0) return
+        measure(
+            MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY),
+        )
+        layout(left, top, right, bottom)
+    }
+
     override fun onStartNestedScroll(child: View, target: View, axes: Int, type: Int): Boolean {
         if (axes and ViewCompat.SCROLL_AXIS_VERTICAL == 0) return false
         hero?.stopAnimating()
@@ -219,7 +237,13 @@ class CollapsingRoot @JvmOverloads constructor(
 
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray, type: Int) {
         val h = hero ?: return
-        if (dy > 0) consumed[1] += h.shrinkBy(dy)
+        if (dy > 0) {
+            val used = h.shrinkBy(dy)
+            if (used > 0) {
+                consumed[1] += used
+                layoutNow()
+            }
+        }
     }
 
     override fun onNestedScroll(
@@ -227,7 +251,13 @@ class CollapsingRoot @JvmOverloads constructor(
         type: Int, consumed: IntArray,
     ) {
         val h = hero ?: return
-        if (dyUnconsumed < 0) consumed[1] += -h.growBy(-dyUnconsumed)
+        if (dyUnconsumed < 0) {
+            val used = h.growBy(-dyUnconsumed)
+            if (used > 0) {
+                consumed[1] -= used
+                layoutNow()
+            }
+        }
     }
 
     override fun onNestedScroll(

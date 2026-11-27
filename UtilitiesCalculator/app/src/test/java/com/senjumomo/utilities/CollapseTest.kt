@@ -18,16 +18,16 @@ class CollapseTest {
     }
 
     @Test fun headerShrinksFasterThanTheFinger() {
-        // 100 px of finger = 200 px of header at the default 2x.
+        // 100 px of finger = 150 px of header at the default 1.5x.
         val (p, used) = Collapse.shrink(0f, 248, 100)
         assertEquals(100, used)
-        assertEquals(200f / 248f, p, 1e-4f)
+        assertEquals(150f / 248f, p, 1e-4f)
     }
 
     @Test fun onlyTheFingerTravelNeededIsUsedUp() {
-        // 10% (25 px) of header is left: that takes 13 px of finger, the rest scrolls the page.
+        // 10% (25 px) of header is left: that takes 17 px of finger, the rest scrolls the page.
         val (p, used) = Collapse.shrink(0.9f, 248, 100)
-        assertEquals(13, used)
+        assertEquals(17, used)
         assertEquals(1f, p, 1e-4f)
     }
 
@@ -40,10 +40,10 @@ class CollapseTest {
     @Test fun pullingDownGrowsBackOnlyAsFarAsFull() {
         val (p, used) = Collapse.grow(1f, 248, 100)
         assertEquals(100, used)
-        assertEquals(1f - 200f / 248f, p, 1e-4f)
+        assertEquals(1f - 150f / 248f, p, 1e-4f)
 
         val (p2, used2) = Collapse.grow(0.1f, 248, 100)
-        assertEquals(13, used2)
+        assertEquals(17, used2)
         assertEquals(0f, p2, 1e-4f)
     }
 
