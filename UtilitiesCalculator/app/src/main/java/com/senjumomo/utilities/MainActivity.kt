@@ -4,8 +4,11 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import android.widget.TextView
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.AppBarLayout
@@ -28,9 +31,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bottomNav: BottomNavigationView
     private lateinit var calculatePage: View
     private lateinit var historyPage: View
+    private lateinit var heroArea: View
+    private lateinit var heroCalc: View
+    private lateinit var heroHistory: View
+    private lateinit var toolbarTotal: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
+        // The header is a deep gradient in both light and dark, so the status bar icons stay light.
+        enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT))
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -44,13 +52,24 @@ class MainActivity : AppCompatActivity() {
         bottomNav = findViewById(R.id.bottomNav)
         calculatePage = findViewById(R.id.calculatePage)
         historyPage = findViewById(R.id.historyPage)
+        heroArea = findViewById(R.id.heroArea)
+        heroCalc = findViewById(R.id.heroCalc)
+        heroHistory = findViewById(R.id.heroHistory)
+        toolbarTotal = findViewById(R.id.toolbarTotal)
 
         // The bottom navigation already sits above the system nav bar; only the keyboard matters.
         padForSystemBars(findViewById(R.id.content), includeNavBar = false)
         padForSystemBars(findViewById(R.id.historyContent), includeNavBar = false)
 
-        screen = BillScreen(calculatePage, prefs)
-        historyScreen = HistoryScreen(historyPage, ::showEntry)
+        screen = BillScreen(root, prefs)
+        historyScreen = HistoryScreen(root, ::showEntry)
+
+        // Once the big header has scrolled away, a small total appears in the toolbar instead.
+        appBar.addOnOffsetChangedListener { _, offset ->
+            val range = heroArea.height.coerceAtLeast(1).toFloat()
+            val gone = (-offset / range).coerceIn(0f, 1f)
+            toolbarTotal.alpha = ((gone - 0.55f) / 0.35f).coerceIn(0f, 1f)
+        }
 
         toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
@@ -59,21 +78,34 @@ class MainActivity : AppCompatActivity() {
             }
             true
         }
-        findViewById<MaterialButton>(R.id.copy).setOnClickListener { copyMessage() }
-        findViewById<MaterialButton>(R.id.share).setOnClickListener { screen.bill?.let { share(it) } }
+        findViewById<MaterialButton>(R.id.copy).setOnClickListener { copyMessage(it) }
+        findViewById<MaterialButton>(R.id.share).setOnClickListener {
+            Motion.confirm(it)
+            screen.bill?.let { bill -> share(bill) }
+        }
         findViewById<MaterialButton>(R.id.saveHistory).setOnClickListener { saveToHistory() }
-        findViewById<MaterialButton>(R.id.monthEdit).setOnClickListener { chooseMonth() }
-        findViewById<MaterialButton>(R.id.waterRateEdit).setOnClickListener {
+        findViewById<View>(R.id.monthEdit).setOnClickListener { chooseMonth() }
+        findViewById<View>(R.id.waterRateEdit).setOnClickListener {
             openSettings(SettingsActivity.FOCUS_WATER)
         }
-        findViewById<MaterialButton>(R.id.tokenRateEdit).setOnClickListener {
+        findViewById<View>(R.id.tokenRateEdit).setOnClickListener {
             openSettings(SettingsActivity.FOCUS_TOKEN)
         }
 
         bottomNav.setOnItemSelectedListener { showTab(it.itemId); true }
         val tab = savedInstanceState?.getInt(STATE_TAB) ?: R.id.tab_calculate
         bottomNav.selectedItemId = tab
-        showTab(tab)
+        showTab(tab, animate = false)
+
+        // Cards rise in when the app opens (not when the screen is merely rotated).
+        if (savedInstanceState == null) {
+            root.post {
+                val cards = listOf(R.id.debtCard, R.id.waterCard, R.id.elecCard, R.id.messageCard)
+                    .map { findViewById<View>(it) }
+                    .filter { it.visibility == View.VISIBLE }
+                Motion.riseIn(cards, firstDelay = 100)
+            }
+        }
     }
 
     override fun onResume() {
@@ -93,13 +125,26 @@ class MainActivity : AppCompatActivity() {
         outState.putInt(STATE_TAB, bottomNav.selectedItemId)
     }
 
-    private fun showTab(id: Int) {
+    private fun showTab(id: Int, animate: Boolean = true) {
         val calc = id == R.id.tab_calculate
-        calculatePage.visibility = if (calc) View.VISIBLE else View.GONE
-        historyPage.visibility = if (calc) View.GONE else View.VISIBLE
+        val incoming = if (calc) calculatePage else historyPage
+        val outgoing = if (calc) historyPage else calculatePage
+        outgoing.visibility = View.GONE
+        if (incoming.visibility != View.VISIBLE) {
+            incoming.visibility = View.VISIBLE
+            if (animate && Motion.enabled(incoming)) {
+                incoming.alpha = 0f
+                incoming.animate().alpha(1f).setDuration(200).start()
+            } else {
+                incoming.alpha = 1f
+            }
+        }
+        heroCalc.visibility = if (calc) View.VISIBLE else View.GONE
+        heroHistory.visibility = if (calc) View.GONE else View.VISIBLE
+        toolbarTotal.visibility = if (calc) View.VISIBLE else View.GONE
         toolbar.title = if (calc) "Utilities" else "History"
         toolbar.menu.findItem(R.id.action_new_month).isVisible = calc
-        appBar.liftOnScrollTargetViewId = if (calc) R.id.scroll else R.id.historyScroll
+        if (!calc) historyScreen.playIntro()
     }
 
     private fun openSettings(focus: String) {
@@ -111,10 +156,11 @@ class MainActivity : AppCompatActivity() {
     private fun snackbar(text: String) =
         Snackbar.make(root, text, Snackbar.LENGTH_LONG).setAnchorView(bottomNav)
 
-    private fun copyMessage() {
+    private fun copyMessage(button: View) {
         val text = screen.bill?.message() ?: return
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText("Utilities", text))
+        Motion.confirm(button)
         snackbar("Copied, ready to paste").show()
     }
 
@@ -151,6 +197,7 @@ class MainActivity : AppCompatActivity() {
             snackbar("Saved ${Months.label(month)}")
                 .setAction("Start new month") { startNewMonth() }
                 .show()
+            celebrateSaved()
         }
         if (!history.has(month)) return save()
         MaterialAlertDialogBuilder(this)
@@ -159,6 +206,19 @@ class MainActivity : AppCompatActivity() {
             .setNegativeButton("Cancel", null)
             .setPositiveButton("Replace") { _, _ -> save() }
             .show()
+    }
+
+    /** The Save button turns into a tick for a moment and the total gives a little pop. */
+    private fun celebrateSaved() {
+        val button = findViewById<MaterialButton>(R.id.saveHistory)
+        Motion.confirm(button)
+        screen.celebrate()
+        button.text = "Saved"
+        button.setIconResource(R.drawable.ic_check)
+        button.postDelayed({
+            button.text = "Save to history"
+            button.setIconResource(R.drawable.ic_save)
+        }, 1800)
     }
 
     private fun showEntry(entry: HistoryEntry) {

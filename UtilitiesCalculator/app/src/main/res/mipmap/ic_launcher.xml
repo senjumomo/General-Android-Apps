@@ -1,14 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Simple icon: blue circle with a water drop and a lightning bolt. -->
+<!-- Round icon for Android 7 and older (newer versions use the adaptive icon). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="48dp"
     android:height="48dp"
-    android:viewportWidth="48"
-    android:viewportHeight="48">
-    <path android:fillColor="#1565C0"
-        android:pathData="M24,2a22,22 0,1 1,0 44a22,22 0,1 1,0 -44z" />
-    <path android:fillColor="#90CAF9"
-        android:pathData="M16,11C16,11 9,20 9,25a7,7 0,0 0,14 0C23,20 16,11 16,11z" />
-    <path android:fillColor="#FFD54F"
-        android:pathData="M33,9L25,26h6l-3,13l10,-18h-6l4,-12z" />
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path android:pathData="M54,54m-54,0a54,54 0,1 1,108 0a54,54 0,1 1,-108 0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0" android:startY="0"
+                android:endX="108" android:endY="108"
+                android:type="linear">
+                <item android:offset="0" android:color="#FF0A4A9A" />
+                <item android:offset="1" android:color="#FF17B5C9" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:pathData="M46,27C46,27 29,46 29,59C29,68.4 36.6,76 46,76C55.4,76 63,68.4 63,59C63,46 46,27 46,27Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="46" android:startY="27"
+                android:endX="46" android:endY="76"
+                android:type="linear">
+                <item android:offset="0" android:color="#FFFFFFFF" />
+                <item android:offset="1" android:color="#FFB6E3FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path android:fillColor="#FFFFC21A" android:pathData="M73,32L60,58L68,58L63,80L80,51L71,51L77,32Z" />
 </vector>

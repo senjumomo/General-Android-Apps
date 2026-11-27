@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One-colour version for Android's themed icons: the bolt cuts through the drop. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FF000000"
+        android:fillType="evenOdd"
+        android:pathData="M46,27C46,27 29,46 29,59C29,68.4 36.6,76 46,76C55.4,76 63,68.4 63,59C63,46 46,27 46,27ZM73,32L60,58L68,58L63,80L80,51L71,51L77,32Z" />
+</vector>

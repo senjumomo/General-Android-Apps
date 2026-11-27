@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Fixed palette: water is always blue, electricity amber, debt rose, totals indigo, so each
+  one is recognisable at a glance. The big header and the bubble still follow the wallpaper
+  colours (Material You); see themes.xml. Night values live in values-night/colors.xml.
+-->
+<resources>
+    <color name="launcher_bg">#0B5FA5</color>
+
+    <!-- Header (always sits on a deep gradient, so its text is always light) -->
+    <color name="hero_text">#FFFFFF</color>
+    <color name="hero_text_dim">#CCFFFFFF</color>
+    <color name="hero_pill">#2EFFFFFF</color>
+    <color name="hero_ripple">#33FFFFFF</color>
+    <color name="hero_track">#33FFFFFF</color>
+    <color name="hero_water">#7DD3FF</color>
+    <color name="hero_elec">#FFCF5C</color>
+    <color name="hero_debt">#FF9DBB</color>
+
+    <!-- Water -->
+    <color name="water_accent">#0A74C9</color>
+    <color name="water_container">#DCEEFF</color>
+    <color name="water_on_container">#04263F</color>
+    <color name="water_card_top">#E6F2FF</color>
+    <color name="water_card_bottom">#FBFDFF</color>
+    <color name="water_stroke">#240A74C9</color>
+
+    <!-- Electricity -->
+    <color name="elec_accent">#B86E00</color>
+    <color name="elec_container">#FFE7B3</color>
+    <color name="elec_on_container">#3A2600</color>
+    <color name="elec_card_top">#FFF1D2</color>
+    <color name="elec_card_bottom">#FFFDF8</color>
+    <color name="elec_stroke">#26B86E00</color>
+
+    <!-- Previous debt -->
+    <color name="debt_accent">#C23B6B</color>
+    <color name="debt_container">#FFDCE7</color>
+    <color name="debt_on_container">#3F0A1D</color>
+    <color name="debt_card_top">#FFE8EF</color>
+    <color name="debt_card_bottom">#FFFBFC</color>
+    <color name="debt_stroke">#24C23B6B</color>
+
+    <!-- Total owing -->
+    <color name="total_accent">#5750D6</color>
+    <color name="total_container">#E4E2FF</color>
+    <color name="total_on_container">#16124A</color>
+    <color name="total_card_top">#ECEBFF</color>
+    <color name="total_card_bottom">#FCFCFF</color>
+    <color name="total_stroke">#245750D6</color>
+
+    <!-- Neutral cards, inputs, tiles -->
+    <color name="neutral_card_top">#FFFFFF</color>
+    <color name="neutral_card_bottom">#FFFFFF</color>
+    <color name="neutral_stroke">#E1E7F0</color>
+    <color name="tile_bg">#F0F4FA</color>
+    <color name="tile_stroke">#DCE3EE</color>
+    <color name="stat_tile_bg">#CCFFFFFF</color>
+    <color name="stat_tile_stroke">#14000000</color>
+
+    <!-- Up/down against the other months (for bills, down is good) -->
+    <color name="trend_good">#18733A</color>
+    <color name="trend_good_bg">#1F18733A</color>
+    <color name="trend_bad">#B3261E</color>
+    <color name="trend_bad_bg">#1FB3261E</color>
+</resources>

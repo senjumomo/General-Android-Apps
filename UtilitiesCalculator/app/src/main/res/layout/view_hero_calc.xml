@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Calculate header: month, the big total, and where the money goes. Sits on the gradient. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="22dp"
+    android:paddingTop="4dp"
+    android:paddingEnd="22dp"
+    android:paddingBottom="30dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/monthEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:background="@drawable/hero_pill"
+            android:clickable="true"
+            android:contentDescription="Change month"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="14dp"
+            android:paddingEnd="10dp">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_calendar"
+                app:tint="@color/hero_text" />
+
+            <TextView
+                android:id="@+id/month"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:fontFamily="@font/manrope_700"
+                android:textColor="@color/hero_text"
+                android:textSize="14sp" />
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginStart="2dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_expand_more"
+                app:tint="@color/hero_text" />
+        </LinearLayout>
+
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <LinearLayout
+            android:id="@+id/messageReady"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:background="@drawable/hero_pill"
+            android:clickable="true"
+            android:contentDescription="Message ready. Jump to it"
+            android:focusable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="10dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_check"
+                app:tint="@color/hero_text" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:fontFamily="@font/manrope_700"
+                android:text="Message ready"
+                android:textColor="@color/hero_text"
+                android:textSize="13sp" />
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="4dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_arrow_down"
+                app:tint="@color/hero_text" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="22dp"
+        android:fontFamily="@font/manrope_700"
+        android:letterSpacing="0.06"
+        android:text="TOTAL OWING"
+        android:textColor="@color/hero_text_dim"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/total"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/manrope_800"
+        android:fontFeatureSettings="tnum"
+        android:includeFontPadding="false"
+        android:textColor="@color/hero_text"
+        android:textSize="56sp" />
+
+    <TextView
+        android:id="@+id/totalHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:fontFamily="@font/manrope_500"
+        android:textColor="@color/hero_text_dim"
+        android:textSize="14sp" />
+
+    <com.senjumomo.utilities.SplitBarView
+        android:id="@+id/splitBar"
+        android:layout_width="match_parent"
+        android:layout_height="10dp"
+        android:layout_marginTop="22dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:background="@drawable/icon_circle"
+                    android:backgroundTint="@color/hero_debt" />
+
+                <TextView
+                    style="@style/LegendLabel"
+                    android:layout_marginStart="6dp"
+                    android:text="Debt" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/legendDebt"
+                style="@style/LegendAmount" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:background="@drawable/icon_circle"
+                    android:backgroundTint="@color/hero_water" />
+
+                <TextView
+                    style="@style/LegendLabel"
+                    android:layout_marginStart="6dp"
+                    android:text="Water" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/legendWater"
+                style="@style/LegendAmount" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:background="@drawable/icon_circle"
+                    android:backgroundTint="@color/hero_elec" />
+
+                <TextView
+                    style="@style/LegendLabel"
+                    android:layout_marginStart="6dp"
+                    android:text="Electricity" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/legendElec"
+                style="@style/LegendAmount" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

@@ -6,12 +6,12 @@
     android:layout_height="match_parent"
     android:background="?attr/colorSurface">
 
-    <com.google.android.material.appbar.AppBarLayout
+    <com.senjumomo.utilities.HeaderAppBar
         android:id="@+id/appBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fitsSystemWindows="true"
-        app:liftOnScroll="true">
+        android:theme="@style/ThemeOverlay.App.Hero">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
@@ -19,8 +19,42 @@
             android:layout_height="?attr/actionBarSize"
             app:menu="@menu/main"
             app:title="Utilities"
-            app:titleTextAppearance="?attr/textAppearanceHeadlineSmall" />
-    </com.google.android.material.appbar.AppBarLayout>
+            app:titleTextAppearance="?attr/textAppearanceTitleLarge"
+            app:titleTextColor="@color/hero_text">
+
+            <!-- Appears when the big header has scrolled away, so the total is never out of sight. -->
+            <TextView
+                android:id="@+id/toolbarTotal"
+                android:layout_width="wrap_content"
+                android:layout_height="32dp"
+                android:layout_gravity="end|center_vertical"
+                android:alpha="0"
+                android:background="@drawable/hero_chip"
+                android:fontFamily="@font/manrope_800"
+                android:fontFeatureSettings="tnum"
+                android:gravity="center"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:textColor="@color/hero_text"
+                android:textSize="14sp" />
+        </com.google.android.material.appbar.MaterialToolbar>
+
+        <FrameLayout
+            android:id="@+id/heroArea"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_scrollFlags="scroll">
+
+            <include
+                android:id="@+id/heroCalc"
+                layout="@layout/view_hero_calc" />
+
+            <include
+                android:id="@+id/heroHistory"
+                layout="@layout/view_hero_history"
+                android:visibility="gone" />
+        </FrameLayout>
+    </com.senjumomo.utilities.HeaderAppBar>
 
     <LinearLayout
         android:layout_width="match_parent"

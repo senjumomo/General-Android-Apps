@@ -1,48 +1,134 @@
 <resources>
-    <color name="launcher_bg">#00497A</color>
 
-    <style name="Theme.Utilities" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">#00639B</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorPrimaryContainer">#CEE5FF</item>
-        <item name="colorOnPrimaryContainer">#001D33</item>
-        <item name="colorSecondary">#51606F</item>
-        <item name="colorOnSecondary">#FFFFFF</item>
-        <item name="colorSecondaryContainer">#D5E4F7</item>
-        <item name="colorOnSecondaryContainer">#0E1D2A</item>
-        <item name="colorTertiary">#7A5900</item>
-        <item name="colorOnTertiary">#FFFFFF</item>
-        <item name="colorTertiaryContainer">#FFDEA1</item>
-        <item name="colorOnTertiaryContainer">#261900</item>
-        <item name="colorError">#BA1A1A</item>
-        <item name="android:colorBackground">#F8F9FF</item>
-        <item name="colorSurface">#F8F9FF</item>
-        <item name="colorOnSurface">#191C20</item>
-        <item name="colorOnSurfaceVariant">#42474E</item>
-        <item name="colorSurfaceContainerLowest">#FFFFFF</item>
-        <item name="colorSurfaceContainerLow">#F2F3FA</item>
-        <item name="colorSurfaceContainer">#ECEEF4</item>
-        <item name="colorSurfaceContainerHigh">#E6E8EE</item>
-        <item name="colorSurfaceContainerHighest">#E1E2E8</item>
-        <item name="colorOutline">#72777F</item>
-        <item name="colorOutlineVariant">#C2C7CF</item>
+    <!-- Everything that is the same in light and dark. -->
+    <style name="Base.Theme.Utilities" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <!-- The header is a deep gradient in both modes, so the status bar icons are always light. -->
+        <item name="android:windowLightStatusBar">false</item>
+
+        <item name="textAppearanceDisplayLarge">@style/TextAppearance.App.DisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/TextAppearance.App.DisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/TextAppearance.App.DisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/TextAppearance.App.HeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/TextAppearance.App.HeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/TextAppearance.App.HeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.App.TitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.App.TitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/TextAppearance.App.TitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.App.BodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.App.BodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/TextAppearance.App.BodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.App.LabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/TextAppearance.App.LabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/TextAppearance.App.LabelSmall</item>
     </style>
 
-    <style name="SectionCard" parent="Widget.Material3.CardView.Filled">
+    <style name="Theme.Utilities" parent="Base.Theme.Utilities">
+        <item name="colorPrimary">#0B5CAD</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#D2E6FF</item>
+        <item name="colorOnPrimaryContainer">#00203D</item>
+        <item name="colorSecondary">#4F6076</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="colorSecondaryContainer">#D6E4F9</item>
+        <item name="colorOnSecondaryContainer">#0B1D2E</item>
+        <item name="colorTertiary">#8A5A00</item>
+        <item name="colorOnTertiary">#FFFFFF</item>
+        <item name="colorTertiaryContainer">#FFE0A8</item>
+        <item name="colorOnTertiaryContainer">#2B1A00</item>
+        <item name="colorError">#BA1A1A</item>
+        <item name="android:colorBackground">#F3F6FB</item>
+        <item name="colorSurface">#F3F6FB</item>
+        <item name="colorOnSurface">#171C22</item>
+        <item name="colorOnSurfaceVariant">#454C55</item>
+        <item name="colorSurfaceContainerLowest">#FFFFFF</item>
+        <item name="colorSurfaceContainerLow">#F8FAFD</item>
+        <item name="colorSurfaceContainer">#ECF0F6</item>
+        <item name="colorSurfaceContainerHigh">#E6EBF2</item>
+        <item name="colorSurfaceContainerHighest">#E0E5ED</item>
+        <item name="colorOutline">#727A85</item>
+        <item name="colorOutlineVariant">#CDD4DE</item>
+        <item name="heroBase">?attr/colorPrimary</item>
+    </style>
+
+    <!-- Light icons and text on the header gradient. -->
+    <style name="ThemeOverlay.App.Hero" parent="">
+        <item name="colorOnSurface">@color/hero_text</item>
+        <item name="colorOnSurfaceVariant">@color/hero_text</item>
+        <item name="colorControlNormal">@color/hero_text</item>
+    </style>
+
+    <!-- Type: Manrope (bundled, SIL Open Font License). -->
+    <style name="TextAppearance.App.DisplayLarge" parent="TextAppearance.Material3.DisplayLarge">
+        <item name="android:fontFamily">@font/manrope_800</item>
+    </style>
+    <style name="TextAppearance.App.DisplayMedium" parent="TextAppearance.Material3.DisplayMedium">
+        <item name="android:fontFamily">@font/manrope_800</item>
+    </style>
+    <style name="TextAppearance.App.DisplaySmall" parent="TextAppearance.Material3.DisplaySmall">
+        <item name="android:fontFamily">@font/manrope_800</item>
+    </style>
+    <style name="TextAppearance.App.HeadlineLarge" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="android:fontFamily">@font/manrope_700</item>
+    </style>
+    <style name="TextAppearance.App.HeadlineMedium" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:fontFamily">@font/manrope_700</item>
+    </style>
+    <style name="TextAppearance.App.HeadlineSmall" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:fontFamily">@font/manrope_700</item>
+    </style>
+    <style name="TextAppearance.App.TitleLarge" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">@font/manrope_700</item>
+    </style>
+    <style name="TextAppearance.App.TitleMedium" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:fontFamily">@font/manrope_700</item>
+    </style>
+    <style name="TextAppearance.App.TitleSmall" parent="TextAppearance.Material3.TitleSmall">
+        <item name="android:fontFamily">@font/manrope_600</item>
+    </style>
+    <style name="TextAppearance.App.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">@font/manrope_500</item>
+    </style>
+    <style name="TextAppearance.App.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">@font/manrope_500</item>
+    </style>
+    <style name="TextAppearance.App.BodySmall" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:fontFamily">@font/manrope_500</item>
+    </style>
+    <style name="TextAppearance.App.LabelLarge" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/manrope_700</item>
+    </style>
+    <style name="TextAppearance.App.LabelMedium" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:fontFamily">@font/manrope_600</item>
+    </style>
+    <style name="TextAppearance.App.LabelSmall" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:fontFamily">@font/manrope_600</item>
+    </style>
+
+    <!-- Reusable bits -->
+    <style name="PageContent">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginBottom">12dp</item>
-        <item name="cardBackgroundColor">?attr/colorSurfaceContainerLow</item>
-        <item name="cardCornerRadius">20dp</item>
-        <item name="contentPadding">16dp</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingTop">20dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingBottom">28dp</item>
+    </style>
+
+    <style name="Section">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">14dp</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:padding">18dp</item>
     </style>
 
     <style name="IconBadge">
-        <item name="android:layout_width">40dp</item>
-        <item name="android:layout_height">40dp</item>
-        <item name="android:padding">9dp</item>
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:padding">11dp</item>
         <item name="android:background">@drawable/icon_circle</item>
     </style>
 
@@ -51,6 +137,7 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textSize">17sp</item>
     </style>
 
     <style name="SectionSubtitle">
@@ -60,105 +147,155 @@
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
     </style>
 
-    <style name="Field" parent="Widget.Material3.TextInputLayout.OutlinedBox">
+    <!-- A big, borderless number box ("meter display"). -->
+    <style name="TileLabel">
+        <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="boxCornerRadiusTopStart">12dp</item>
-        <item name="boxCornerRadiusTopEnd">12dp</item>
-        <item name="boxCornerRadiusBottomStart">12dp</item>
-        <item name="boxCornerRadiusBottomEnd">12dp</item>
-        <item name="boxBackgroundColor">?attr/colorSurfaceContainerLowest</item>
+        <item name="android:fontFamily">@font/manrope_700</item>
+        <item name="android:letterSpacing">0.06</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textSize">11sp</item>
     </style>
 
-    <style name="FieldInput">
-        <item name="android:layout_width">match_parent</item>
+    <style name="TileInput">
+        <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:inputType">numberDecimal</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@null</item>
+        <item name="android:fontFamily">@font/manrope_800</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:hint">0</item>
         <item name="android:imeOptions">actionNext</item>
+        <item name="android:importantForAutofill">no</item>
+        <item name="android:inputType">numberDecimal</item>
         <item name="android:maxLines">1</item>
+        <item name="android:minHeight">44dp</item>
+        <item name="android:padding">0dp</item>
+        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:textColorHint">?attr/colorOutlineVariant</item>
+        <item name="android:textSize">28sp</item>
+    </style>
+
+    <style name="TileUnit">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">@font/manrope_700</item>
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textSize">15sp</item>
+    </style>
+
+    <!-- Price chip beside a section title -->
+    <style name="RateChip">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">12dp</item>
+    </style>
+
+    <style name="RateChipText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">@font/manrope_700</item>
+        <item name="android:textSize">13sp</item>
     </style>
 
     <style name="SubtotalLabel">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_weight">1</item>
-        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
-        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:fontFamily">@font/manrope_600</item>
+        <item name="android:textSize">14sp</item>
     </style>
 
     <style name="SubtotalValue">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textAppearance">?attr/textAppearanceTitleMedium</item>
-        <item name="android:textColor">?attr/colorOnSurface</item>
-    </style>
-
-    <style name="PageContent">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:orientation">vertical</item>
-        <item name="android:paddingStart">16dp</item>
-        <item name="android:paddingTop">8dp</item>
-        <item name="android:paddingEnd">16dp</item>
-        <item name="android:paddingBottom">24dp</item>
+        <item name="android:fontFamily">@font/manrope_800</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:textSize">24sp</item>
     </style>
 
     <style name="MessageText">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:background">@drawable/message_bg</item>
-        <item name="android:lineSpacingExtra">2dp</item>
-        <item name="android:padding">16dp</item>
-        <item name="android:textAppearance">?attr/textAppearanceBodyLarge</item>
-        <item name="android:textColor">?attr/colorOnSurface</item>
+        <item name="android:background">@drawable/bubble_bg</item>
+        <item name="android:fontFamily">@font/manrope_500</item>
+        <item name="android:lineSpacingExtra">3dp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingTop">14dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingBottom">14dp</item>
+        <item name="android:textColor">?attr/colorOnPrimaryContainer</item>
         <item name="android:textIsSelectable">true</item>
+        <item name="android:textSize">14sp</item>
     </style>
 
-    <style name="SummaryLabel">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:textAppearance">?attr/textAppearanceLabelLarge</item>
-        <item name="android:textColor">?attr/colorOnPrimaryContainer</item>
+    <style name="PillButton.Filled" parent="Widget.Material3.Button.Icon">
+        <item name="android:layout_height">56dp</item>
+        <item name="cornerRadius">28dp</item>
     </style>
 
-    <style name="SummaryValue">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginTop">4dp</item>
-        <item name="android:textAppearance">?attr/textAppearanceHeadlineSmall</item>
-        <item name="android:textColor">?attr/colorOnPrimaryContainer</item>
-        <item name="android:textStyle">bold</item>
+    <style name="PillButton.Tonal" parent="Widget.Material3.Button.TonalButton.Icon">
+        <item name="android:layout_height">56dp</item>
+        <item name="cornerRadius">28dp</item>
     </style>
 
-    <style name="HistoryLine">
-        <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginTop">6dp</item>
-        <item name="android:drawablePadding">10dp</item>
-        <item name="android:gravity">center_vertical</item>
-        <item name="android:textAppearance">?attr/textAppearanceBodyMedium</item>
-        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    <style name="PillButton.Outlined" parent="Widget.Material3.Button.OutlinedButton.Icon">
+        <item name="android:layout_height">52dp</item>
+        <item name="cornerRadius">26dp</item>
     </style>
 
+    <!-- Stat tiles under the charts -->
     <style name="StatLabel">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textAppearance">?attr/textAppearanceLabelMedium</item>
+        <item name="android:fontFamily">@font/manrope_700</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:textAllCaps">true</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textSize">10.5sp</item>
     </style>
 
     <style name="StatValue">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:layout_marginTop">2dp</item>
-        <item name="android:textAppearance">?attr/textAppearanceTitleLarge</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:fontFamily">@font/manrope_800</item>
+        <item name="android:fontFeatureSettings">tnum</item>
         <item name="android:textColor">?attr/colorOnSurface</item>
-        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">21sp</item>
     </style>
 
     <style name="StatCaption">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
+        <item name="android:layout_marginTop">1dp</item>
+        <item name="android:fontFamily">@font/manrope_600</item>
         <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <!-- Header legend -->
+    <style name="LegendLabel">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">@font/manrope_600</item>
+        <item name="android:textColor">@color/hero_text_dim</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="LegendAmount">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:fontFamily">@font/manrope_800</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:textColor">@color/hero_text</item>
+        <item name="android:textSize">17sp</item>
     </style>
 </resources>

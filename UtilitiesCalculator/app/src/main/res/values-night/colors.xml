@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="water_accent">#7CC4FF</color>
+    <color name="water_container">#12405F</color>
+    <color name="water_on_container">#D6ECFF</color>
+    <color name="water_card_top">#123049</color>
+    <color name="water_card_bottom">#10161D</color>
+    <color name="water_stroke">#337CC4FF</color>
+
+    <color name="elec_accent">#FFC857</color>
+    <color name="elec_container">#5A3C00</color>
+    <color name="elec_on_container">#FFE7B3</color>
+    <color name="elec_card_top">#33270C</color>
+    <color name="elec_card_bottom">#16140F</color>
+    <color name="elec_stroke">#33FFC857</color>
+
+    <color name="debt_accent">#FF93B4</color>
+    <color name="debt_container">#5E1B35</color>
+    <color name="debt_on_container">#FFDCE7</color>
+    <color name="debt_card_top">#34182A</color>
+    <color name="debt_card_bottom">#171115</color>
+    <color name="debt_stroke">#33FF93B4</color>
+
+    <color name="total_accent">#AEB1FF</color>
+    <color name="total_container">#2D2C69</color>
+    <color name="total_on_container">#E4E2FF</color>
+    <color name="total_card_top">#1F1E45</color>
+    <color name="total_card_bottom">#111219</color>
+    <color name="total_stroke">#33AEB1FF</color>
+
+    <color name="neutral_card_top">#171C23</color>
+    <color name="neutral_card_bottom">#171C23</color>
+    <color name="neutral_stroke">#262D38</color>
+    <color name="tile_bg">#0D1117</color>
+    <color name="tile_stroke">#2A323E</color>
+    <color name="stat_tile_bg">#12FFFFFF</color>
+    <color name="stat_tile_stroke">#1FFFFFFF</color>
+
+    <color name="trend_good">#7FDC9C</color>
+    <color name="trend_good_bg">#2E7FDC9C</color>
+    <color name="trend_bad">#FFB4AB</color>
+    <color name="trend_bad_bg">#2EFFB4AB</color>
+</resources>

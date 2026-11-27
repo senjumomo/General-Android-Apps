@@ -1,12 +1,10 @@
 package com.senjumomo.utilities
 
 import android.view.View
-import androidx.core.view.allViews
+import android.widget.EditText
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
 import com.android.resources.NightMode
-import com.google.android.material.textfield.TextInputEditText
-import com.google.android.material.textfield.TextInputLayout
 import org.junit.Rule
 import org.junit.Test
 
@@ -20,15 +18,11 @@ class ScreenshotTest {
         "debt" to "900", "waterPrev" to "800", "waterCurr" to "810", "tokens" to "10",
     )
 
-    private fun inflate(layout: Int): View =
-        paparazzi.inflate<View>(layout).also { root ->
-            // Floating-label animations don't run in the renderer; jump straight to the end state.
-            root.allViews.filterIsInstance<TextInputLayout>().forEach { it.isHintAnimationEnabled = false }
-        }
+    private fun inflate(layout: Int): View = paparazzi.inflate<View>(layout)
 
     private fun calculate(values: Map<String, String>, priced: Boolean = true): View {
         val root = inflate(R.layout.activity_main)
-        BillScreen(root.findViewById(R.id.calculatePage), null).apply {
+        BillScreen(root, null, animate = false).apply {
             month = "2026-11"
             if (priced) setPrices("70".toBigDecimal(), "100".toBigDecimal())
             fill(values)
@@ -40,6 +34,9 @@ class ScreenshotTest {
         val root = inflate(R.layout.activity_main)
         root.findViewById<View>(R.id.calculatePage).visibility = View.GONE
         root.findViewById<View>(R.id.historyPage).visibility = View.VISIBLE
+        root.findViewById<View>(R.id.heroCalc).visibility = View.GONE
+        root.findViewById<View>(R.id.heroHistory).visibility = View.VISIBLE
+        root.findViewById<View>(R.id.toolbarTotal).visibility = View.GONE
         root.findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(R.id.bottomNav)
             .selectedItemId = R.id.tab_history
         root.findViewById<com.google.android.material.appbar.MaterialToolbar>(R.id.toolbar).title = "History"
@@ -72,6 +69,21 @@ class ScreenshotTest {
 
     @Test fun filled() = paparazzi.snapshot(calculate(example))
 
+    /** What the top looks like once the big header has scrolled away: a small total in the toolbar. */
+    @Test fun collapsed() {
+        val root = calculate(example)
+        root.findViewById<View>(R.id.heroArea).visibility = View.GONE
+        root.findViewById<View>(R.id.toolbarTotal).alpha = 1f
+        paparazzi.snapshot(root)
+    }
+
+    @Test fun incomplete() = paparazzi.snapshot(calculate(mapOf("waterPrev" to "800", "waterCurr" to "812")))
+
+    @Test fun icon() {
+        val root = inflate(R.layout.icon_preview)
+        paparazzi.snapshot(root)
+    }
+
     @Test fun error() = paparazzi.snapshot(calculate(example + ("waterCurr" to "790")))
 
     @Test fun historyList() = paparazzi.snapshot(history(sampleHistory))
@@ -80,14 +92,27 @@ class ScreenshotTest {
 
     @Test fun settings() {
         val root = inflate(R.layout.activity_settings)
-        root.findViewById<TextInputEditText>(R.id.waterPrice).setText("70")
-        root.findViewById<TextInputEditText>(R.id.tokenPrice).setText("100")
+        root.findViewById<EditText>(R.id.waterPrice).setText("70")
+        root.findViewById<EditText>(R.id.tokenPrice).setText("100")
         paparazzi.snapshot(root)
     }
 
     @Test fun filledDark() {
         paparazzi.unsafeUpdateConfig(device.copy(nightMode = NightMode.NIGHT))
         paparazzi.snapshot(calculate(example))
+    }
+
+    @Test fun emptyDark() {
+        paparazzi.unsafeUpdateConfig(device.copy(nightMode = NightMode.NIGHT))
+        paparazzi.snapshot(calculate(emptyMap()))
+    }
+
+    @Test fun settingsDark() {
+        paparazzi.unsafeUpdateConfig(device.copy(nightMode = NightMode.NIGHT))
+        val root = inflate(R.layout.activity_settings)
+        root.findViewById<EditText>(R.id.waterPrice).setText("70")
+        root.findViewById<EditText>(R.id.tokenPrice).setText("100")
+        paparazzi.snapshot(root)
     }
 
     @Test fun historyDark() {

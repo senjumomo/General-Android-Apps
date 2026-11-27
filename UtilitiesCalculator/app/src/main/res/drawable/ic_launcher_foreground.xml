@@ -1,8 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A glassy water drop with an amber lightning bolt, inside the adaptive icon's safe zone. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp" android:height="108dp"
-    android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#9FD0FF"
-        android:pathData="M44,30C44,30 30,47 30,57a14,14 0,0 0,28 0C58,47 44,30 44,30z" />
-    <path android:fillColor="#FFD166"
-        android:pathData="M70,28L56,56h11l-5,24l18,-32h-11l7,-20z" />
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+  <group android:pivotX="54" android:pivotY="54" android:scaleX="1.1" android:scaleY="1.1">
+    <!-- Drop -->
+    <path android:pathData="M46,27C46,27 29,46 29,59C29,68.4 36.6,76 46,76C55.4,76 63,68.4 63,59C63,46 46,27 46,27Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="46" android:startY="27"
+                android:endX="46" android:endY="76"
+                android:type="linear">
+                <item android:offset="0" android:color="#FFFFFFFF" />
+                <item android:offset="1" android:color="#FFB6E3FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Sheen on the drop -->
+    <path
+        android:pathData="M37.5,57C37.5,51.5 40.5,46.5 44,42"
+        android:strokeColor="#CCFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeWidth="2.6" />
+    <!-- Soft shadow under the bolt -->
+    <path
+        android:fillColor="#33001A4D"
+        android:pathData="M74.5,34.5L61.5,60.5L69.5,60.5L64.5,82.5L81.5,53.5L72.5,53.5L78.5,34.5Z" />
+    <!-- Bolt -->
+    <path android:pathData="M73,32L60,58L68,58L63,80L80,51L71,51L77,32Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="70" android:startY="32"
+                android:endX="70" android:endY="80"
+                android:type="linear">
+                <item android:offset="0" android:color="#FFFFE27A" />
+                <item android:offset="1" android:color="#FFFFA800" />
+            </gradient>
+        </aapt:attr>
+    </path>
+  </group>
 </vector>

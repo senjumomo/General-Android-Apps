@@ -1,56 +1,154 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    style="@style/SectionCard"
+    style="@style/Section"
+    android:background="@drawable/card_neutral_clickable"
     android:clickable="true"
     android:focusable="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/month"
+            style="@style/SectionTitle"
+            android:layout_width="0dp"
+            android:layout_weight="1" />
+
+        <TextView
+            android:id="@+id/owing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/manrope_800"
+            android:fontFeatureSettings="tnum"
+            android:textColor="@color/total_accent"
+            android:textSize="24sp" />
+    </LinearLayout>
+
+    <com.senjumomo.utilities.SplitBarView
+        android:id="@+id/split"
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:layout_marginTop="14dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:orientation="horizontal">
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/month"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
-                android:textColor="?attr/colorOnSurface" />
-
-            <TextView
-                android:id="@+id/owing"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceTitleLarge"
-                android:textColor="?attr/colorPrimary"
-                android:textStyle="bold" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:background="@drawable/icon_circle"
+                    android:backgroundTint="@color/water_accent" />
+
+                <TextView
+                    style="@style/StatCaption"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginTop="0dp"
+                    android:text="Water" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/waterValue"
+                style="@style/StatCaption"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/manrope_800"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="15sp" />
+
+            <TextView android:id="@+id/waterCost" style="@style/StatCaption" />
         </LinearLayout>
 
-            <TextView
-                android:id="@+id/water"
-                style="@style/HistoryLine"
-                android:drawableStart="@drawable/ic_water"
-                app:drawableTint="?attr/colorPrimary" />
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:background="@drawable/icon_circle"
+                    android:backgroundTint="@color/elec_accent" />
+
+                <TextView
+                    style="@style/StatCaption"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginTop="0dp"
+                    android:text="Electricity" />
+            </LinearLayout>
 
             <TextView
-                android:id="@+id/electricity"
-                style="@style/HistoryLine"
-                android:drawableStart="@drawable/ic_bolt"
-                app:drawableTint="?attr/colorTertiary" />
+                android:id="@+id/elecValue"
+                style="@style/StatCaption"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/manrope_800"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="15sp" />
+
+            <TextView android:id="@+id/elecCost" style="@style/StatCaption" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/debtColumn"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <View
+                    android:layout_width="8dp"
+                    android:layout_height="8dp"
+                    android:background="@drawable/icon_circle"
+                    android:backgroundTint="@color/debt_accent" />
+
+                <TextView
+                    style="@style/StatCaption"
+                    android:layout_marginStart="6dp"
+                    android:layout_marginTop="0dp"
+                    android:text="Debt" />
+            </LinearLayout>
 
             <TextView
-                android:id="@+id/debt"
-                style="@style/HistoryLine"
-                android:drawableStart="@drawable/ic_wallet"
-                app:drawableTint="?attr/colorSecondary" />
+                android:id="@+id/debtValue"
+                style="@style/StatCaption"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/manrope_800"
+                android:textColor="?attr/colorOnSurface"
+                android:textSize="15sp" />
 
+            <TextView
+                style="@style/StatCaption"
+                android:text="brought over" />
+        </LinearLayout>
     </LinearLayout>
-</com.google.android.material.card.MaterialCardView>
+</LinearLayout>

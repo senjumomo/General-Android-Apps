@@ -5,12 +5,11 @@
     android:layout_height="match_parent"
     android:background="?attr/colorSurface">
 
-    <com.google.android.material.appbar.AppBarLayout
+    <com.senjumomo.utilities.HeaderAppBar
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fitsSystemWindows="true"
-        app:liftOnScroll="true"
-        app:liftOnScrollTargetViewId="@id/settingsScroll">
+        android:theme="@style/ThemeOverlay.App.Hero">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
@@ -19,8 +18,21 @@
             app:navigationContentDescription="Back"
             app:navigationIcon="@drawable/ic_arrow_back"
             app:title="Settings"
-            app:titleTextAppearance="?attr/textAppearanceHeadlineSmall" />
-    </com.google.android.material.appbar.AppBarLayout>
+            app:titleTextAppearance="?attr/textAppearanceTitleLarge"
+            app:titleTextColor="@color/hero_text" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/manrope_500"
+            android:paddingStart="22dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="22dp"
+            android:paddingBottom="30dp"
+            android:text="Set your prices once. The Calculate page uses them for every month."
+            android:textColor="@color/hero_text_dim"
+            android:textSize="15sp" />
+    </com.senjumomo.utilities.HeaderAppBar>
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/settingsScroll"
@@ -33,26 +45,22 @@
             android:id="@+id/settingsContent"
             style="@style/PageContent">
 
-        <com.google.android.material.card.MaterialCardView style="@style/SectionCard">
-
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+                style="@style/Section"
+                android:background="@drawable/card_water">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <ImageView
                         style="@style/IconBadge"
-                        android:backgroundTint="?attr/colorPrimaryContainer"
+                        android:backgroundTint="@color/water_container"
                         android:importantForAccessibility="no"
                         android:src="@drawable/ic_water"
-                        app:tint="?attr/colorOnPrimaryContainer" />
+                        app:tint="@color/water_accent" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -66,42 +74,53 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/waterPriceLayout"
-                        style="@style/Field"
-                        android:layout_width="match_parent"
-                        app:prefixText="R"
-                        app:helperText="Shown on the Calculate page"
-                        android:hint="Price per kl">
+                <LinearLayout
+                    android:id="@+id/waterPriceTile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:addStatesFromChildren="true"
+                    android:background="@drawable/tile_water"
+                    android:gravity="center_vertical"
+                    android:minHeight="72dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp">
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/waterPrice"
-                            style="@style/FieldInput" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                    <TextView
+                        style="@style/TileUnit"
+                        android:layout_marginEnd="6dp"
+                        android:text="R"
+                        android:textSize="22sp" />
 
+                    <EditText
+                        android:id="@+id/waterPrice"
+                        style="@style/TileInput"
+                        android:contentDescription="Water price per kilolitre in rand"
+                        android:textSize="32sp" />
+
+                    <TextView
+                        style="@style/TileUnit"
+                        android:text="per kl" />
+                </LinearLayout>
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <com.google.android.material.card.MaterialCardView style="@style/SectionCard">
 
             <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+                style="@style/Section"
+                android:background="@drawable/card_elec">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <ImageView
                         style="@style/IconBadge"
-                        android:backgroundTint="?attr/colorTertiaryContainer"
+                        android:backgroundTint="@color/elec_container"
                         android:importantForAccessibility="no"
                         android:src="@drawable/ic_bolt"
-                        app:tint="?attr/colorOnTertiaryContainer" />
+                        app:tint="@color/elec_accent" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -115,32 +134,48 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tokenPriceLayout"
-                        style="@style/Field"
-                        android:layout_width="match_parent"
-                        app:prefixText="R"
-                        app:helperText="Shown on the Calculate page"
-                        android:hint="Price per token">
+                <LinearLayout
+                    android:id="@+id/tokenPriceTile"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:addStatesFromChildren="true"
+                    android:background="@drawable/tile_elec"
+                    android:gravity="center_vertical"
+                    android:minHeight="72dp"
+                    android:orientation="horizontal"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp">
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/tokenPrice"
-                            style="@style/FieldInput"
-                            android:imeOptions="actionDone" />
-                    </com.google.android.material.textfield.TextInputLayout>
+                    <TextView
+                        style="@style/TileUnit"
+                        android:layout_marginEnd="6dp"
+                        android:text="R"
+                        android:textSize="22sp" />
 
+                    <EditText
+                        android:id="@+id/tokenPrice"
+                        style="@style/TileInput"
+                        android:contentDescription="Price of one token in rand"
+                        android:imeOptions="actionDone"
+                        android:textSize="32sp" />
+
+                    <TextView
+                        style="@style/TileUnit"
+                        android:text="per token" />
+                </LinearLayout>
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:paddingStart="4dp"
-                android:paddingEnd="4dp"
+                android:layout_marginTop="2dp"
+                android:fontFamily="@font/manrope_500"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
                 android:text="Changes are saved automatically. Months already in History keep the prices they were saved with."
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorOnSurfaceVariant" />
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textSize="13sp" />
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

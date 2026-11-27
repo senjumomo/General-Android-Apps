@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The colour the header gradient is built from (follows Material You when it is on). -->
+    <attr name="heroBase" format="color" />
+</resources>

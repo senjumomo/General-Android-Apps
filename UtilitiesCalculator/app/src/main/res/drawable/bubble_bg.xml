@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A sent-message bubble: small tail corner at the bottom right. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="?attr/colorPrimaryContainer" />
+    <corners
+        android:topLeftRadius="22dp"
+        android:topRightRadius="22dp"
+        android:bottomLeftRadius="22dp"
+        android:bottomRightRadius="6dp" />
+</shape>

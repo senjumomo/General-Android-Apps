@@ -67,11 +67,29 @@ dynamic colour, dark mode. Data in SharedPreferences (`utilities`), history stor
 - `Bill.kt`: the maths and the exact landlord message format (the user specified it; keep it exact):
   `Previous Month's Debt: R900` / `Water: 810kl - 800kl = 10kl x R70 = R700` /
   `Electricity: 10 tokens x R100 = R1000` / `Owing = R2600`.
-- Prices (per kl, per token) live in Settings and show read-only on the Calculate page.
-- Month selector on Calculate; "Start new month" advances it and moves the reading over.
-- History tab: trend cards (bar chart of last 12 months + average/latest/lowest/highest) per measure.
-  `Trends.kt` is pure and unit-tested; `BarChartView` follows the dataviz rules (≤24px bars, 4px rounded
-  tops, hairline average line labelled in a gutter, value label only on the selected bar).
+- Prices (per kl, per token) live in Settings and show as a small chip on each section ("R70 / kl").
+- Month selector is a pill in the header; "Start new month" advances it and moves the reading over.
+- History tab: header with the average month + sparkline, trend cards (bar chart of last 12 months +
+  average/latest/lowest/highest) per measure, then a card per saved month. `Trends.kt` is pure and
+  unit-tested; `BarChartView` has gradient bars, a value bubble, dashed average line, grow-in animation.
+- **Look (v5, "make it gorgeous")**: `HeaderAppBar` paints `HeroDrawable` (gradient from the theme's
+  `heroBase` attr = colorPrimary in light, colorPrimaryContainer in dark, so it follows Material You).
+  The header is the app bar's scrolling part; `toolbarTotal` fades in as it scrolls away.
+  Fixed palettes in `colors.xml`/`Palette.kt` (water blue, electricity amber, debt rose, total indigo).
+  Type is Manrope (`res/font`, OFL, converted from the fontsource woff2 files); every M3 text appearance
+  is overridden in `themes.xml`. Avoid `textStyle="bold"` (use a weight-specific `@font/manrope_*`).
+  `BillScreen`/`HistoryScreen` take the whole screen root (the header is outside the page layouts).
+  The `<include android:id=...>` in `activity_main` replaces the included root's own id, so the Calculate
+  scroll view is `R.id.calculatePage`.
+- Animations (`Motion.kt`: `AmountText` count-up, `riseIn`, `pulse`; chart/sparkline/split-bar) only run
+  when the view is attached and system animations are on, so Paparazzi snapshots stay deterministic
+  (`BillScreen(..., animate = false)` in tests).
+- Pitfalls: a `Paint`'s alpha multiplies its shader. Never reuse one paint for a faint colour and then a
+  gradient (the header went near-invisible on every redraw after the first). Ripple on a rounded card needs
+  an explicit `@android:id/mask`. `enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(...))` keeps the
+  status bar icons light over the gradient in both themes.
+- Launcher icon: adaptive (gradient bg, glassy drop, amber bolt) + monochrome layer for themed icons;
+  `app/src/debug/res/layout/icon_preview.xml` is only for the `icon` snapshot.
 
 ---
 
