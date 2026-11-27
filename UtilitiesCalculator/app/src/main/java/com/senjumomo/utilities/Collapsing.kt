@@ -13,32 +13,51 @@ import androidx.core.view.NestedScrollingParentHelper
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
 /** The pure maths of the collapsing header, so it can be unit-tested. */
 object Collapse {
+    /**
+     * The header shrinks this many px per px of finger movement. Above 1 it folds away quickly
+     * instead of making you drag the whole way before the page starts to move.
+     */
+    const val SPEED = 2f
+
     /** Header height for a collapse [progress] (0 = full, 1 = compact). */
     fun height(natural: Int, compact: Int, progress: Float): Int {
         val range = max(0, natural - compact)
         return natural - (progress.coerceIn(0f, 1f) * range).roundToInt()
     }
 
-    /** New progress after the page is scrolled up by [dy] px: the header shrinks first. Returns (progress, used px). */
-    fun shrink(progress: Float, range: Int, dy: Int): Pair<Float, Int> {
+    /**
+     * New progress after the page is scrolled up by [dy] px: the header shrinks first, [speed] times
+     * as fast as the finger. Returns (progress, finger px used up).
+     */
+    fun shrink(progress: Float, range: Int, dy: Int, speed: Float = SPEED): Pair<Float, Int> {
         if (range <= 0 || dy <= 0) return progress to 0
         val left = ((1f - progress) * range).roundToInt()
-        val used = min(dy, left)
-        return (progress + used.toFloat() / range).coerceIn(0f, 1f) to used
+        val headerPx = min((dy * speed).roundToInt(), left)
+        val used = min(dy, ceil(headerPx / speed).toInt())
+        return (progress + headerPx.toFloat() / range).coerceIn(0f, 1f) to used
     }
 
     /** New progress after the page is pulled down by [dy] px beyond its top: the header grows back. */
-    fun grow(progress: Float, range: Int, dy: Int): Pair<Float, Int> {
+    fun grow(progress: Float, range: Int, dy: Int, speed: Float = SPEED): Pair<Float, Int> {
         if (range <= 0 || dy <= 0) return progress to 0
         val room = (progress * range).roundToInt()
-        val used = min(dy, room)
-        return (progress - used.toFloat() / range).coerceIn(0f, 1f) to used
+        val headerPx = min((dy * speed).roundToInt(), room)
+        val used = min(dy, ceil(headerPx / speed).toInt())
+        return (progress - headerPx.toFloat() / range).coerceIn(0f, 1f) to used
+    }
+
+    /** Where a half-open header settles when the finger lifts: whichever end is closer. */
+    fun settleTarget(progress: Float): Float? = when {
+        progress <= 0.01f || progress >= 0.99f -> null
+        progress > 0.5f -> 1f
+        else -> 0f
     }
 }
 
@@ -95,6 +114,11 @@ class CollapsingHero @JvmOverloads constructor(
     /** Stops an animation so a drag takes over cleanly. */
     fun stopAnimating() {
         animator?.cancel()
+    }
+
+    /** When nothing is scrolling any more, finish a half-open header off one way or the other. */
+    fun settle() {
+        Collapse.settleTarget(progress)?.let { animateTo(it) }
     }
 
     override fun onFinishInflate() {
@@ -172,6 +196,7 @@ class CollapsingRoot @JvmOverloads constructor(
 
     private val helper = NestedScrollingParentHelper(this)
     private val hero: CollapsingHero? get() = findViewById(R.id.heroArea)
+    private var activeScrolls = 0
 
     override fun onStartNestedScroll(child: View, target: View, axes: Int, type: Int): Boolean {
         if (axes and ViewCompat.SCROLL_AXIS_VERTICAL == 0) return false
@@ -181,10 +206,15 @@ class CollapsingRoot @JvmOverloads constructor(
 
     override fun onNestedScrollAccepted(child: View, target: View, axes: Int, type: Int) {
         helper.onNestedScrollAccepted(child, target, axes, type)
+        activeScrolls++
     }
 
     override fun onStopNestedScroll(target: View, type: Int) {
         helper.onStopNestedScroll(target, type)
+        // A finger lift is followed by a fling (a second scroll) before this one stops, so only
+        // settle once both are over.
+        activeScrolls = max(0, activeScrolls - 1)
+        if (activeScrolls == 0) hero?.settle()
     }
 
     override fun onNestedPreScroll(target: View, dx: Int, dy: Int, consumed: IntArray, type: Int) {
@@ -222,4 +252,15 @@ class CollapsingRoot @JvmOverloads constructor(
         onNestedScroll(target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, ViewCompat.TYPE_TOUCH)
 
     override fun getNestedScrollAxes(): Int = helper.nestedScrollAxes
+}
+
+/**
+ * A LinearLayout that can be faded without being drawn into an offscreen layer first (much
+ * cheaper while the header fades every frame). Fine here: the panels' pieces never overlap.
+ */
+class FadeLinearLayout @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null,
+) : LinearLayout(context, attrs) {
+    override fun hasOverlappingRendering(): Boolean = false
 }

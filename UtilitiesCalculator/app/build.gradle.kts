@@ -12,8 +12,8 @@ android {
         applicationId = "com.senjumomo.utilities"
         minSdk = 24
         targetSdk = 35
-        versionCode = 6
-        versionName = "5.1"
+        versionCode = 7
+        versionName = "5.2"
     }
 
     buildTypes {

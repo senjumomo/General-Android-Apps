@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Thin strip the History header shrinks to. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.senjumomo.utilities.FadeLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="58dp"
     android:layout_gravity="bottom"
@@ -28,4 +28,4 @@
         android:text="average per month"
         android:textColor="@color/hero_text_dim"
         android:textSize="13sp" />
-</LinearLayout>
+</com.senjumomo.utilities.FadeLinearLayout>

@@ -38,13 +38,29 @@ class HeroDrawable(context: Context) : Drawable() {
     private val wave2 = Path()
     private val corner = 28f * density
 
+    private var shaderWidth = -1
+    private var linear: LinearGradient? = null
+    private var glowTop: RadialGradient? = null
+    private var glowBottom: RadialGradient? = null
+
+    /** The gradient is laid out for a full-size header and just clipped when the header shrinks. */
+    private val fullHeight = 330f * density
+
     override fun onBoundsChange(bounds: android.graphics.Rect) {
         val w = bounds.width().toFloat()
         val h = bounds.height().toFloat()
+        if (bounds.width() != shaderWidth && w > 0f) {
+            // Built once per width; they must not change while the header shrinks (that is every frame).
+            shaderWidth = bounds.width()
+            linear = LinearGradient(0f, 0f, w, fullHeight, stops, floatArrayOf(0f, 0.5f, 1f), Shader.TileMode.CLAMP)
+            glowTop = RadialGradient(w * 0.88f, fullHeight * 0.06f, w * 0.78f, 0x3DFFFFFF, 0x00FFFFFF, Shader.TileMode.CLAMP)
+            glowBottom = RadialGradient(0f, fullHeight * 1.05f, w * 0.7f, 0x24FFFFFF, 0x00FFFFFF, Shader.TileMode.CLAMP)
+        }
         clip.reset()
         clip.addRoundRect(
             RectF(bounds), floatArrayOf(0f, 0f, 0f, 0f, corner, corner, corner, corner), Path.Direction.CW
         )
+        // Waves ride the bottom edge and follow the current height.
         wave1.reset()
         wave1.moveTo(0f, h * 0.80f)
         wave1.cubicTo(w * 0.25f, h * 0.60f, w * 0.55f, h * 1.00f, w, h * 0.68f)
@@ -62,17 +78,12 @@ class HeroDrawable(context: Context) : Drawable() {
         canvas.save()
         canvas.clipPath(clip)
 
-        paint.shader = LinearGradient(0f, 0f, w, h, stops, floatArrayOf(0f, 0.5f, 1f), Shader.TileMode.CLAMP)
+        paint.shader = linear
         canvas.drawRect(0f, 0f, w, h, paint)
-
         // Light from the top right, a little from the bottom left.
-        paint.shader = RadialGradient(
-            w * 0.88f, h * 0.06f, w * 0.78f, 0x3DFFFFFF, 0x00FFFFFF, Shader.TileMode.CLAMP
-        )
+        paint.shader = glowTop
         canvas.drawRect(0f, 0f, w, h, paint)
-        paint.shader = RadialGradient(
-            0f, h * 1.05f, w * 0.7f, 0x24FFFFFF, 0x00FFFFFF, Shader.TileMode.CLAMP
-        )
+        paint.shader = glowBottom
         canvas.drawRect(0f, 0f, w, h, paint)
 
         wavePaint.color = 0x14FFFFFF

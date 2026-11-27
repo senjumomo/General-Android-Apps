@@ -76,7 +76,12 @@ dynamic colour, dark mode. Data in SharedPreferences (`utilities`), history stor
   `heroBase` attr = colorPrimary in light, colorPrimaryContainer in dark, so it follows Material You).
   **Collapsing header is our own** (`Collapsing.kt`): `CollapsingRoot` (nested-scroll parent) shrinks
   `CollapsingHero` (`progress` 0..1) before the page scrolls; views tagged `compact` are the thin strip it
-  ends as, everything else is the full panel (clipped, cross-faded). Maths in `Collapse` (unit-tested);
+  ends as, everything else is the full panel (clipped, cross-faded). The header shrinks `Collapse.SPEED`
+  (2x) px per px of finger (1:1 felt like resistance on the phone: ~250dp of dragging before the page
+  moved) and settles open/closed when the finger lifts and no fling is running. Panels are
+  `FadeLinearLayout` (no offscreen layer while fading); `HeroDrawable` builds its shaders once per width.
+  "Message ready" sits on the TOTAL OWING row (it overflowed beside the month pill at the user's text
+  size; `bigText` snapshot = fontScale 1.3 guards this). Maths in `Collapse` (unit-tested);
   Paparazzi renders any state by setting `progress` (`headerHalf`, `headerCollapsed`, ...). It also folds
   while the keyboard is open (`MainActivity`, root layout listener). Don't go back to `AppBarLayout`: its
   scroll range stops at the first child without scroll flags, so a pinned toolbar above a scrolling child

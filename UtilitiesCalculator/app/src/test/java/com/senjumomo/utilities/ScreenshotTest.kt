@@ -90,6 +90,12 @@ class ScreenshotTest {
         paparazzi.snapshot(root)
     }
 
+    /** Large system text (like the phone's): nothing in the header may be clipped. */
+    @Test fun bigText() {
+        paparazzi.unsafeUpdateConfig(device.copy(fontScale = 1.3f))
+        paparazzi.snapshot(calculate(example))
+    }
+
     @Test fun incomplete() = paparazzi.snapshot(calculate(mapOf("waterPrev" to "800", "waterCurr" to "812")))
 
     @Test fun icon() {

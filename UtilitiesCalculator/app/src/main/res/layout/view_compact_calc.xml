@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Thin strip the Calculate header shrinks to: the live total and where it goes. -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.senjumomo.utilities.FadeLinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="58dp"
     android:layout_gravity="bottom"
@@ -27,4 +27,4 @@
         android:layout_marginStart="18dp"
         android:layout_marginBottom="1dp"
         android:layout_weight="1" />
-</LinearLayout>
+</com.senjumomo.utilities.FadeLinearLayout>
